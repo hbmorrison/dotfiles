@@ -52,8 +52,8 @@ case $SHELL_ENVIRONMENT in
     pathadd "${HOME}/.local/bin"
     ;;
   wsl|redhat)
-    pathadd "/usr/sbin"
     pathadd "/opt/puppetlabs/sbin"
+    pathadd "/usr/sbin"
     pathadd "${HOME}/bin"
     pathadd "${HOME}/.local/bin"
     ;;

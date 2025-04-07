@@ -18,7 +18,7 @@ BASE_DIR=$(dirname $THIS_SCRIPT)
 case $(cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
-  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="debian" ;;
+  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
@@ -80,9 +80,10 @@ do
     \.git/*) ;;
     \.git*) ;;
     gitconfig) ;;
+    startup/*) ;;
     vim-pathogen/*) ;;
     vim/*) ;;
-    update.sh) ;;
+    *.sh) ;;
 
     # Copy everything else.
 

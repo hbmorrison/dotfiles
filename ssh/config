@@ -9,5 +9,7 @@ Host puppet-filestore
   User hmorris
 Host bambooapp-live
   User bamboo
+Host *.lan
+  User hannah
 Host *
   User isapps
