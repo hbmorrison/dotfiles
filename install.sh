@@ -24,13 +24,10 @@ esac
 
 SHELL_PACKAGES="bash-completion curl git-flow gpg hiera-eyaml vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois"
-
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
-CHOCO_PACKAGES="7zip firacode gitkraken kitty maven \
-  nmap openjdk rsync wincrypt-sshagent winscp"
-STARTUP_SHORTCUTS="wincryptsshagent"
+CHOCO_PACKAGES="7zip firacode nmap openjdk wincrypt-sshagent winscp"
 
-# Find out the Windows home and programs directories if required.
+# Find out the Windows home and program directories.
 
 case $SHELL_ENVIRONMENT in
   wsl)
@@ -99,8 +96,9 @@ case $SHELL_ENVIRONMENT in
     BACKSLASHED_STARTUP_DIR="C:\\Users\\${USER:-$USERNAME}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
 
     NOT_INSTALLED_SHORTCUTS=""
-    for SHORTCUT in $STARTUP_SHORTCUTS
+    for SHORTCUT_PS1 in $(ls -1 "${BASE_DIR}/startup")
     do
+      SHORTCUT=$(basename $SHORTCUT_PS1 .ps1)
       echo -n "Checking if ${SHORTCUT} shortcut is installed ... "
       if [ ! -f "${STARTUP_DIR}/${SHORTCUT}.lnk" ]
       then
@@ -113,9 +111,9 @@ case $SHELL_ENVIRONMENT in
     for SHORTCUT in $NOT_INSTALLED_SHORTCUTS
     do
       echo "Installing ${SHORTCUT} startup shortcut"
-      cp -f "${BASE_DIR}/startup/${SHORTCUT}.ps1" $WINDOWS_HOME_DIR
-      powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; ${BACKSLASHED_HOME_DIR}\\${SHORTCUT}.ps1"
-      rm -f "${WINDOWS_HOME_DIR}/${SHORTCUT}.ps1"
+      cp -f "${BASE_DIR}/startup/${SHORTCUT_PS1}" $WINDOWS_HOME_DIR
+      powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; ${BACKSLASHED_HOME_DIR}\\${SHORTCUT_PS1}"
+      rm -f "${WINDOWS_HOME_DIR}/${SHORTCUT_PS1}"
     done
     ;;
 esac
