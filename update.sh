@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Files that must be copied into the roaming profile directory.
-
-ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
-
 # Locate the base directory of the repository.
 
 THIS_SCRIPT=$(readlink -f $0)
@@ -24,7 +20,7 @@ case $(cat /proc/version 2>/dev/null) in
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
 
-# Copy the git config file, extracting and replacing the user name and email.
+# Copy the gitconfig file, extracting and replacing the user name and email.
 
 if [ -r "${HOME}/.gitconfig" ]
 then
@@ -64,7 +60,7 @@ mkdir -p "${HOME}/.vim/autoload"
 rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
 cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
 
-# Ensure directories exist and are secure.
+# Ensure these directories exist and are secure.
 
 mkdir -p $HOME/.ssh $HOME/.eyaml
 chmod go-rwx $HOME/.ssh $HOME/.eyaml
@@ -80,10 +76,19 @@ do
 
     \.git/*) ;;
     \.git*) ;;
+
+    # Ignore files that are dealt with as special cases.
+
     gitconfig) ;;
     startup/*) ;;
+
+    # Ignore submodules.
+
     vim-pathogen/*) ;;
     vim/*) ;;
+
+    # Ignore install and update scripts.
+
     *.sh) ;;
 
     # Copy everything else.
@@ -99,6 +104,7 @@ done
 if [ "${SHELL_ENVIRONMENT}" = "gitbash" ]
 then
 
+  ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
   PROFILEDRIVE=`echo $USERPROFILE | cut -d'\' -f1`
 
   if [ "$PROFILEDRIVE" != "$HOMEDRIVE" ]
