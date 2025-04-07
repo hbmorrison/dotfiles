@@ -1,0 +1,36 @@
+[init]
+	defaultBranch = production
+[fetch]
+	prune = true
+[pull]
+	rebase = false
+[gitflow "prefix"]
+	feature = feature-
+	bugfix = bugfix-
+	release = release-
+	hotfix = hotfix-
+	support = support-
+	versiontag = v
+[gitflow "branch"]
+	master = production
+	develop = development
+[format]
+	pretty = format: %C(auto,yellow)%h %C(auto,blue)%cn %C(auto,green)%cr%C(auto,reset)%C(auto,red)%d%C(auto,reset) %s
+[log]
+	abbrevCommit = true
+[blame]
+	coloring = highlightRecent
+	date = short
+[alias]
+	user = config --get-regexp '^user\\.'
+	chmod = update-index --chmod=+x
+	wdiff = diff --word-diff=color
+[push]
+	recurseSubmodules = check
+[status]
+	submodulesummary = 1
+[submodule]
+	recurse = true
+[diff]
+	submodule = log
+	algorithm = patience
