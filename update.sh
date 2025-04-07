@@ -1,5 +1,4 @@
 #!/bin/bash
-/usr/bin/env > /tmp/update-environment
 
 # Files that must be copied into the roaming profile directory.
 
@@ -80,15 +79,14 @@ do
 
     \.git/*) ;;
     \.git*) ;;
+    gitconfig) ;;
     vim-pathogen/*) ;;
     vim/*) ;;
     update.sh) ;;
 
     # Copy everything else.
 
-    *)
-      cp $BASE_DIR/$ITEM "$HOME/.${ITEM}"
-      ;;
+    *) cp $BASE_DIR/$ITEM "$HOME/.${ITEM}" ;;
 
   esac
 

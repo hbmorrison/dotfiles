@@ -157,9 +157,6 @@ set path=.,**
 " partially enable mouse
 set mouse=nv
 
-" set the errorformat to load results from ripgrep into quickfix
-set errorformat^=%f:%l:%c:%m
-
 " automatically close the quickfix window when a file is selected with Enter
 :autocmd FileType qf nnoremap <buffer> <CR> <CR>:cclose<CR>
 
@@ -255,13 +252,6 @@ nnoremap <silent> <Leader>q :call ToggleQuickFix()<cr>
 
 " PLUGINS
 
-" ack
-let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
-let g:ack_autoclose = 1
-let g:ack_use_cword_for_empty_search = 1
-cnoreabbrev Ack Ack!
-nnoremap <Leader>s :Ack!<Space>
-
 " vim rooter
 let g:rooter_cd_cmd = 'lcd'
 let g:rooter_silent_chdir = 1
@@ -282,9 +272,6 @@ nmap <Leader>S :Git -p status<Return>
 nmap <Leader>D :Git -p diff<Return>
 nmap <Leader>C :Git commit -a<Return>
 nmap <Leader>P :Git -p push<Return>
-
-" vim-ripgrep
-let g:rg_derive_root=1
 
 " tabular
 nmap <Leader>t :Tab /=<Return>
