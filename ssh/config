@@ -1,0 +1,13 @@
+AddressFamily inet
+GSSAPIAuthentication yes
+GSSAPIDelegateCredentials yes
+Host is-apps-jumphost
+  User hmorris
+Host pmaster
+  User hmorris
+Host puppet-filestore
+  User hmorris
+Host bambooapp-live
+  User bamboo
+Host *
+  User isapps
