@@ -19,6 +19,7 @@ case $(cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
+  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
