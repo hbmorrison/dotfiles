@@ -7,7 +7,8 @@ BASE_DIR=$(dirname $SCRIPT)
 
 # Configuration.
 
-QMK_DEPENDENCIES="dfu-programmer g++ gcc gcc-arm-none-eabi make python3 pipx"
+QMK_DEPENDENCIES="dfu-programmer gcc-arm-none-eabi make python3 pipx"
+QMK_DEPENDENCIES="python3 pipx"
 
 # Work out which OS and terminal is being used.
 
