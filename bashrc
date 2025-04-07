@@ -181,7 +181,7 @@ SUB_PROMPT="$PROMPT_COLOUR_PURPLE\$(__sub_ps1)$PROMPT_COLOUR_CLEAR"
 
 # Make sure the hostname is lowercase.
 
-HOSTNAME=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
+HOSTNAME=`hostname -s | tr '[:upper:]' '[:lower:]'`
 
 # Set up a window title prompt.
 
@@ -189,7 +189,7 @@ TITLE_PROMPT="\[\e]0;\u@${HOSTNAME}\$(__git_ps1) \W\a\]"
 
 # Set the entire prompt.
 
-PS1="${TITLE_PROMPT}${debian_chroot:+($debian_chroot)}${PROMPT_COLOUR_CLEAR}\u@${PROMPT_HOSTNAME}${GIT_PROMPT} ${SUB_PROMPT}${DIR_PROMPT} \\$ "
+PS1="${TITLE_PROMPT}${debian_chroot:+($debian_chroot)}${PROMPT_COLOUR_CLEAR}\u@${HOSTNAME}${GIT_PROMPT} ${SUB_PROMPT}${DIR_PROMPT} \\$ "
 
 # Completions for git aliases.
 

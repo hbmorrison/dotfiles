@@ -62,7 +62,7 @@ fi
 cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
 mkdir -p "${HOME}/.vim/autoload"
 rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
-cp -f "${BASE_DIR}/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
+cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
 
 # Ensure directories exist and are secure.
 
@@ -71,16 +71,18 @@ chmod go-rwx $HOME/.ssh $HOME/.eyaml
 
 # Copy the dotfiles.
 
-for ITEM in $(cd $BASE_DIR; find . -type f)
+for ITEM in $(cd $BASE_DIR; find . -type f  | sed  's#^./##')
 do
 
   case $ITEM in
 
     # Ignore repo files.
 
-    \./\.git/*) ;;
-    \./\.gitignore) ;;
-    \./update.sh) ;;
+    \.git/*) ;;
+    \.git*) ;;
+    vim-pathogen/*) ;;
+    vim/*) ;;
+    update.sh) ;;
 
     # Copy everything else.
 
