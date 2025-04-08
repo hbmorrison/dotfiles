@@ -115,9 +115,6 @@ autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
 autocmd InsertLeave * match ExtraWhitespace /\s\+$/
 autocmd BufWinLeave * call clearmatches()
 
-" set the default background
-set bg=light
-
 " toggle the background from dark to light with \b in normal mode
 nnoremap <silent> <Leader>b :let &bg=(&bg=='light'?'dark':'light')<CR>
 
