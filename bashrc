@@ -222,7 +222,6 @@ then
   alias dc="docker-compose"
 else
   alias dc="docker compose"
-else
 fi
 alias dn="docker network"
 alias dv="docker volume"
