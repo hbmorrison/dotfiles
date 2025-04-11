@@ -44,10 +44,10 @@ if ! shopt -oq posix; then
     source /usr/share/bash-completion/bash_completion
     if [ -f /usr/share/bash-completion/completions/git ]; then
       source /usr/share/bash-completion/completions/git
-    endif
+    fi
     if [ -f /usr/share/bash-completion/completions/git-flow ]; then
       source /usr/share/bash-completion/completions/git-flow
-    endif
+    fi
   elif [ -f /etc/bash_completion ]; then
     source /etc/bash_completion
   fi
