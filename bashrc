@@ -217,7 +217,13 @@ alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.e
 # Docker aliases
 
 alias d=docker
-alias dc="docker-compose"
+if [ -f /usr/bin/docker-compose ]
+then
+  alias dc="docker-compose"
+else
+  alias dc="docker compose"
+else
+fi
 alias dn="docker network"
 alias dv="docker volume"
 alias dl="docker logs -f"
