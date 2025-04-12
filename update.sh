@@ -20,49 +20,45 @@ case $(cat /proc/version 2>/dev/null) in
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
 
-# Copy the gitconfig file, extracting and replacing the user name and email.
+# Create any directories that are needed.
 
-if [ -r "${HOME}/.gitconfig" ]
-then
+for DIR in $(cd $BASE_DIR; find . -type d -not -path "."  | sed  's#^./##')
+do
 
-  TEMP_USER_SECTION=`mktemp`
-  awk -f - $HOME/.gitconfig > $TEMP_USER_SECTION <<EXTRACT_USER_SECTION
-BEGIN { USER_SECTION = 0; }
-/^\[/ { if ( USER_SECTION == 1 ) { USER_SECTION = 0; } }
-/^\[user\]/ { USER_SECTION = 1; }
-{ if ( USER_SECTION == 1 ) { print; } }
-EXTRACT_USER_SECTION
+  case $DIR in
 
-  cp $BASE_DIR/gitconfig $HOME/.gitconfig
-  cat $TEMP_USER_SECTION >> $HOME/.gitconfig
+    # Ignore the git directory.
 
-  rm -f $TEMP_USER_SECTION
+    \.git) ;;
+    \.git/*) ;;
 
-else
+    # Ignore submodules.
 
-  cp $BASE_DIR/gitconfig $HOME/.gitconfig
+    vim) ;;
+    vim/*) ;;
+    vim-pathogen) ;;
+    vim-pathogen/*) ;;
 
-fi
+    # Ignore directories used for special cases below.
 
-# Configure Vim.
+    startup) ;;
+    startup/*) ;;
 
-if [ -d $HOME/.vim ]
-then
-  if [ -d $HOME/.vim.old ]
-  then
-    rm -rf "${HOME}/.vim.old" 2> /dev/null
-  fi
-  mv "${HOME}/.vim" "${HOME}/.vim.old" 2> /dev/null
-fi
+    # Create other directories under the home directory.
 
-cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
-mkdir -p "${HOME}/.vim/autoload"
-rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
-cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
+    *)
+      if [ ! -d "${HOME}/.${DIR}" ]
+      then
+        mkdir "${HOME}/.${DIR}"
+      fi
+      ;;
 
-# Ensure these directories exist and are secure.
+  esac
 
-mkdir -p $HOME/.ssh $HOME/.eyaml
+done
+
+# Make sure these directories are secure.
+
 chmod go-rwx $HOME/.ssh $HOME/.eyaml
 
 # Copy the dotfiles.
@@ -77,15 +73,15 @@ do
     \.git/*) ;;
     \.git*) ;;
 
+    # Ignore submodules.
+
+    vim/*) ;;
+    vim-pathogen/*) ;;
+
     # Ignore files that are dealt with as special cases.
 
     gitconfig) ;;
     startup/*) ;;
-
-    # Ignore submodules.
-
-    vim-pathogen/*) ;;
-    vim/*) ;;
 
     # Ignore install and update scripts.
 
@@ -129,3 +125,43 @@ then
   fi
 
 fi
+
+# Copy the gitconfig file, extracting and replacing the user name and email.
+
+if [ -r "${HOME}/.gitconfig" ]
+then
+
+  TEMP_USER_SECTION=`mktemp`
+  awk -f - $HOME/.gitconfig > $TEMP_USER_SECTION <<EXTRACT_USER_SECTION
+BEGIN { USER_SECTION = 0; }
+/^\[/ { if ( USER_SECTION == 1 ) { USER_SECTION = 0; } }
+/^\[user\]/ { USER_SECTION = 1; }
+{ if ( USER_SECTION == 1 ) { print; } }
+EXTRACT_USER_SECTION
+
+  cp $BASE_DIR/gitconfig $HOME/.gitconfig
+  cat $TEMP_USER_SECTION >> $HOME/.gitconfig
+
+  rm -f $TEMP_USER_SECTION
+
+else
+
+  cp $BASE_DIR/gitconfig $HOME/.gitconfig
+
+fi
+
+# Configure Vim.
+
+if [ -d $HOME/.vim ]
+then
+  if [ -d $HOME/.vim.old ]
+  then
+    rm -rf "${HOME}/.vim.old" 2> /dev/null
+  fi
+  mv "${HOME}/.vim" "${HOME}/.vim.old" 2> /dev/null
+fi
+
+cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
+mkdir -p "${HOME}/.vim/autoload"
+rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
+cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
