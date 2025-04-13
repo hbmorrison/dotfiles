@@ -3,7 +3,8 @@
 # Locate the base directory of the repository.
 
 THIS_SCRIPT=$(readlink -f $0)
-BASE_DIR=$(dirname $THIS_SCRIPT)
+BIN_DIR=$(dirname $THIS_SCRIPT)
+BASE_DIR=$(dirname $BIN_DIR)
 
 # Initialise submodules.
 
@@ -126,4 +127,4 @@ esac
 
 # Run the dotfiles update.
 
-source $BASE_DIR/update.sh
+source $BASE_DIR/bin/update.sh

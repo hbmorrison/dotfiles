@@ -3,7 +3,8 @@
 # Locate the base directory of the repository.
 
 SCRIPT=$(readlink -f $0)
-BASE_DIR=$(dirname $SCRIPT)
+BIN_DIR=$(dirname $THIS_SCRIPT)
+BASE_DIR=$(dirname $BIN_DIR)
 
 # Configuration.
 
