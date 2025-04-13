@@ -11,6 +11,12 @@ set t_Co=256
 set nocompatible
 set viminfo='20,<500,/50,:50,h
 
+" set default base colours
+let g:darkbg=8
+let g:darkfg=15
+let g:lightbg=8
+let g:lightfg=15
+
 " set base colours properly for ChromeOS
 let g:proc_version = substitute(system("cat /proc/version | grep 'Chromium OS' 2>/dev/null"), '\n', '', 'g')
 if g:proc_version == ""
@@ -18,11 +24,6 @@ if g:proc_version == ""
   let g:darkfg=15
   let g:lightbg=15
   let g:lightfg=0
-else
-  let g:darkbg=8
-  let g:darkfg=15
-  let g:lightbg=8
-  let g:lightfg=15
 end
 
 " set colours based on light or dark background
