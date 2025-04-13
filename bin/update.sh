@@ -92,9 +92,9 @@ do
 
 done
 
-AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
-
 # Check that the authorized_keys file exists.
+
+AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
 
 if [ ! -f $AUTHORIZED_KEYS ]
 then
