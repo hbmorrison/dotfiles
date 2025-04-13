@@ -13,6 +13,15 @@ NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
 CHOCO_PACKAGES="7zip firacode nmap openjdk wincrypt-sshagent winscp"
 
+# Work out whether to run commands using sudo.
+
+SUDO=sudo
+
+if [ `id -u` -eq 0 ]
+then
+  SUDO=""
+fi
+
 # Initialise submodules.
 
 (cd "$BASE_DIR"; git submodule update --init --recursive)
@@ -45,9 +54,9 @@ esac
 
 case $SHELL_ENVIRONMENT in
   chromeos|wsl|debian)
-    sudo apt-get update
-    sudo apt-get -y dist-upgrade
-    sudo apt-get install --no-install-recommends -y $SHELL_PACKAGES $NETWORK_PACKAGES
+    $SUDO apt-get update
+    $SUDO apt-get -y dist-upgrade
+    $SUDO apt-get install --no-install-recommends -y $SHELL_PACKAGES $NETWORK_PACKAGES
     ;;
   gitbash)
     if [ ! -r $CHOCO ]
@@ -122,7 +131,7 @@ esac
 # Fix the WSL2 / Debian clock issue.
 
 case $SHELL_ENVIRONMENT in
-  wsl) sudo hwclock -s ;;
+  wsl) $SUDO hwclock -s ;;
 esac
 
 # Run the dotfiles update.
