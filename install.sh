@@ -96,7 +96,7 @@ case $SHELL_ENVIRONMENT in
     BACKSLASHED_STARTUP_DIR="C:\\Users\\${USER:-$USERNAME}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
 
     NOT_INSTALLED_SHORTCUTS=""
-    for SHORTCUT_PS1 in $(ls -1 "${BASE_DIR}/startup")
+    for SHORTCUT_PS1 in $(ls -1 "${BASE_DIR}/etc/*.ps1")
     do
       SHORTCUT=$(basename $SHORTCUT_PS1 .ps1)
       echo -n "Checking if ${SHORTCUT} shortcut is installed ... "
@@ -111,7 +111,7 @@ case $SHELL_ENVIRONMENT in
     for SHORTCUT in $NOT_INSTALLED_SHORTCUTS
     do
       echo "Installing ${SHORTCUT} startup shortcut"
-      cp -f "${BASE_DIR}/startup/${SHORTCUT_PS1}" $WINDOWS_HOME_DIR
+      cp -f "${BASE_DIR}/etc/${SHORTCUT_PS1}" $WINDOWS_HOME_DIR
       powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; ${BACKSLASHED_HOME_DIR}\\${SHORTCUT_PS1}"
       rm -f "${WINDOWS_HOME_DIR}/${SHORTCUT_PS1}"
     done

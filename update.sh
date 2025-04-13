@@ -41,8 +41,8 @@ do
 
     # Ignore directories used for special cases below.
 
-    startup) ;;
-    startup/*) ;;
+    etc) ;;
+    etc/*) ;;
 
     # Create other directories under the home directory.
 
@@ -78,14 +78,10 @@ do
     vim/*) ;;
     vim-pathogen/*) ;;
 
-    # Ignore files that are dealt with as special cases.
-
-    gitconfig) ;;
-    startup/*) ;;
-
-    # Ignore install and update scripts.
+    # Ignore scripts and files that are dealt with as special cases.
 
     *.sh) ;;
+    etc/*) ;;
 
     # Copy everything else.
 
@@ -94,6 +90,66 @@ do
   esac
 
 done
+
+AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
+
+# Check that the authorized_keys file exists.
+
+if [ ! -f $AUTHORIZED_KEYS ]
+then
+  touch $AUTHORIZED_KEYS
+fi
+
+# Go through each ssh key and add it to authorized_keys if not present.
+
+while read -r TYPE KEY COMMENT
+do
+  if ! grep "${KEY}" $AUTHORIZED_KEYS > /dev/null 2>&1
+  then
+    echo "${COMMENT} added to authorized keys"
+    echo "${TYPE} ${KEY} ${COMMENT}" >> $AUTHORIZED_KEYS
+  fi
+done < "${BASE_DIR}/etc/authorized_keys"
+
+# Copy the gitconfig file, extracting and replacing the user name and email.
+
+if [ -r "${HOME}/.gitconfig" ]
+then
+
+  TEMP_USER_SECTION=`mktemp`
+  awk -f - $HOME/.gitconfig > $TEMP_USER_SECTION <<EXTRACT_USER_SECTION
+BEGIN { USER_SECTION = 0; }
+/^\[/ { if ( USER_SECTION == 1 ) { USER_SECTION = 0; } }
+/^\[user\]/ { USER_SECTION = 1; }
+{ if ( USER_SECTION == 1 ) { print; } }
+EXTRACT_USER_SECTION
+
+  cp $BASE_DIR/etc/gitconfig $HOME/.gitconfig
+  cat $TEMP_USER_SECTION >> $HOME/.gitconfig
+
+  rm -f $TEMP_USER_SECTION
+
+else
+
+  cp $BASE_DIR/etc/gitconfig $HOME/.gitconfig
+
+fi
+
+# Configure Vim.
+
+if [ -d $HOME/.vim ]
+then
+  if [ -d $HOME/.vim.old ]
+  then
+    rm -rf "${HOME}/.vim.old" 2> /dev/null
+  fi
+  mv "${HOME}/.vim" "${HOME}/.vim.old" 2> /dev/null
+fi
+
+cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
+mkdir -p "${HOME}/.vim/autoload"
+rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
+cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
 
 # Copy the necessary files to the Windows roaming profile if one is being used.
 
@@ -125,43 +181,3 @@ then
   fi
 
 fi
-
-# Copy the gitconfig file, extracting and replacing the user name and email.
-
-if [ -r "${HOME}/.gitconfig" ]
-then
-
-  TEMP_USER_SECTION=`mktemp`
-  awk -f - $HOME/.gitconfig > $TEMP_USER_SECTION <<EXTRACT_USER_SECTION
-BEGIN { USER_SECTION = 0; }
-/^\[/ { if ( USER_SECTION == 1 ) { USER_SECTION = 0; } }
-/^\[user\]/ { USER_SECTION = 1; }
-{ if ( USER_SECTION == 1 ) { print; } }
-EXTRACT_USER_SECTION
-
-  cp $BASE_DIR/gitconfig $HOME/.gitconfig
-  cat $TEMP_USER_SECTION >> $HOME/.gitconfig
-
-  rm -f $TEMP_USER_SECTION
-
-else
-
-  cp $BASE_DIR/gitconfig $HOME/.gitconfig
-
-fi
-
-# Configure Vim.
-
-if [ -d $HOME/.vim ]
-then
-  if [ -d $HOME/.vim.old ]
-  then
-    rm -rf "${HOME}/.vim.old" 2> /dev/null
-  fi
-  mv "${HOME}/.vim" "${HOME}/.vim.old" 2> /dev/null
-fi
-
-cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
-mkdir -p "${HOME}/.vim/autoload"
-rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
-cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
