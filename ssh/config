@@ -11,7 +11,14 @@ Host bambooapp-live
   User bamboo
 Host *.home
   User root
-Host *.lan
-  User hannah
+Host router
+  HostName router.home
+  User root
+Host nas-01
+  HostName nas-01.home
+  User root
+Host nas-02
+  HostName nas-02.home
+  User root
 Host *
   User isapps
