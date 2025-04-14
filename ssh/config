@@ -1,16 +1,12 @@
 AddressFamily inet
 GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
-Host is-apps-jumphost
-  User hmorris
 Host pmaster
   User hmorris
 Host puppet-filestore
   User hmorris
 Host bambooapp-live
   User bamboo
-Host *.home
-  User root
 Host router
   HostName router.home
   User root
@@ -20,5 +16,7 @@ Host nas-01
 Host nas-02
   HostName nas-02.home
   User root
+Host *.home
+  User hannah
 Host *
   User isapps
