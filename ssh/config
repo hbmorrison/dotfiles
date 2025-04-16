@@ -18,5 +18,7 @@ Host nas-02
   User root
 Host *.home
   User hannah
+Host *.frogstar.party
+  User hannah
 Host *
   User isapps
