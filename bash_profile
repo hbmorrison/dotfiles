@@ -77,7 +77,7 @@ esac
 # Connect to an ssh-agent.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|redhat)
+  chromeos|debian|redhat)
     AGENT_ENV=$HOME/.ssh/agent-env
     if [ -f "$AGENT_ENV" ]
     then
