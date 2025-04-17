@@ -46,7 +46,7 @@ case $SHELL_ENVIRONMENT in
     fi
     if [ ! -f /etc/apt/sources.list.d/docker.list ]
     then
-      echo "deb https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" \
+      echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" \
         | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
     fi
     if [ ! -f /usr/bin/dockerd ]
