@@ -16,6 +16,12 @@ Host nas-01
 Host nas-02
   HostName nas-02.home
   User root
+Host pbs-local
+  HostName pbs-local.home
+  User root
+Host pbs-remote
+  HostName pbs-remote.gerbil-koi.ts.net
+  User root
 Host docker-remote
   HostName docker-remote.frogstar.party
   User hannah
