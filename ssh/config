@@ -7,27 +7,3 @@ Host puppet-filestore
   User hmorris
 Host bambooapp-live
   User bamboo
-Host router
-  HostName router.home
-  User root
-Host nas-01
-  HostName nas-01.home
-  User root
-Host nas-02
-  HostName nas-02.home
-  User root
-Host pbs-local
-  HostName pbs-local.home
-  User root
-Host pbs-remote
-  HostName pbs-remote.gerbil-koi.ts.net
-  User root
-Host docker-remote
-  HostName docker-remote.frogstar.party
-  User hannah
-Host *.home
-  User hannah
-Host *.frogstar.party
-  User hannah
-Host *
-  User isapps
