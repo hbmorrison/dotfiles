@@ -42,7 +42,6 @@ esac
 
 # Create the non-root user if needed.
 
-grep "^${NON_ROOT_USER}:" /etc/passwd
 USER_EXISTS=`grep "^${NON_ROOT_USER}:" /etc/passwd`
 
 if [ "x${USER_EXISTS}" = "x" ]
