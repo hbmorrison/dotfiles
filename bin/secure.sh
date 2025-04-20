@@ -105,23 +105,23 @@ systemctl restart sshd
 
 while true
 do
-  read -s -p "${SCRIPT_NAME}: new password: " PASSWORD
+  read -s -p "${SCRIPT_NAME} new password: " PASSWORD
   echo
-  read -s -p "${SCRIPT_NAME}: retype new password: " RETYPE
+  read -s -p "${SCRIPT_NAME} retype new password: " RETYPE
   echo
   if [ "${PASSWORD}" != "${RETYPE}" ]
   then
-    echo "${SCRIPT_NAME}: sorry, passwords do not match."
+    echo "${SCRIPT_NAME} sorry, passwords do not match."
     continue
   fi
   if [ "${PASSWORD}" = "" ]
   then
-    echo "${SCRIPT_NAME}: sorry, password must not be empty."
+    echo "${SCRIPT_NAME} sorry, password must not be empty."
     continue
   fi
   if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
   then
-    echo "${SCRIPT_NAME}: password updated successfully"
+    echo "${SCRIPT_NAME} password updated successfully"
     break
   fi
 done
