@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Locate the base directory of the repository.
 
@@ -20,7 +20,13 @@ fi
 
 # Work out which OS and terminal is being used.
 
-source /etc/os-release 2> /dev/null
+if [ -f /etc/os-release ]
+then
+  . /etc/os-release
+else
+  echo "Error: /etc/os-release not found"
+  exit 1
+fi
 
 case $ID in
   debian)
@@ -36,9 +42,10 @@ esac
 
 # Create the non-root user if needed.
 
+grep "^${NON_ROOT_USER}:" /etc/passwd
 USER_EXISTS=`grep "^${NON_ROOT_USER}:" /etc/passwd`
 
-if [ "x${USER_EXISTS}" == "x" ]
+if [ "x${USER_EXISTS}" = "x" ]
 then
   case $ID in
     debian)
@@ -53,25 +60,55 @@ fi
 
 # Configure the user home directory.
 
-cp -r $BASE_DIR /home/$NON_ROOT_USER/dotfiles
+if [ ! -d /home/$NON_ROOT_USER/dotfiles ]
+then
+  cp -r $BASE_DIR /home/$NON_ROOT_USER/dotfiles
+  chown -R $NON_ROOT_USER:$NON_ROOT_USER /home/$NON_ROOT_USER/dotfiles
+fi
 
-#su -c "/home/$NON_ROOT_USER/dotfiles/bin/update.sh" $NON_ROOT_USER
-#
-## Secure sshd.
-#
-#sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
-#sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
-#sed -i "$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
-#systemctl restart sshd
+if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/update.sh ]
+then
+  echo "Error: dotfiles update script not found"
+  exit 1
+fi
 
-while ! passwd $NON_ROOT_USER
+su -c "/home/$NON_ROOT_USER/dotfiles/bin/update.sh" $NON_ROOT_USER
+
+# Secure sshd.
+
+TIMESTAMP=`date '+%Y%M%dT%H%M'`
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
+
+sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+sed -i "$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
+
+systemctl restart sshd
+
+# Set the user's password.
+
+while true
 do
-  echo "Error: password not set correctly - please try again"
+  read -s -p "New password: " PASSWORD
+  echo
+  read -s -p "Retype new password: " RETYPE
+  echo
+  if [ "${PASSWORD}" != "${RETYPE}" ]
+  then
+    echo "Sorry, passwords do not match."
+    continue
+  fi
+  if [ "${PASSWORD}" = "" ]
+  then
+    echo "Sorry, password must not be empty."
+    continue
+  fi
+  echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
 done

@@ -92,26 +92,6 @@ do
 
 done
 
-# Check that the authorized_keys file exists.
-
-AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
-
-if [ ! -f $AUTHORIZED_KEYS ]
-then
-  touch $AUTHORIZED_KEYS
-fi
-
-# Go through each ssh key and add it to authorized_keys if not present.
-
-while read -r TYPE KEY COMMENT
-do
-  if ! grep "${KEY}" $AUTHORIZED_KEYS > /dev/null 2>&1
-  then
-    echo "${COMMENT} added to authorized keys"
-    echo "${TYPE} ${KEY} ${COMMENT}" >> $AUTHORIZED_KEYS
-  fi
-done < "${BASE_DIR}/etc/authorized_keys"
-
 # Copy the gitconfig file, extracting and replacing the user name and email.
 
 if [ -r "${HOME}/.gitconfig" ]
