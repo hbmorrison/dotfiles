@@ -72,7 +72,15 @@ then
   exit 1
 fi
 
-su -c "/home/$NON_ROOT_USER/dotfiles/bin/update.sh" $NON_ROOT_USER
+su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" $NON_ROOT_USER
+
+if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/keys.sh ]
+then
+  echo "Error: dotfiles keys script not found"
+  exit 1
+fi
+
+su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" $NON_ROOT_USER
 
 # Secure sshd.
 
