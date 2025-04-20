@@ -34,9 +34,6 @@ case $ID in
   debian)
       apt update
       ;;
-  openwrt)
-      opkg update
-      ;;
   *)
     echo "Error: operating system not supported"
     exit 1
@@ -52,9 +49,6 @@ then
     debian)
       apt install -y sudo
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
-      ;;
-    openwrt)
-      opkg install shadow-useradd shadow-groupadd shadow-chpasswd shadow-su sudo
       ;;
   esac
 fi
@@ -119,10 +113,6 @@ case $ID in
     sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
     sed -i -e "\$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
     systemctl restart sshd
-    ;;
-  openwrt)
-    uci set dropbear.@dropbear[0].RootLogin='0'
-    uci set dropbear.@dropbear[0].PasswordAuth='0'
     ;;
 esac
 
