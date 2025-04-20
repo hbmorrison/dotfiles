@@ -101,7 +101,7 @@ su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
 case $ID in
   debian)
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
-    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
@@ -111,7 +111,7 @@ case $ID in
     sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
     sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
-    sed -i -e "\$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
+    sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
     systemctl restart sshd
     ;;
 esac
