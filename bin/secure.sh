@@ -10,6 +10,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 # Configuration.
 
 NON_ROOT_USER=hannah
+TIMESTAMP=`date '+%Y%M%dT%H%M'`
 
 # Check that this script is being run by root.
 
@@ -50,13 +51,32 @@ then
   case $ID in
     debian)
       apt install -y sudo
+      useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
       ;;
     openwrt)
       opkg install shadow-useradd sudo
       ;;
   esac
-  useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
 fi
+
+# Check that the sudo group exists.
+
+SUDO_GROUP_EXISTS=`grep "^sudo:" /etc/group`
+
+if [ "x${SUDO_GROUP_EXISTS}" = "x" ]
+then
+  groupadd sudo
+fi
+
+# Check that sudo rights are granted to the sudo group.
+
+cp /etc/sudoers /etc/sudoers.$TIMESTAMP
+
+sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers
+
+# Create the non-root user.
+
+useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
 
 # Configure the user home directory.
 
@@ -84,7 +104,6 @@ su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
 
 # Secure sshd.
 
-TIMESTAMP=`date '+%Y%M%dT%H%M'`
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
 
 sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
