@@ -8,7 +8,13 @@ BASE_DIR=$(dirname $BIN_DIR)
 
 # Check that the authorized_keys file exists.
 
-AUTHORIZED_KEYS="$HOME/.ssh/authorized_keys"
+SSH_DIR="$HOME/.ssh"
+AUTHORIZED_KEYS="$SSH_DIR/authorized_keys"
+
+if [ ! -d $SSH_DIR ]
+then
+  mkdir -m 0700 $SSH_DIR
+fi
 
 if [ ! -f $AUTHORIZED_KEYS ]
 then
