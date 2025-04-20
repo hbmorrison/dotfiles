@@ -5,6 +5,7 @@
 THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
 BASE_DIR=$(dirname $BIN_DIR)
+SCRIPT_NAME=$(basename $THIS_SCRIPT)
 
 # Configuration.
 
@@ -103,20 +104,23 @@ systemctl restart sshd
 
 while true
 do
-  read -s -p "New password: " PASSWORD
+  read -s -p "${SCRIPT_NAME}: new password: " PASSWORD
   echo
-  read -s -p "Retype new password: " RETYPE
+  read -s -p "${SCRIPT_NAME}: retype new password: " RETYPE
   echo
   if [ "${PASSWORD}" != "${RETYPE}" ]
   then
-    echo "Sorry, passwords do not match."
+    echo "${SCRIPT_NAME}: sorry, passwords do not match."
     continue
   fi
   if [ "${PASSWORD}" = "" ]
   then
-    echo "Sorry, password must not be empty."
+    echo "${SCRIPT_NAME}: sorry, password must not be empty."
     continue
   fi
-  echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
-  break
+  if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
+  then
+    echo "${SCRIPT_NAME}: password updated successfully"
+    break
+  fi
 done
