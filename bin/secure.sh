@@ -54,7 +54,7 @@ then
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
       ;;
     openwrt)
-      opkg install shadow-useradd shadow-groupadd shadow-chpasswd sudo
+      opkg install shadow-useradd shadow-groupadd shadow-chpasswd shadow-su sudo
       ;;
   esac
 fi
