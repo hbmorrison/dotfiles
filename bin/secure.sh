@@ -118,4 +118,5 @@ do
     continue
   fi
   echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
+  break
 done
