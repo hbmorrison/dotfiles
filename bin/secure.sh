@@ -54,7 +54,7 @@ then
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
       ;;
     openwrt)
-      opkg install shadow-useradd sudo
+      opkg install shadow-useradd shadow-groupadd shadow-chpasswd sudo
       ;;
   esac
 fi
@@ -104,21 +104,27 @@ su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
 
 # Secure sshd.
 
-cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
-
-sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
-sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
-sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
-sed -i -e "\$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
-
-systemctl restart sshd
+case $ID in
+  debian)
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
+    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+    sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
+    sed -i -e "\$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
+    systemctl restart sshd
+    ;;
+  openwrt)
+    uci set dropbear.@dropbear[0].RootLogin='0'
+    uci set dropbear.@dropbear[0].PasswordAuth='0'
+    ;;
+esac
 
 # Set the user's password.
 
