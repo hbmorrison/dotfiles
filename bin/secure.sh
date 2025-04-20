@@ -96,6 +96,7 @@ sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/s
 sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
 sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
 sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
 sed -i -e "\$a AllowUsers ${NON_ROOT_USER}" /etc/ssh/sshd_config
 
 systemctl restart sshd
