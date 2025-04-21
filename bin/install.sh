@@ -106,7 +106,7 @@ case $SHELL_ENVIRONMENT in
     BACKSLASHED_STARTUP_DIR="C:\\Users\\${USER:-$USERNAME}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
 
     NOT_INSTALLED_SHORTCUTS=""
-    for SHORTCUT_PS1 in $(ls -1 "${BASE_DIR}/etc/*.ps1")
+    for SHORTCUT_PS1 in $(ls -1 ${BASE_DIR}/etc/*.ps1)
     do
       SHORTCUT=$(basename $SHORTCUT_PS1 .ps1)
       echo -n "Checking if ${SHORTCUT} shortcut is installed ... "
