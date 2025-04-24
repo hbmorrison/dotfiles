@@ -68,6 +68,15 @@ cp /etc/sudoers /etc/sudoers.$TIMESTAMP
 
 sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers
 
+# Remove NOPASSWD from sudoers.d rules.
+
+for SUDO_ITEM in $(ls -1 /etc/sudoers.d/*)
+do
+  echo $SUDO_ITEM
+  sed -i -e '/NOPASSWD:/s/NOPASSWD://' $SUDO_ITEM
+done
+exit 1
+
 # Create the non-root user.
 
 useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER

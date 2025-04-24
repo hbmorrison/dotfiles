@@ -7,3 +7,7 @@ Host puppet-filestore
   User hmorris
 Host bambooapp-live
   User bamboo
+Host *.home
+  User hannah
+Host *.gerbil-koi.ts.net
+  User hannah
