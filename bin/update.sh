@@ -45,6 +45,10 @@ do
     etc) ;;
     etc/*) ;;
 
+    # Ignore environment files (for SMTP configuration).
+
+    *.env) ;;
+
     # Create other directories under the home directory.
 
     *)

@@ -1,0 +1,15 @@
+biff = no
+append_dot_mydomain = no
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+mynetworks = 127.0.0.0/8
+inet_interfaces = loopback-only
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_tls_security_level = may
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+header_size_limit = 4096000
+sender_canonical_classes = envelope_sender
+sender_canonical_maps = regexp:/etc/postfix/sender_canonical
