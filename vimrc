@@ -121,11 +121,15 @@ nnoremap <silent> <Leader>b :let &bg=(&bg=='light'?'dark':'light')<CR>
 
 " autoformat comments by default
 set textwidth=80
-set formatoptions=cqj
+set formatoptions=croqj/
 set nojoinspaces
 
 " make sure the formatoptions are applied to new buffers properly
-autocmd BufRead,BufNewFile * setlocal formatoptions=cqj
+autocmd BufRead,BufNewFile * setlocal formatoptions=croqj/
+
+" autoformat text as well as comments for various text files
+autocmd BufRead,BufNewFile *.md setlocal formatoptions+=tan
+autocmd BufRead,BufNewFile *.txt setlocal formatoptions+=tan
 
 " toggle paste mode with \v to avoid autoformatting if needed
 nnoremap <silent> <Leader>v :set paste!<CR>
@@ -352,7 +356,7 @@ augroup END
 augroup netrw_gitcommit_fo_fix
     autocmd!
     autocmd BufWinEnter *
-                \  if &ft != 'gitcommit'
-                \|     setlocal formatoptions+=a
+                \  if &ft == 'gitcommit'
+                \|     setlocal formatoptions-=a
                 \| endif
 augroup END
