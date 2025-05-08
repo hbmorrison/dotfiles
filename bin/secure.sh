@@ -22,16 +22,17 @@ fi
 
 # Work out which OS and terminal is being used.
 
-if [ -f /etc/os-release ]
-then
-  . /etc/os-release
-else
-  echo "Error: /etc/os-release not found"
-  exit 1
-fi
+case $(cat /proc/version 2>/dev/null) in
+  MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
+  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
+  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
+  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
+  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
+  *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
+esac
 
 case $ID in
-  debian)
+  debian|ubuntu)
       apt update
       ;;
   *)
@@ -46,7 +47,7 @@ USER_EXISTS=`grep "^${NON_ROOT_USER}:" /etc/passwd`
 if [ "x${USER_EXISTS}" = "x" ]
 then
   case $ID in
-    debian)
+    debian|ubuntu)
       apt install -y sudo
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
       ;;
@@ -108,7 +109,7 @@ su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
 # Secure sshd.
 
 case $ID in
-  debian)
+  debian|ubuntu)
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
