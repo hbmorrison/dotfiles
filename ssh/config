@@ -1,12 +1,8 @@
 AddressFamily inet
 GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
-Host pmaster
-  User hmorris
-Host puppet-filestore
-  User hmorris
-Host bambooapp-live
-  User bamboo
+Include config.github
+Include config.work
 Host *.home
   User hannah
 Host *.gerbil-koi.ts.net
