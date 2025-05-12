@@ -82,9 +82,9 @@ do
   sed -i -e '/NOPASSWD:/s/NOPASSWD://' $SUDO_ITEM
 done
 
-# Updaet the non-root user with the correct shell and groups.
+# Update the non-root user with the correct shell and groups.
 
-useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
+usermod -s /bin/bash -U -G users,sudo $NON_ROOT_USER
 
 # Configure the user home directory.
 
@@ -134,9 +134,9 @@ esac
 
 while true
 do
-  read -s -p "${SCRIPT_NAME} new password: " PASSWORD
+  read -s -p "${SCRIPT_NAME} new password for ${NON_ROOT_USER}: " PASSWORD
   echo
-  read -s -p "${SCRIPT_NAME} retype new password: " RETYPE
+  read -s -p "${SCRIPT_NAME} retype new password for ${NON_ROOT_USER}: " RETYPE
   echo
   if [ "${PASSWORD}" != "${RETYPE}" ]
   then
@@ -150,7 +150,7 @@ do
   fi
   if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
   then
-    echo "${SCRIPT_NAME} password updated successfully"
+    echo "${SCRIPT_NAME} password for ${NON_ROOT_USER} updated successfully"
     break
   fi
 done
