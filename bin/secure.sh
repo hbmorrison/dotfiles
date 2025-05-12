@@ -11,6 +11,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 
 NON_ROOT_USER=hannah
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
+DEBIAN_PACKAGES="bash-completion curl git git-flow vim"
 
 # Check that this script is being run by root.
 
@@ -40,6 +41,7 @@ esac
 case $SHELL_ENVIRONMENT in
   debian|ubuntu)
       apt update
+      apt install -y $DEBIAN_PACKAGES
       ;;
   *)
     echo "Error: operating system not supported"
@@ -54,7 +56,6 @@ if [ "x${USER_EXISTS}" = "x" ]
 then
   case $SHELL_ENVIRONMENT in
     debian|ubuntu)
-      apt install -y sudo
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
       ;;
   esac
