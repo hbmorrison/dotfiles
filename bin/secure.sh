@@ -29,6 +29,12 @@ case $(cat /proc/version 2>/dev/null) in
   *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
   *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
+  *aarch64-linux-gcc*)
+    . /etc/os-release
+    case $ID in
+      debian)                SHELL_ENVIRONMENT="debian" ;;
+    esac
+    ;;
 esac
 
 case $SHELL_ENVIRONMENT in
