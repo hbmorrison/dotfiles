@@ -3,6 +3,8 @@ GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
 Include config.github
 Include config.work
+Host router.home
+  User root
 Host *.home
   User hannah
 Host *.gerbil-koi.ts.net
