@@ -4,3 +4,9 @@ Host wiki-go-tailscale.github.com
     IdentityFile ~/.ssh/id_ed25519.wiki-go-tailscale
     IdentitiesOnly yes
     AddKeysToAgent yes
+Host unifi-tailscale.github.com
+    Hostname github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519.unifi-tailscale
+    IdentitiesOnly yes
+    AddKeysToAgent yes
