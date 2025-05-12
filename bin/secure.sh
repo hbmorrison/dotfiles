@@ -31,7 +31,7 @@ case $(cat /proc/version 2>/dev/null) in
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
 
-case $ID in
+case $SHELL_ENVIRONMENT in
   debian|ubuntu)
       apt update
       ;;
@@ -46,7 +46,7 @@ USER_EXISTS=`grep "^${NON_ROOT_USER}:" /etc/passwd`
 
 if [ "x${USER_EXISTS}" = "x" ]
 then
-  case $ID in
+  case $SHELL_ENVIRONMENT in
     debian|ubuntu)
       apt install -y sudo
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
@@ -108,7 +108,7 @@ su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
 
 # Secure sshd.
 
-case $ID in
+case $SHELL_ENVIRONMENT in
   debian|ubuntu)
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
