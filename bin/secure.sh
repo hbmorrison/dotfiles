@@ -79,7 +79,6 @@ sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /e
 
 for SUDO_ITEM in $(ls -1 /etc/sudoers.d/*)
 do
-  echo $SUDO_ITEM
   sed -i -e '/NOPASSWD:/s/NOPASSWD://' $SUDO_ITEM
 done
 exit 1
