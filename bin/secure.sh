@@ -81,9 +81,8 @@ for SUDO_ITEM in $(ls -1 /etc/sudoers.d/*)
 do
   sed -i -e '/NOPASSWD:/s/NOPASSWD://' $SUDO_ITEM
 done
-exit 1
 
-# Create the non-root user.
+# Updaet the non-root user with the correct shell and groups.
 
 useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
 
