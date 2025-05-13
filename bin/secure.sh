@@ -11,6 +11,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 
 NON_ROOT_USER=hannah
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
+DEBIAN_PACKAGES="bash-completion curl git git-flow vim"
 
 # Check that this script is being run by root.
 
@@ -22,17 +23,25 @@ fi
 
 # Work out which OS and terminal is being used.
 
-if [ -f /etc/os-release ]
-then
-  . /etc/os-release
-else
-  echo "Error: /etc/os-release not found"
-  exit 1
-fi
+case $(cat /proc/version 2>/dev/null) in
+  MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
+  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
+  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
+  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
+  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
+  *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
+  *aarch64-linux-gcc*)
+    . /etc/os-release
+    case $ID in
+      debian)                SHELL_ENVIRONMENT="debian" ;;
+    esac
+    ;;
+esac
 
-case $ID in
-  debian)
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu)
       apt update
+      apt install -y $DEBIAN_PACKAGES
       ;;
   *)
     echo "Error: operating system not supported"
@@ -45,9 +54,8 @@ USER_EXISTS=`grep "^${NON_ROOT_USER}:" /etc/passwd`
 
 if [ "x${USER_EXISTS}" = "x" ]
 then
-  case $ID in
-    debian)
-      apt install -y sudo
+  case $SHELL_ENVIRONMENT in
+    debian|ubuntu)
       useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
       ;;
   esac
@@ -68,9 +76,16 @@ cp /etc/sudoers /etc/sudoers.$TIMESTAMP
 
 sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers
 
-# Create the non-root user.
+# Remove NOPASSWD from sudoers.d rules.
 
-useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
+for SUDO_ITEM in $(ls -1 /etc/sudoers.d/*)
+do
+  sed -i -e '/NOPASSWD:/s/NOPASSWD://' $SUDO_ITEM
+done
+
+# Update the non-root user with the correct shell and groups.
+
+usermod -s /bin/bash -U -G users,sudo $NON_ROOT_USER
 
 # Configure the user home directory.
 
@@ -98,15 +113,15 @@ su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
 
 # Secure sshd.
 
-case $ID in
-  debian)
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu)
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
@@ -120,9 +135,9 @@ esac
 
 while true
 do
-  read -s -p "${SCRIPT_NAME} new password: " PASSWORD
+  read -s -p "${SCRIPT_NAME} new password for ${NON_ROOT_USER}: " PASSWORD
   echo
-  read -s -p "${SCRIPT_NAME} retype new password: " RETYPE
+  read -s -p "${SCRIPT_NAME} retype new password for ${NON_ROOT_USER}: " RETYPE
   echo
   if [ "${PASSWORD}" != "${RETYPE}" ]
   then
@@ -136,7 +151,7 @@ do
   fi
   if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
   then
-    echo "${SCRIPT_NAME} password updated successfully"
+    echo "${SCRIPT_NAME} password for ${NON_ROOT_USER} updated successfully"
     break
   fi
 done

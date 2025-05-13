@@ -33,7 +33,7 @@ case $(cat /proc/version 2>/dev/null) in
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
   *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
-  *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
+  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
 
@@ -50,10 +50,35 @@ case $SHELL_ENVIRONMENT in
     ;;
 esac
 
+# Check that WSL2 is configured correctly.
+
+case $SHELL_ENVIRONMENT in
+  wsl)
+
+    echo -n "Checking if WSL is configured correctly... "
+    if ! diff $BASE_DIR/etc/wsl.conf /etc/wsl.conf > /dev/null 2>&1
+    then
+      echo "No"
+      $SUDO cp $BASE_DIR/etc/wsl.conf /etc/wsl.conf
+      echo
+      echo " 1. Hit Enter to restart WSL"
+      echo " 2. Accept the UAC for Powershell"
+      echo " 3. Open the Terminal app again"
+      echo " 4. Re-run bin/$(basename $0)"
+      echo
+      read -s
+      echo "Restarting..."
+      powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl --shutdown\""
+    else
+      echo "Yes"
+    fi
+    ;;
+esac
+
 # Update and install required packages.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|wsl|debian)
+  chromeos|wsl|debian|ubuntu)
     $SUDO apt-get update
     $SUDO apt-get -y dist-upgrade
     $SUDO apt-get install --no-install-recommends -y $SHELL_PACKAGES $NETWORK_PACKAGES
@@ -66,33 +91,36 @@ case $SHELL_ENVIRONMENT in
     TO_BE_INSTALLED=""
     for PACKAGE in $CHOCO_PACKAGES
     do
-      echo -n "Checking if $PACKAGE is installed ... "
+      echo -n "Checking if $PACKAGE is installed... "
       INSTALLED=`$CHOCO info -l -r $PACKAGE`
       if [ "${INSTALLED}" = "" ]
       then
-        echo "no"
+        echo "No"
         TO_BE_INSTALLED="${PACKAGE} ${TO_BE_INSTALLED}"
       else
-        echo "yes"
+        echo "Yes"
       fi
     done
     if [ "${TO_BE_INSTALLED}" != "" ]
     then
-      echo "Installing ${TO_BE_INSTALLED}"
+      echo -n "Installing ${TO_BE_INSTALLED}... "
       powershell Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco install -y $TO_BE_INSTALLED\""
+      echo "Done"
     fi
-    echo "Checking for updates"
+    echo -n "Checking for updates..."
     powershell Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco upgrade all -y\""
+    echo "Done"
     ;;
 esac
 
 # Set environment variables to use Windows OpenSSH.
 
 case $SHELL_ENVIRONMENT in
-  gitbash)
-    echo "Setting environment variables for OpenSSH"
-    PowerShell -Command "[System.Environment]::SetEnvironmentVariable('SSH_AUTH_SOCK','\\\\.\\pipe\\openssh-ssh-agent','User')"
-    PowerShell -Command "[System.Environment]::SetEnvironmentVariable('GIT_SSH_COMMAND','C:/Windows/System32/OpenSSH/ssh.exe','User')"
+  gitbash|wsl)
+    echo -n "Setting environment variables for OpenSSH... "
+    powershell.exe -Command "[System.Environment]::SetEnvironmentVariable('SSH_AUTH_SOCK','\\\\.\\pipe\\openssh-ssh-agent','User')"
+    powershell.exe -Command "[System.Environment]::SetEnvironmentVariable('GIT_SSH_COMMAND','C:/Windows/System32/OpenSSH/ssh.exe','User')"
+    echo "Done"
     ;;
 esac
 
@@ -109,21 +137,22 @@ case $SHELL_ENVIRONMENT in
     for SHORTCUT_PS1 in $(ls -1 ${BASE_DIR}/etc/*.ps1)
     do
       SHORTCUT=$(basename $SHORTCUT_PS1 .ps1)
-      echo -n "Checking if ${SHORTCUT} shortcut is installed ... "
+      echo -n "Checking if ${SHORTCUT} shortcut is installed... "
       if [ ! -f "${STARTUP_DIR}/${SHORTCUT}.lnk" ]
       then
-        echo "no"
+        echo "No"
         NOT_INSTALLED_SHORTCUTS="${NOT_INSTALLED_SHORTCUTS} ${SHORTCUT}"
       else
-        echo "yes"
+        echo "Yes"
       fi
     done
     for SHORTCUT in $NOT_INSTALLED_SHORTCUTS
     do
-      echo "Installing ${SHORTCUT} startup shortcut"
+      echo -n "Installing ${SHORTCUT} startup shortcut... "
       cp -f "${BASE_DIR}/etc/${SHORTCUT_PS1}" $WINDOWS_HOME_DIR
       powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; ${BACKSLASHED_HOME_DIR}\\${SHORTCUT_PS1}"
       rm -f "${WINDOWS_HOME_DIR}/${SHORTCUT_PS1}"
+      echo "Done"
     done
     ;;
 esac

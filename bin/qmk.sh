@@ -30,12 +30,13 @@ sudo apt-get install --no-install-recommends -y $QMK_DEPENDENCIES
 
 # Install QMK.
 
-echo -n "Checking if QMK is installed ... "
+echo -n "Checking if QMK is installed... "
 if [ -r "${HOME}/.local/bin/qmk" ]
 then
-  echo "yes"
+  echo "Yes"
 else
-  echo "no"
-  echo "Installing QMK"
+  echo "No"
+  echo -n "Installing QMK... "
   pipx install qmk 2> /dev/null
+  echo "Done"
 fi

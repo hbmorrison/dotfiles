@@ -206,7 +206,7 @@ fi
 # Shell aliases.
 
 alias c=clear
-alias ls="LC_COLLATE=C command ls -F --color=auto"
+alias ls="command ls -F --color=auto"
 alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
 
 # Eyaml aliases for Puppet.

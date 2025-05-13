@@ -60,17 +60,11 @@ esac
 # Start docker service.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|debian|ubuntu)
+  chromeos|wsl|debian|ubuntu)
     if ! docker info > /dev/null 2>&1
     then
       $SUDO systemctl start docker
       $SUDO systemctl enable docker
-    fi
-    ;;
-  wsl)
-    if ! service docker status > /dev/null 2>&1
-    then
-      $SUDO service docker start
     fi
     ;;
 esac
@@ -79,6 +73,7 @@ esac
 
 if ! groups "${USER:-$USERNAME}" | grep " docker" > /dev/null 2>&1
 then
-  echo "Adding user ${USER:-$USERNAME} to docker group"
+  echo -n "Adding user ${USER:-$USERNAME} to docker group... "
   $SUDO usermod -aG docker "${USER:-$USERNAME}"
+  echo "Done"
 fi
