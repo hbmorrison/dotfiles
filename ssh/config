@@ -9,3 +9,5 @@ Host *.home
   User hannah
 Host *.gerbil-koi.ts.net
   User hannah
+Host *.frogstar.party
+  User hannah
