@@ -95,13 +95,13 @@ then
   chown -R $NON_ROOT_USER:$NON_ROOT_USER /home/$NON_ROOT_USER/dotfiles
 fi
 
-if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/update.sh ]
+if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/dotfiles.sh ]
 then
-  echo "Error: dotfiles update script not found"
+  echo "Error: dotfiles dotfiles script not found"
   exit 1
 fi
 
-su -c "/home/$NON_ROOT_USER/dotfiles/bin/update.sh" - $NON_ROOT_USER
+su -c "/home/$NON_ROOT_USER/dotfiles/bin/dotfiles.sh" - $NON_ROOT_USER
 
 if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/keys.sh ]
 then
