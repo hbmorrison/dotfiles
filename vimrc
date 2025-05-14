@@ -32,10 +32,11 @@ function SetHighlight()
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=242"
     execute "highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=" . g:darkbg
-    execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=203"
+    execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=196"
+    execute "highlight MatchParen term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=196"
     execute "highlight SignColumn term=NONE cterm=NONE ctermbg=" . g:darkbg
     execute "highlight EndOfBuffer term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkbg
-    execute "highlight LineNr term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=242"
+    execute "highlight LineNr term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=244"
     execute "highlight CursorLineNr term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=111"
     execute "highlight CursorLine term=NONE cterm=NONE ctermbg=" . g:darkbg
     execute "highlight StatusLine term=NONE cterm=NONE ctermbg=242 ctermfg=" . g:darkbg
@@ -64,12 +65,14 @@ function SetHighlight()
     highlight String term=NONE cterm=NONE ctermfg=37
     highlight Number term=NONE cterm=NONE ctermfg=37
     highlight vimSynType term=NONE cterm=NONE ctermfg=37
-    highlight Special term=NONE cterm=NONE ctermfg=196
+    highlight Special term=NONE cterm=NONE ctermfg=245
+    highlight Noise term=NONE cterm=NONE ctermfg=245
   else
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
     execute "highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=" . g:lightfg
-    execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=203"
+    execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=196"
+    execute "highlight MatchParen term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=196"
     execute "highlight SignColumn term=NONE cterm=NONE ctermbg=" . g:lightbg
     execute "highlight EndOfBuffer term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightbg
     execute "highlight LineNr term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
@@ -101,7 +104,8 @@ function SetHighlight()
     highlight String term=NONE cterm=NONE ctermfg=37
     highlight Number term=NONE cterm=NONE ctermfg=37
     highlight vimSynType term=NONE cterm=NONE ctermfg=37
-    highlight Special term=NONE cterm=NONE ctermfg=160
+    highlight Special term=NONE cterm=NONE ctermfg=245
+    highlight Noise term=NONE cterm=NONE ctermfg=245
   endif
 endfunction
 autocmd VimEnter * call SetHighlight()
