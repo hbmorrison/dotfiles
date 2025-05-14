@@ -163,6 +163,6 @@ case $SHELL_ENVIRONMENT in
   wsl) $SUDO hwclock -s ;;
 esac
 
-# Run the dotfiles update.
+# Run the dotfiles shell setup.
 
-source $BASE_DIR/bin/update.sh
+source $BASE_DIR/bin/shell.sh
