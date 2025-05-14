@@ -11,7 +11,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 
 NON_ROOT_USER=hannah
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
-DEBIAN_PACKAGES="bash-completion curl git git-flow vim"
+DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow vim"
 
 # Check that this script is being run by root.
 
@@ -47,6 +47,52 @@ case $SHELL_ENVIRONMENT in
     echo "Error: operating system not supported"
     exit 1
 esac
+
+# Secure sshd.
+
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu)
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
+    # Keep root password logins enabled on Proxmox VE for cluster management.
+    if grep /etc/pve /proc/mounts
+    then
+      sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+    else
+      sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+    fi
+    sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+    sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
+    sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
+    systemctl restart sshd
+    ;;
+esac
+
+# Configure fail2ban for sshd.
+
+echo > /etc/fail2ban/jail.local <<SSHD_JAIL
+[sshd]
+enabled = true
+banaction = iptables-multiport
+SSHD_JAIL
+
+systemctl enable fail2ban
+
+# Configure ufw on non-Proxmox hosts.
+
+if ! grep /etc/pve /proc/mounts
+then
+  apt install -y ufw
+  ufw allow 22/tcp     # allow ssh
+  ufw allow 41641/udp  # allow direct tailscale connections
+  ufw enable
+fi
 
 # Create the non-root user if needed.
 
@@ -110,32 +156,6 @@ then
 fi
 
 su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
-
-# Secure sshd.
-
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu)
-    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
-    # Keep root password logins enabled on Proxmox VE for cluster management.
-    if grep /etc/pve /proc/mounts
-    then
-      sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-    else
-      sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
-    fi
-    sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
-    sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
-    sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
-    systemctl restart sshd
-    ;;
-esac
 
 # Set the user's password.
 
