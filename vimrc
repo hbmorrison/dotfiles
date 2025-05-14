@@ -32,6 +32,7 @@ function SetHighlight()
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=242"
     execute "highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=" . g:darkbg
+    execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=203"
     execute "highlight SignColumn term=NONE cterm=NONE ctermbg=" . g:darkbg
     execute "highlight EndOfBuffer term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkbg
     execute "highlight LineNr term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=242"
@@ -68,6 +69,7 @@ function SetHighlight()
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
     execute "highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=" . g:lightfg
+    execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=203"
     execute "highlight SignColumn term=NONE cterm=NONE ctermbg=" . g:lightbg
     execute "highlight EndOfBuffer term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightbg
     execute "highlight LineNr term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
