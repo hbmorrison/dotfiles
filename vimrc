@@ -162,8 +162,8 @@ set wildmode=longest:full,full
 set wildcharm=<Tab>
 set path=.,**
 
-" partially enable mouse
-set mouse=nv
+" disable mouse
+set mouse=
 
 " automatically close the quickfix window when a file is selected with Enter
 :autocmd FileType qf nnoremap <buffer> <CR> <CR>:cclose<CR>
@@ -219,11 +219,8 @@ set statusline+=%{b:git_branch}
 set statusline+=%{g:space}
 set statusline+=%t
 set statusline+=%{g:space}
-set statusline+=%{&ff}
-set statusline+=%{g:space}
-set statusline+=[%{&fileencoding?&fileencoding:&encoding}]
-set statusline+=%{&paste?'\ [pst]':''}
-set statusline+=%{g:space}
+set statusline+=[%{mode()}]
+set statusline+=%{&paste?'[paste]':''}
 set statusline+=%m%r%h
 set statusline+=%=
 set statusline+=%<%{b:git_root}
@@ -316,6 +313,7 @@ let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetC
 " FIXES
 
 " WSL yank support
+set clipboard=unnamed
 let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
 if executable(s:clip)
     augroup WSLYank
