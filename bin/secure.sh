@@ -10,6 +10,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 # Configuration.
 
 NON_ROOT_USER=hannah
+NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/.dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
 DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow vim"
 
@@ -153,27 +154,27 @@ usermod -s /bin/bash -U -G users,sudo $NON_ROOT_USER
 
 # Configure the user home directory.
 
-if [ ! -d /home/$NON_ROOT_USER/dotfiles ]
+if [ ! -d $NON_ROOT_DOTFILES ]
 then
-  cp -r $BASE_DIR /home/$NON_ROOT_USER/dotfiles
-  chown -R $NON_ROOT_USER:$NON_ROOT_USER /home/$NON_ROOT_USER/dotfiles
+  cp -r $BASE_DIR $NON_ROOT_DOTFILES
+  chown -R $NON_ROOT_USER:$NON_ROOT_USER $NON_ROOT_DOTFILES
 fi
 
-if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/dotfiles.sh ]
+if [ ! -x $NON_ROOT_DOTFILES/bin/dotfiles.sh ]
 then
   echo "Error: dotfiles dotfiles script not found"
   exit 1
 fi
 
-su -c "/home/$NON_ROOT_USER/dotfiles/bin/dotfiles.sh" - $NON_ROOT_USER
+su -c "$NON_ROOT_DOTFILES/bin/dotfiles.sh" - $NON_ROOT_USER
 
-if [ ! -x /home/$NON_ROOT_USER/dotfiles/bin/keys.sh ]
+if [ ! -x $NON_ROOT_DOTFILES/bin/keys.sh ]
 then
   echo "Error: dotfiles keys script not found"
   exit 1
 fi
 
-su -c "/home/$NON_ROOT_USER/dotfiles/bin/keys.sh" - $NON_ROOT_USER
+su -c "$NON_ROOT_DOTFILES/bin/keys.sh" - $NON_ROOT_USER
 
 # Set the user's password.
 
