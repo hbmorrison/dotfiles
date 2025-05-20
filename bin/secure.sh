@@ -12,7 +12,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/.dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
-DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow python3-systemd sudo vim"
+DEBIAN_PACKAGES="bash-completion curl fail2ban git python3-systemd sudo vim"
 
 # Check that this script is being run by root.
 
