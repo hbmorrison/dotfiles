@@ -111,6 +111,8 @@ then
   cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
   cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
   systemctl enable fail2ban
+  systemctl restart fail2ban
+  journalctl -u fail2ban -n 10
 fi
 
 # Create the non-root user if needed.
