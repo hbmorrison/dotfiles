@@ -12,7 +12,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/.dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
-DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow vim"
+DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow sudo vim"
 
 # Check that this script is being run by root.
 
@@ -126,16 +126,7 @@ then
   esac
 fi
 
-# Check that the sudo group exists.
-
-SUDO_GROUP_EXISTS=`grep "^sudo:" /etc/group`
-
-if [ "x${SUDO_GROUP_EXISTS}" = "x" ]
-then
-  groupadd sudo
-fi
-
-# Check that sudo rights are granted to the sudo group.
+# Check that sudo rights are granted to the sudo group without NOPASSWD.
 
 cp /etc/sudoers /etc/sudoers.$TIMESTAMP
 
@@ -178,25 +169,28 @@ su -c "$NON_ROOT_DOTFILES/bin/keys.sh" - $NON_ROOT_USER
 
 # Set the user's password.
 
-while true
-do
-  read -s -p "${SCRIPT_NAME} new password for ${NON_ROOT_USER}: " PASSWORD
-  echo
-  read -s -p "${SCRIPT_NAME} retype new password for ${NON_ROOT_USER}: " RETYPE
-  echo
-  if [ "${PASSWORD}" != "${RETYPE}" ]
-  then
-    echo "${SCRIPT_NAME} sorry, passwords do not match."
-    continue
-  fi
-  if [ "${PASSWORD}" = "" ]
-  then
-    echo "${SCRIPT_NAME} sorry, password must not be empty."
-    continue
-  fi
-  if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
-  then
-    echo "${SCRIPT_NAME} password for ${NON_ROOT_USER} updated successfully"
-    break
-  fi
-done
+if [ `grep $NON_ROOT_USER /etc/shadow | cut -d: -f2 | wc -c` -lt 3 ]
+then
+  while true
+  do
+    read -s -p "${SCRIPT_NAME} new password for ${NON_ROOT_USER}: " PASSWORD
+    echo
+    read -s -p "${SCRIPT_NAME} retype new password for ${NON_ROOT_USER}: " RETYPE
+    echo
+    if [ "${PASSWORD}" != "${RETYPE}" ]
+    then
+      echo "${SCRIPT_NAME} sorry, passwords do not match."
+      continue
+    fi
+    if [ "${PASSWORD}" = "" ]
+    then
+      echo "${SCRIPT_NAME} sorry, password must not be empty."
+      continue
+    fi
+    if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
+    then
+      echo "${SCRIPT_NAME} password for ${NON_ROOT_USER} updated successfully"
+      break
+    fi
+  done
+fi
