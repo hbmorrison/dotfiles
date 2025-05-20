@@ -4,12 +4,12 @@ backend = systemd
 ignoreip = 127.0.0.1/8 ::1/128 100.64.0.0/10 fd7a:115c:a1e0::/48
 banaction = nftables-multiport
 chain = input
-bantime = 15m
 findtime = 900
 maxretry = 3
+bantime = 15m
 bantime.increment = true
 bantime.factor = 2
-bantime.rndtime = 30m
+bantime.rndtime = 5m
 bantime.maxtime = 24h
 dbpurgeage = 30d
 
