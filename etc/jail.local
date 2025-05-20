@@ -1,5 +1,7 @@
 [DEFAULT]
 backend = systemd
+banaction = nftables-multiport
+chain = input
 ignoreip = 127.0.0.1/8 ::1/128 100.64.0.0/10 fd7a:115c:a1e0::/48
 maxretry = 3
 findtime = 613
