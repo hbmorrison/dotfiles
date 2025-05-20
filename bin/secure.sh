@@ -12,7 +12,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/.dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
-DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow sudo vim"
+DEBIAN_PACKAGES="bash-completion curl fail2ban git git-flow python3-systemd sudo vim"
 
 # Check that this script is being run by root.
 
@@ -108,8 +108,8 @@ fi
 
 if ! grep /etc/pve /proc/mounts
 then
+  cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
   cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
-  cat $BASE_DIR/etc/jail.local.sshd >> /etc/fail2ban/jail.local
   systemctl enable fail2ban
 fi
 
