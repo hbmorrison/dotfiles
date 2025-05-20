@@ -52,37 +52,46 @@ esac
 
 case $SHELL_ENVIRONMENT in
   debian|ubuntu)
+
+    # Keep a backup copy of the sshd_config file.
+
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
-    # Keep root password logins enabled on Proxmox VE for cluster management.
+
+    # Keep root password logins and TCP forwarding enabled on Proxmox VE for cluster management.
+
     if grep /etc/pve /proc/mounts
     then
       sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+      sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
     else
       sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
+      sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
     fi
+
+    # Lock down authentication and forwarding.
+
     sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+
+    # Ensure that authorized_keys will be read.
+
     sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+
+    # Only allow root and the non-root user access.
+
     sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
     sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
+
+    # Restart sshd to pick up the changes.
+
     systemctl restart sshd
     ;;
+
 esac
-
-# Configure fail2ban for sshd.
-
-echo > /etc/fail2ban/jail.local <<SSHD_JAIL
-[sshd]
-enabled = true
-banaction = iptables-multiport
-SSHD_JAIL
-
-systemctl enable fail2ban
 
 # Configure ufw on non-Proxmox hosts.
 
@@ -92,6 +101,15 @@ then
   ufw allow 22/tcp     # allow ssh
   ufw allow 41641/udp  # allow direct tailscale connections
   ufw enable
+fi
+
+# Configure fail2ban for sshd on non-Proxmox hosts.
+
+if ! grep /etc/pve /proc/mounts
+then
+  cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
+  cat $BASE_DIR/etc/jail.local.sshd >> /etc/fail2ban/jail.local
+  systemctl enable fail2ban
 fi
 
 # Create the non-root user if needed.
