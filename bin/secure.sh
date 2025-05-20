@@ -101,7 +101,7 @@ then
   apt install -y ufw
   ufw allow 22/tcp     # allow ssh
   ufw allow 41641/udp  # allow direct tailscale connections
-  ufw enable
+  ufw --force enable
 fi
 
 # Configure fail2ban for sshd on non-Proxmox hosts.
