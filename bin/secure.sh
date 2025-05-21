@@ -13,6 +13,14 @@ NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/.dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
 DEBIAN_PACKAGES="bash-completion curl fail2ban git python3-systemd sudo vim"
+ADMIN_GROUPS="sudo,users"
+
+# Add docker group to the list of admin groups if it exists.
+
+if grep ^docker: /etc/group > /dev/null 2>&1
+then
+  ADMIN_GROUPS="${ADMIN_GROUPS},docker"
+fi
 
 # Check that this script is being run by root.
 
@@ -60,7 +68,7 @@ case $SHELL_ENVIRONMENT in
 
     # Keep root password logins and TCP forwarding enabled on Proxmox VE for cluster management.
 
-    if grep /etc/pve /proc/mounts
+    if grep /etc/pve /proc/mounts > /dev/null 2>&1
     then
       sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
       sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
@@ -94,19 +102,23 @@ case $SHELL_ENVIRONMENT in
 
 esac
 
-# Configure ufw on non-Proxmox hosts.
+# Only configure ufw on non-Proxmox / non-Docker hosts.
 
-if ! grep /etc/pve /proc/mounts
+if ! grep /etc/pve /proc/mounts > /dev/null 2>&1
 then
-  apt install -y ufw
-  ufw allow 22/tcp     # allow ssh
-  ufw allow 41641/udp  # allow direct tailscale connections
-  ufw --force enable
+  systemctl status docker.service >/dev/null 2>&1
+  if [ $? -eq 4 ]
+  then
+    apt install -y ufw
+    ufw allow 22/tcp     # allow ssh
+    ufw allow 41641/udp  # allow direct tailscale connections
+    ufw --force enable
+  fi
 fi
 
 # Configure fail2ban for sshd on non-Proxmox hosts.
 
-if ! grep /etc/pve /proc/mounts
+if ! grep /etc/pve /proc/mounts > /dev/null 2>&1
 then
   cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
   cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
@@ -117,13 +129,11 @@ fi
 
 # Create the non-root user if needed.
 
-USER_EXISTS=`grep "^${NON_ROOT_USER}:" /etc/passwd`
-
-if [ "x${USER_EXISTS}" = "x" ]
+if ! grep ^$NON_ROOT_USER: /etc/passwd`> /dev/null 2>&1
 then
   case $SHELL_ENVIRONMENT in
     debian|ubuntu)
-      useradd -s /bin/bash -U -G users,sudo -m $NON_ROOT_USER
+      useradd -s /bin/bash -U -G $ADMIN_GROUPS -m $NON_ROOT_USER
       ;;
   esac
 fi
@@ -143,7 +153,7 @@ done
 
 # Update the non-root user with the correct shell and groups.
 
-usermod -s /bin/bash -U -G users,sudo $NON_ROOT_USER
+usermod -s /bin/bash -U -G $ADMIN_GROUPS $NON_ROOT_USER
 
 # Configure the user home directory.
 
@@ -171,7 +181,7 @@ su -c "$NON_ROOT_DOTFILES/bin/keys.sh" - $NON_ROOT_USER
 
 # Set the user's password.
 
-if [ `grep $NON_ROOT_USER /etc/shadow | cut -d: -f2 | wc -c` -lt 3 ]
+if [ `grep ^$NON_ROOT_USER: /etc/shadow 2> /dev/null | cut -d: -f2 | wc -c` -lt 3 ]
 then
   while true
   do
