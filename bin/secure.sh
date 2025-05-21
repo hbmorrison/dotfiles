@@ -129,7 +129,7 @@ fi
 
 # Create the non-root user if needed.
 
-if ! grep ^$NON_ROOT_USER: /etc/passwd`> /dev/null 2>&1
+if ! grep ^$NON_ROOT_USER: /etc/passwd > /dev/null 2>&1
 then
   case $SHELL_ENVIRONMENT in
     debian|ubuntu)
