@@ -161,6 +161,8 @@ if [ ! -d $NON_ROOT_DOTFILES ]
 then
   cp -r $BASE_DIR $NON_ROOT_DOTFILES
   chown -R $NON_ROOT_USER:$NON_ROOT_USER $NON_ROOT_DOTFILES
+else
+  su -c "git -C $NON_ROOT_DOTFILES pull" - $NON_ROOT_USER
 fi
 
 if [ ! -x $NON_ROOT_DOTFILES/bin/dotfiles.sh ]
