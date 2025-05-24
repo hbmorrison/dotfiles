@@ -133,10 +133,6 @@ set nojoinspaces
 " make sure the formatoptions are applied to new buffers properly
 autocmd BufRead,BufNewFile * setlocal formatoptions=croqj/
 
-" autoformat text as well as comments for various text files
-autocmd BufRead,BufNewFile *.md setlocal formatoptions+=tan
-autocmd BufRead,BufNewFile *.txt setlocal formatoptions+=tan
-
 " toggle paste mode with \v to avoid autoformatting if needed
 nnoremap <silent> <Leader>v :set paste!<CR>
 
