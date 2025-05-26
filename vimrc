@@ -363,7 +363,7 @@ autocmd BufEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&buftype"
 " to be hidden to avoid save warnings
 set nohidden
 autocmd FileType netrw setl bufhidden=wipe
-augroup netrw_buf_hidden_fix
+augroup netrw_bufhidden_fix
     autocmd!
     autocmd BufWinEnter *
                 \  if &ft != 'netrw'
@@ -372,7 +372,7 @@ augroup netrw_buf_hidden_fix
 augroup END
 
 " fix git commit buffers not working with paragraph formatting
-augroup netrw_gitcommit_fo_fix
+augroup gitcommit_fo_fix
     autocmd!
     autocmd BufWinEnter *
                 \  if &ft == 'gitcommit'
