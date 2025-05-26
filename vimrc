@@ -134,7 +134,22 @@ set nojoinspaces
 autocmd BufRead,BufNewFile * setlocal formatoptions=croqj/
 
 " toggle paste mode with \v to avoid autoformatting if needed
-nnoremap <silent> <Leader>v :set paste!<CR>
+function! TogglePastemode()
+    if !exists("b:pastemode_on") || b:pastemode_on
+        set signcolumn=no
+        set mouse=
+        set nonumber
+        set paste
+        let b:pastemode_on=0
+    else
+        set signcolumn=yes
+        set mouse=a
+        set number
+        set nopaste
+        let b:pastemode_on=1
+    endif
+endfunction
+nnoremap <silent> <Leader>v :call TogglePastemode()<cr>
 
 " enable line numbers
 set number
@@ -158,8 +173,8 @@ set wildmode=longest:full,full
 set wildcharm=<Tab>
 set path=.,**
 
-" partially enable mouse
-set mouse=nv
+" enable mouse
+set mouse=a
 
 " automatically close the quickfix window when a file is selected with Enter
 :autocmd FileType qf nnoremap <buffer> <CR> <CR>:cclose<CR>
@@ -218,7 +233,7 @@ set statusline+=%{g:space}
 set statusline+=%{&ff}
 set statusline+=%{g:space}
 set statusline+=[%{&fileencoding?&fileencoding:&encoding}]
-set statusline+=%{&paste?'\ [pst]':''}
+set statusline+=%{&paste?'\ [paste]':''}
 set statusline+=%{g:space}
 set statusline+=%m%r%h
 set statusline+=%=
@@ -267,7 +282,9 @@ catch /:E518:/
 endtry
 set updatetime=100
 nmap <Leader>n <Plug>(GitGutterNextHunk)
+nmap <Leader>p <Plug>(GitGutterPrevHunk)
 nmap <Leader>a <Plug>(GitGutterStageHunk)
+nmap <Leader>u <Plug>(GitGutterUndoHunk)
 nmap <Leader>hs <Nop>
 nmap <Leader>hu <Nop>
 
@@ -278,14 +295,14 @@ nmap <Leader>C :Git commit -a<Return>
 nmap <Leader>P :Git -p push<Return>
 
 " tabular
-nmap <Leader>t :Tab /=<Return>
-nmap <Leader>T :Tab /=><Return>
-nmap <Leader>, :Tab /,\zs<Return>
-nmap <Leader>. :Tab /^  *[^ ]* \zs/<Return>
-vmap <Leader>t :Tab /=<Return>
-vmap <Leader>T :Tab /=><Return>
-vmap <Leader>, :Tab /,\zs<Return>
-vmap <Leader>. :Tab /^  *[^ ]* \zs/<Return>
+nmap <Leader>t :Tabularize /=<Return>
+nmap <Leader>T :Tabularize /=><Return>
+nmap <Leader>, :Tabularize /,\zs<Return>
+nmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
+vmap <Leader>t :Tabularize /=<Return>
+vmap <Leader>T :Tabularize /=><Return>
+vmap <Leader>, :Tabularize /,\zs<Return>
+vmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
 
 " ctrlp
 let g:ctrlp_working_path_mode = 'rwa'
@@ -312,7 +329,7 @@ let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetC
 " FIXES
 
 " WSL yank support
-let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+let s:clip = '/mnt/c/Windows/System32/clip.exe'
 if executable(s:clip)
     augroup WSLYank
         autocmd!
