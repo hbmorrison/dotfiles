@@ -137,12 +137,14 @@ function! TogglePastemode()
     set signcolumn=no
     set mouse=
     set nonumber
+    set laststatus=0
     set paste
     let b:pastemode_on=0
   else
     set signcolumn=yes
     set mouse=a
     set number
+    set laststatus=2
     set nopaste
     let b:pastemode_on=1
   endif
