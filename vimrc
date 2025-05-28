@@ -67,6 +67,8 @@ function SetHighlight()
     highlight vimSynType term=NONE cterm=NONE ctermfg=37
     highlight Special term=NONE cterm=NONE ctermfg=245
     highlight Noise term=NONE cterm=NONE ctermfg=245
+    highlight SpecialKey term=NONE cterm=NONE ctermfg=203
+    highlight NonText term=NONE cterm=NONE ctermfg=203
   else
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
@@ -106,21 +108,17 @@ function SetHighlight()
     highlight vimSynType term=NONE cterm=NONE ctermfg=37
     highlight Special term=NONE cterm=NONE ctermfg=245
     highlight Noise term=NONE cterm=NONE ctermfg=245
+    highlight SpecialKey term=NONE cterm=NONE ctermfg=203
+    highlight NonText term=NONE cterm=NONE ctermfg=203
   endif
 endfunction
+
 autocmd VimEnter * call SetHighlight()
+
 try
   autocmd OptionSet background call SetHighlight()
 catch /:E216:/
 endtry
-
-" mark trailing whitepace
-highlight ExtraWhitespace term=NONE cterm=NONE ctermbg=203
-match ExtraWhitespace /\s\+$/
-autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-autocmd BufWinLeave * call clearmatches()
 
 " toggle the background from dark to light with \b in normal mode
 nnoremap <silent> <Leader>b :let &bg=(&bg=='light'?'dark':'light')<CR>
@@ -135,20 +133,21 @@ autocmd BufRead,BufNewFile * setlocal formatoptions=croqj/
 
 " toggle paste mode with \v to avoid autoformatting if needed
 function! TogglePastemode()
-    if !exists("b:pastemode_on") || b:pastemode_on
-        set signcolumn=no
-        set mouse=
-        set nonumber
-        set paste
-        let b:pastemode_on=0
-    else
-        set signcolumn=yes
-        set mouse=a
-        set number
-        set nopaste
-        let b:pastemode_on=1
-    endif
+  if !exists("b:pastemode_on") || b:pastemode_on
+    set signcolumn=no
+    set mouse=
+    set nonumber
+    set paste
+    let b:pastemode_on=0
+  else
+    set signcolumn=yes
+    set mouse=a
+    set number
+    set nopaste
+    let b:pastemode_on=1
+  endif
 endfunction
+
 nnoremap <silent> <Leader>v :call TogglePastemode()<cr>
 
 " enable line numbers
@@ -164,6 +163,13 @@ set softtabstop=2
 set shiftwidth=2
 set smarttab
 set expandtab
+
+" use shift-tab to insert an actual tab character
+inoremap <S-Tab> <C-Q><Tab>
+
+" mark tabs and trailing whitepace
+set listchars=tab:▸·,trail:×
+set list
 
 " set tab completion menu
 set wildmenu
@@ -256,8 +262,7 @@ let g:netrw_keepdir = 1
 let g:netrw_sizestyle = "h"
 
 " toggle netrw
-nnoremap <silent> <Leader>e :Explore<CR>
-nnoremap <silent> <Leader>l :Lexplore<CR>
+nnoremap <silent> <Leader>e :Lexplore<CR>
 
 " toggle quickfix window
 function! ToggleQuickFix()
