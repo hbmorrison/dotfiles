@@ -171,6 +171,10 @@ inoremap <S-Tab> <C-Q><Tab>
 set listchars=tab:▸·,trail:×
 set list
 
+" turn off trailing whitespace mark in insert mode
+autocmd InsertEnter * setlocal listchars=tab:▸·
+autocmd InsertLeave * setlocal listchars=tab:▸·,trail:×
+
 " set tab completion menu
 set wildmenu
 set wildignorecase
