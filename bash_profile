@@ -33,6 +33,10 @@ fi
 export EDITOR=vi
 export VISUAL=vi
 
+# Set the Proxmox backup repository.
+
+export PBS_REPOSITORY=client@pbs@pbs-remote.gerbil-koi.ts.net:u457113.your-storagebox.de
+
 # Additional paths.
 
 pathadd () {
