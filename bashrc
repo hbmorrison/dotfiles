@@ -106,21 +106,24 @@ function pmp {
   fi
 }
 
-function pssh {
-  if echo "${1}" | grep '\.'
-  then
-    local userhost=$1
-  else
-    local userhost="${1}.is.ed.ac.uk"
-  fi
-  if [ -z "$PMP_API_AUTHTOKEN" ]
-  then
-    export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
-  fi
-  $HOME/bin/pmp_lookup.rb $1 2> /dev/null | /mnt/c/WINDOWS/system32/clip.exe
-  PMP_LASTHOST=$1
-  /mnt/c/Windows/System32/OpenSSH/ssh.exe $userhost
-}
+if [ -f $HOME/.pmp_api_authtoken ]
+then
+  function ssh {
+    if echo "${1}" | grep '\.'
+    then
+      local userhost=$1
+    else
+      local userhost="${1}.is.ed.ac.uk"
+    fi
+    if [ -z "$PMP_API_AUTHTOKEN" ]
+    then
+      export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
+    fi
+    $HOME/bin/pmp_lookup.rb $1 2> /dev/null | /mnt/c/WINDOWS/system32/clip.exe
+    PMP_LASTHOST=$1
+    /mnt/c/Windows/System32/OpenSSH/ssh.exe $userhost
+  }
+fi
 
 # Tell git to use the real ssh command.
 
@@ -239,6 +242,7 @@ alias cl="git clone"
 alias co="git commit -a"
 alias dh="git wdiff HEAD^"
 alias di="git wdiff"
+alias ds="git wdiff --staged"
 alias fe="git fetch"
 alias gsa="git submodule add"
 alias gsu="git submodule update --init --recursive"

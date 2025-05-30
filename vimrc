@@ -67,6 +67,8 @@ function SetHighlight()
     highlight vimSynType term=NONE cterm=NONE ctermfg=37
     highlight Special term=NONE cterm=NONE ctermfg=245
     highlight Noise term=NONE cterm=NONE ctermfg=245
+    highlight SpecialKey term=NONE cterm=NONE ctermfg=203
+    highlight NonText term=NONE cterm=NONE ctermfg=203
   else
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
@@ -106,21 +108,17 @@ function SetHighlight()
     highlight vimSynType term=NONE cterm=NONE ctermfg=37
     highlight Special term=NONE cterm=NONE ctermfg=245
     highlight Noise term=NONE cterm=NONE ctermfg=245
+    highlight SpecialKey term=NONE cterm=NONE ctermfg=203
+    highlight NonText term=NONE cterm=NONE ctermfg=203
   endif
 endfunction
+
 autocmd VimEnter * call SetHighlight()
+
 try
   autocmd OptionSet background call SetHighlight()
 catch /:E216:/
 endtry
-
-" mark trailing whitepace
-highlight ExtraWhitespace term=NONE cterm=NONE ctermbg=203
-match ExtraWhitespace /\s\+$/
-autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-autocmd InsertLeave * match ExtraWhitespace /\s\+$/
-autocmd BufWinLeave * call clearmatches()
 
 " toggle the background from dark to light with \b in normal mode
 nnoremap <silent> <Leader>b :let &bg=(&bg=='light'?'dark':'light')<CR>
@@ -134,7 +132,25 @@ set nojoinspaces
 autocmd BufRead,BufNewFile * setlocal formatoptions=croqj/
 
 " toggle paste mode with \v to avoid autoformatting if needed
-nnoremap <silent> <Leader>v :set paste!<CR>
+function! TogglePastemode()
+  if !exists("b:pastemode_on") || b:pastemode_on
+    set signcolumn=no
+    set mouse=
+    set nonumber
+    set laststatus=0
+    set paste
+    let b:pastemode_on=0
+  else
+    set signcolumn=yes
+    set mouse=a
+    set number
+    set laststatus=2
+    set nopaste
+    let b:pastemode_on=1
+  endif
+endfunction
+
+nnoremap <silent> <Leader>v :call TogglePastemode()<cr>
 
 " enable line numbers
 set number
@@ -150,6 +166,17 @@ set shiftwidth=2
 set smarttab
 set expandtab
 
+" use shift-tab to insert an actual tab character
+inoremap <S-Tab> <C-Q><Tab>
+
+" mark tabs and trailing whitepace
+set listchars=tab:▸·,trail:×
+set list
+
+" turn off trailing whitespace mark in insert mode
+autocmd InsertEnter * setlocal listchars=tab:▸·
+autocmd InsertLeave * setlocal listchars=tab:▸·,trail:×
+
 " set tab completion menu
 set wildmenu
 set wildignorecase
@@ -158,8 +185,8 @@ set wildmode=longest:full,full
 set wildcharm=<Tab>
 set path=.,**
 
-" partially enable mouse
-set mouse=nv
+" enable mouse
+set mouse=a
 
 " automatically close the quickfix window when a file is selected with Enter
 :autocmd FileType qf nnoremap <buffer> <CR> <CR>:cclose<CR>
@@ -218,7 +245,7 @@ set statusline+=%{g:space}
 set statusline+=%{&ff}
 set statusline+=%{g:space}
 set statusline+=[%{&fileencoding?&fileencoding:&encoding}]
-set statusline+=%{&paste?'\ [pst]':''}
+set statusline+=%{&paste?'\ [paste]':''}
 set statusline+=%{g:space}
 set statusline+=%m%r%h
 set statusline+=%=
@@ -241,8 +268,7 @@ let g:netrw_keepdir = 1
 let g:netrw_sizestyle = "h"
 
 " toggle netrw
-nnoremap <silent> <Leader>e :Explore<CR>
-nnoremap <silent> <Leader>l :Lexplore<CR>
+nnoremap <silent> <Leader>e :Lexplore<CR>
 
 " toggle quickfix window
 function! ToggleQuickFix()
@@ -267,7 +293,9 @@ catch /:E518:/
 endtry
 set updatetime=100
 nmap <Leader>n <Plug>(GitGutterNextHunk)
+nmap <Leader>p <Plug>(GitGutterPrevHunk)
 nmap <Leader>a <Plug>(GitGutterStageHunk)
+nmap <Leader>u <Plug>(GitGutterUndoHunk)
 nmap <Leader>hs <Nop>
 nmap <Leader>hu <Nop>
 
@@ -278,14 +306,14 @@ nmap <Leader>C :Git commit -a<Return>
 nmap <Leader>P :Git -p push<Return>
 
 " tabular
-nmap <Leader>t :Tab /=<Return>
-nmap <Leader>T :Tab /=><Return>
-nmap <Leader>, :Tab /,\zs<Return>
-nmap <Leader>. :Tab /^  *[^ ]* \zs/<Return>
-vmap <Leader>t :Tab /=<Return>
-vmap <Leader>T :Tab /=><Return>
-vmap <Leader>, :Tab /,\zs<Return>
-vmap <Leader>. :Tab /^  *[^ ]* \zs/<Return>
+nmap <Leader>t :Tabularize /=<Return>
+nmap <Leader>T :Tabularize /=><Return>
+nmap <Leader>, :Tabularize /,\zs<Return>
+nmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
+vmap <Leader>t :Tabularize /=<Return>
+vmap <Leader>T :Tabularize /=><Return>
+vmap <Leader>, :Tabularize /,\zs<Return>
+vmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
 
 " ctrlp
 let g:ctrlp_working_path_mode = 'rwa'
@@ -312,7 +340,7 @@ let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetC
 " FIXES
 
 " WSL yank support
-let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+let s:clip = '/mnt/c/Windows/System32/clip.exe'
 if executable(s:clip)
     augroup WSLYank
         autocmd!
@@ -346,7 +374,7 @@ autocmd BufEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&buftype"
 " to be hidden to avoid save warnings
 set nohidden
 autocmd FileType netrw setl bufhidden=wipe
-augroup netrw_buf_hidden_fix
+augroup netrw_bufhidden_fix
     autocmd!
     autocmd BufWinEnter *
                 \  if &ft != 'netrw'
@@ -355,7 +383,7 @@ augroup netrw_buf_hidden_fix
 augroup END
 
 " fix git commit buffers not working with paragraph formatting
-augroup netrw_gitcommit_fo_fix
+augroup gitcommit_fo_fix
     autocmd!
     autocmd BufWinEnter *
                 \  if &ft == 'gitcommit'
