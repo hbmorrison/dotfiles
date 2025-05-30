@@ -11,7 +11,7 @@ BASE_DIR=$(dirname $BIN_DIR)
 SHELL_PACKAGES="bash-completion curl git-flow gpg hiera-eyaml vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois"
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
-CHOCO_PACKAGES="7zip firacode nmap openjdk wincrypt-sshagent winscp"
+CHOCO_PACKAGES="7zip autohotkey firacode nmap openjdk wincrypt-sshagent winscp"
 
 # Work out whether to run commands using sudo.
 

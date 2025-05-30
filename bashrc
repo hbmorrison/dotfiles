@@ -16,6 +16,13 @@ case $(cat /proc/version 2>/dev/null) in
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat";;
 esac
 
+# Work out the location of the system32 directory on Windows.
+
+case $SHELL_ENVIRONMENT in
+  wsl)     SYSTEM_DIR="/mnt/c/Windows/System32" ;;
+  gitbash) SYSTEM_DIR="/c/Windows/System32" ;;
+esac
+
 # Don't put duplicate lines or lines starting with space in the history.
 
 HISTCONTROL=ignoreboth
@@ -88,42 +95,49 @@ case $SHELL_ENVIRONMENT in
         parentgitroot=$gitroot
       fi
     }
-    ;;
 
 esac
 
-# Paste PMP password into clipboard.
-
-function pmp {
-  if [ -z "$PMP_API_AUTHTOKEN" ]
-  then
-    export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
-  fi
-  $HOME/bin/pmp_lookup.rb "$*" | /mnt/c/WINDOWS/system32/clip.exe
-  if [ "$(jobs -s)" != "" ]
-  then
-    fg
-  fi
-}
-
-if [ -f $HOME/.pmp_api_authtoken ]
-then
-  function ssh {
-    if echo "${1}" | grep '\.'
+case $SHELL_ENVIRONMENT in
+  gitbash|wsl)
+    if [ -f $HOME/.pmp_api_authtoken ]
     then
-      local userhost=$1
-    else
-      local userhost="${1}.is.ed.ac.uk"
+
+      function pmp {
+        if [ -z "$PMP_API_AUTHTOKEN" ]
+        then
+          export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
+        fi
+        if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
+        then
+          $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
+        else
+          $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
+        fi
+        if [ "$(jobs -s)" != "" ]
+        then
+          fg
+        fi
+      }
+
+      function ssh {
+        if echo "${1}" | grep '\.'
+        then
+          local userhost=$1
+        else
+          local userhost="${1}.is.ed.ac.uk"
+        fi
+        if [ -z "$PMP_API_AUTHTOKEN" ]
+        then
+          export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
+        fi
+        $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
+        PMP_LASTHOST=$1
+        $SYSTEM_DIR/OpenSSH/ssh.exe $userhost
+      }
+
     fi
-    if [ -z "$PMP_API_AUTHTOKEN" ]
-    then
-      export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
-    fi
-    $HOME/bin/pmp_lookup.rb $1 2> /dev/null | /mnt/c/WINDOWS/system32/clip.exe
-    PMP_LASTHOST=$1
-    /mnt/c/Windows/System32/OpenSSH/ssh.exe $userhost
-  }
-fi
+esac
 
 # Tell git to use the real ssh command.
 
