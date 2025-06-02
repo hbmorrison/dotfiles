@@ -1,35 +1,27 @@
-SendMode Input
-SetTitleMatchMode, RegEx
+#Requires AutoHotkey v2
+#SingleInstance Force
 
-#SingleInstance, Off
-#Persistent
+SendMode("Input")
+SetWinDelay(0)
 
-if ( ScriptInstanceExist() ) {
-  ExitApp
-}
-
-^!b:: ; Ctrl+Shift+B
+^!p:: ; Ctrl+Alt+P
 {
-  if ! WinActivate, ahk_exe Bitwarden.exe
-    Run, shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712dmw3xyy!bitwardendesktop
-  WinWaitActive, ahk_exe Bitwarden.exe,, 1
-  Send ^f
+  if WinActive("ahk_exe Bitwarden.exe") {
+    Send("^p")
+  } else {
+    try
+      WinActivate("ahk_exe Bitwarden.exe")
+    catch TargetError as error
+      Run("shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712dmw3xyy!bitwardendesktop")
+    finally
+      WinWaitActive("ahk_exe Bitwarden.exe", , 1)
+    Send("^f")
+  }
 }
-return
 
-^!v:: ; Ctrl+Shift+V
+^!v:: ; Ctrl+Alt+V
 {
-  SendInput %ClipBoard%
-  Sleep 500
-  SendInput {Enter}
-}
-return
-
-ScriptInstanceExist() {
-  static title := " - AutoType - AutoHotkey v" A_AhkVersion
-  dhw := A_DetectHiddenWindows
-  DetectHiddenWindows, On
-  WinGet, match, List, % A_ScriptFullPath . title
-  DetectHiddenWindows, % dhw
-  return (match > 1)
+  SendInput(A_ClipBoard)
+  Sleep(500)
+  Send("{Enter}")
 }
