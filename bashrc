@@ -226,25 +226,26 @@ alias c=clear
 alias ls="command ls -F --color=auto"
 alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
 
+# Open vim with results from fuzzy find.
+
+alias vf="fzf --bind 'enter:become(vim {+})'"
+
+# Open vim with results from ripgrep search.
+
+function vg {
+  rg -l --path-separator // $* | xargs -o vim
+}
+
+# Open vim with all files that have changes in the quickfix buffer.
+
+alias vc="vim -c 'silent make'"
+
 # Eyaml aliases for Puppet.
 
 alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.eyaml/isapps_puppet_public_key.pkcs7.pem --password"
 alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.eyaml/isapps_puppet_public_key.pkcs7.pem --file"
 
-# Docker aliases
-
-alias d=docker
-if [ -f /usr/bin/docker-compose ]
-then
-  alias dc="docker-compose"
-else
-  alias dc="docker compose"
-fi
-alias dn="docker network"
-alias dv="docker volume"
-alias dl="docker logs -f"
-
-# Git aliases
+# Git aliases.
 
 alias br="git branch"
 alias bra="git branch -a"

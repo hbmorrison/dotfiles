@@ -32,6 +32,7 @@ fi
 
 export EDITOR=vi
 export VISUAL=vi
+export FZF_DEFAULT_OPTs="--multi --keep-right --border none --preview 'cat {}' --preview-window up:60%,border-bottom"
 
 # Set the Proxmox backup repository.
 
