@@ -32,7 +32,10 @@ fi
 
 export EDITOR=vi
 export VISUAL=vi
-export FZF_DEFAULT_OPTs="--multi --keep-right --border none --preview 'cat {}' --preview-window up:60%,border-bottom"
+export FZF_DEFAULT_OPTS="-0 -1 --multi --keep-right --border=none --info=hidden \
+  --bind start:select-all,ctrl-a:toggle-all \
+  --color=bg+:-1,fg+:-1,prompt:-1,pointer:-1,hl:111,hl+:111 \
+  --prompt='$ ' --pointer='>' --marker='*'"
 
 # Set the Proxmox backup repository.
 

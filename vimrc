@@ -188,8 +188,15 @@ set path=.,**
 " enable mouse
 set mouse=a
 
-" set the errorformat to load results from ripgrep into quickfix
-set errorformat^=%f:%l:%c:%m
+" use :make to load changed files according to git into quickfix
+set makeprg=git\ status\ --porcelain
+
+" parse results from external ripgrep and makeprg in the quickfix list
+set errorformat=\ %m\ %f,%m\ \ %f
+
+" internal grep using ripgrep
+set grepprg=rg\ --vimgrep\ --smart-case\ $*
+set grepformat^=%f:%l:%c:%m
 
 " automatically close the quickfix window when a file is selected with Enter
 :autocmd FileType qf nnoremap <buffer> <CR> <CR>:cclose<CR>
@@ -285,13 +292,6 @@ nnoremap <silent> <Leader>q :call ToggleQuickFix()<cr>
 
 " PLUGINS
 
-" ack
-let g:ackprg = 'rg --vimgrep --type-not sql --smart-case'
-let g:ack_autoclose = 1
-let g:ack_use_cword_for_empty_search = 1
-cnoreabbrev Ack Ack!
-nnoremap <Leader>s :Ack!<Space>
-
 " vim rooter
 let g:rooter_cd_cmd = 'lcd'
 let g:rooter_silent_chdir = 1
@@ -317,6 +317,8 @@ nmap <Leader>P :Git -p push<Return>
 
 " vim-ripgrep
 let g:rg_derive_root=1
+nnoremap <Leader>g :Rg<Space>
+inoremap <Leader>g <Esc>:Rg<Space>
 
 " tabular
 nmap <Leader>t :Tabularize /=<Return>
@@ -327,6 +329,14 @@ vmap <Leader>t :Tabularize /=<Return>
 vmap <Leader>T :Tabularize /=><Return>
 vmap <Leader>, :Tabularize /,\zs<Return>
 vmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
+
+" vim-unimpaired
+nmap < [
+nmap > ]
+omap < [
+omap > ]
+xmap < [
+xmap > ]
 
 " ctrlp
 let g:ctrlp_working_path_mode = 'rwa'

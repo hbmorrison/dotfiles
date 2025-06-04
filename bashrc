@@ -228,17 +228,26 @@ alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
 
 # Open vim with results from fuzzy find.
 
-alias vf="fzf --bind 'enter:become(vim {+})'"
+function vf {
+  if [ "$#" -eq 0 ]
+  then
+    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})'
+  else
+    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})' -q "$*"
+  fi
+}
 
 # Open vim with results from ripgrep search.
 
 function vg {
-  rg -l --path-separator // $* | xargs -o vim
+  rg -l $* | xargs -o vim
 }
 
-# Open vim with all files that have changes in the quickfix buffer.
+# Open vim with all files that have git changes.
 
-alias vc="vim -c 'silent make'"
+function vc {
+  git status --porcelain | grep -v ^D | cut -c4- | xargs -o vim
+}
 
 # Eyaml aliases for Puppet.
 
