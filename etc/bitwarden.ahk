@@ -1,13 +1,14 @@
 #Requires AutoHotkey v2
 #SingleInstance Force
 
-SendMode("Input")
-SetWinDelay(0)
-
 ^!p:: ; Ctrl+Alt+P
 {
+  wd := A_WinDelay
+  SetWinDelay(0)
   if WinActive("ahk_exe Bitwarden.exe") {
-    Send("^p")
+    SendInput("{Tab}{Tab}{Enter}")
+    Sleep(200)
+    SendInput("^p")
   } else {
     try
       WinActivate("ahk_exe Bitwarden.exe")
@@ -15,13 +16,14 @@ SetWinDelay(0)
       Run("shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712dmw3xyy!bitwardendesktop")
     finally
       WinWaitActive("ahk_exe Bitwarden.exe", , 1)
-    Send("^f")
+    SendInput("^f")
   }
+  SetWinDelay(wd)
 }
 
 ^!v:: ; Ctrl+Alt+V
 {
   SendInput(A_ClipBoard)
   Sleep(500)
-  Send("{Enter}")
+  SendInput("{Enter}")
 }
