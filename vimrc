@@ -323,16 +323,8 @@ vmap <Leader>T :Tabularize /=><Return>
 vmap <Leader>, :Tabularize /,\zs<Return>
 vmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
 
-" vim-unimpaired
-nmap < [
-nmap > ]
-omap < [
-omap > ]
-xmap < [
-xmap > ]
-
 " ctrlp
-let g:ctrlp_working_path_mode = 'rwa'
+let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
 let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:10,results:0'
 if exists("g:loaded_pathogen")
