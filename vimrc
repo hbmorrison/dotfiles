@@ -3,6 +3,7 @@ silent! call pathogen#infect()
 " enable syntax highlighting and indenting
 syntax on
 filetype plugin indent on
+set hlsearch
 
 " set colour range for modern terminals
 set t_Co=256
@@ -26,12 +27,23 @@ if g:proc_version == ""
   let g:lightfg=0
 end
 
-" set colours based on light or dark background
+" set highlighting common to light and dark backgrounds
+highlight Constant term=NONE cterm=NONE ctermfg=37
+highlight Noise term=NONE cterm=NONE ctermfg=245
+highlight NonText term=NONE cterm=NONE ctermfg=203
+highlight Number term=NONE cterm=NONE ctermfg=37
+highlight SpecialKey term=NONE cterm=NONE ctermfg=203
+highlight Special term=NONE cterm=NONE ctermfg=245
+highlight String term=NONE cterm=NONE ctermfg=37
+highlight vimSynType term=NONE cterm=NONE ctermfg=37
+
+" set more highlighting based on light or dark background
 function SetHighlight()
   if &background == "dark"
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=242"
     execute "highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=" . g:darkbg
+    execute "highlight Search term=NONE cterm=NONE ctermbg=115 ctermfg=" . g:darkbg
     execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=196"
     execute "highlight MatchParen term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=196"
     execute "highlight SignColumn term=NONE cterm=NONE ctermbg=" . g:darkbg
@@ -42,37 +54,28 @@ function SetHighlight()
     execute "highlight StatusLine term=NONE cterm=NONE ctermbg=242 ctermfg=" . g:darkbg
     execute "highlight StatusLineTerm term=NONE cterm=NONE ctermbg=242 ctermfg=" . g:darkbg
     execute "highlight VertSplit term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkbg
-    highlight StatusLineNC term=NONE cterm=NONE ctermbg=242 ctermfg=242
-    highlight StatusLineTermNC term=NONE cterm=NONE ctermbg=242 ctermfg=242
     execute "highlight netrwTreeBar term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=" . g:darkbg
     execute "highlight netrwPlain term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=248"
     execute "highlight netrwClassify term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=248"
     execute "highlight netrwLink term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=248"
     execute "highlight netrwDir term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=68"
-    highlight qfFileName term=NONE cterm=NONE ctermfg=214
-    " syntax highlighting for plugins
     execute "highlight GitGutterDelete term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=1"
     execute "highlight GitGutterAdd term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=2"
     execute "highlight GitGutterChange term=NONE cterm=NONE ctermbg=" . g:darkbg . " ctermfg=3"
     execute "highlight CtrlPMode1 term=NONE cterm=NONE ctermbg=242 ctermfg=" . g:darkbg
     execute "highlight CtrlPMode2 term=NONE cterm=NONE ctermbg=242 ctermfg=" . g:darkbg
-    " syntax highlighting for code
+    highlight StatusLineNC term=NONE cterm=NONE ctermbg=242 ctermfg=242
+    highlight StatusLineTermNC term=NONE cterm=NONE ctermbg=242 ctermfg=242
+    highlight qfFileName term=NONE cterm=NONE ctermfg=214
     highlight Identifier term=NONE cterm=NONE ctermfg=39
     highlight Type term=NONE cterm=NONE ctermfg=39
     highlight PreProc term=NONE cterm=NONE ctermfg=202
     highlight Statement term=NONE cterm=NONE ctermfg=214
-    highlight Constant term=NONE cterm=NONE ctermfg=37
-    highlight String term=NONE cterm=NONE ctermfg=37
-    highlight Number term=NONE cterm=NONE ctermfg=37
-    highlight vimSynType term=NONE cterm=NONE ctermfg=37
-    highlight Special term=NONE cterm=NONE ctermfg=245
-    highlight Noise term=NONE cterm=NONE ctermfg=245
-    highlight SpecialKey term=NONE cterm=NONE ctermfg=203
-    highlight NonText term=NONE cterm=NONE ctermfg=203
   else
     execute "highlight Normal term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightfg
     execute "highlight Comment term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=248"
     execute "highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=" . g:lightfg
+    execute "highlight Search term=NONE cterm=NONE ctermbg=115 ctermfg=" . g:lightbg
     execute "highlight Error term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=196"
     execute "highlight MatchParen term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=196"
     execute "highlight SignColumn term=NONE cterm=NONE ctermbg=" . g:lightbg
@@ -83,33 +86,23 @@ function SetHighlight()
     execute "highlight StatusLine term=NONE cterm=NONE ctermbg=248 ctermfg=" . g:lightbg
     execute "highlight StatusLineTerm term=NONE cterm=NONE ctermbg=248 ctermfg=" . g:lightbg
     execute "highlight VertSplit term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightbg
-    highlight StatusLineNC term=NONE cterm=NONE ctermbg=248 ctermfg=248
-    highlight StatusLineTermNC term=NONE cterm=NONE ctermbg=248 ctermfg=248
     execute "highlight netrwTreeBar term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=" . g:lightbg
     execute "highlight netrwPlain term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=242"
     execute "highlight netrwClassify term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=242"
     execute "highlight netrwLink term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=242"
     execute "highlight netrwDir term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=68"
-    highlight qfFileName term=NONE cterm=NONE ctermfg=136
-    " syntax highlighting for plugins
     execute "highlight GitGutterDelete term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=160"
     execute "highlight GitGutterAdd term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=70"
     execute "highlight GitGutterChange term=NONE cterm=NONE ctermbg=" . g:lightbg . " ctermfg=178"
     execute "highlight CtrlPMode1 term=NONE cterm=NONE ctermbg=248 ctermfg=" . g:lightbg
     execute "highlight CtrlPMode2 term=NONE cterm=NONE ctermbg=248 ctermfg=" . g:lightbg
-    " syntax highlighting for code
+    highlight StatusLineNC term=NONE cterm=NONE ctermbg=248 ctermfg=248
+    highlight StatusLineTermNC term=NONE cterm=NONE ctermbg=248 ctermfg=248
+    highlight qfFileName term=NONE cterm=NONE ctermfg=136
     highlight Identifier term=NONE cterm=NONE ctermfg=32
     highlight Type term=NONE cterm=NONE ctermfg=32
     highlight PreProc term=NONE cterm=NONE ctermfg=166
     highlight Statement term=NONE cterm=NONE ctermfg=136
-    highlight Constant term=NONE cterm=NONE ctermfg=37
-    highlight String term=NONE cterm=NONE ctermfg=37
-    highlight Number term=NONE cterm=NONE ctermfg=37
-    highlight vimSynType term=NONE cterm=NONE ctermfg=37
-    highlight Special term=NONE cterm=NONE ctermfg=245
-    highlight Noise term=NONE cterm=NONE ctermfg=245
-    highlight SpecialKey term=NONE cterm=NONE ctermfg=203
-    highlight NonText term=NONE cterm=NONE ctermfg=203
   endif
 endfunction
 
@@ -341,6 +334,7 @@ xmap > ]
 " ctrlp
 let g:ctrlp_working_path_mode = 'rwa'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
+let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:10,results:0'
 if exists("g:loaded_pathogen")
   nnoremap f :CtrlP<CR>
   nnoremap F :CtrlPMRU<CR>

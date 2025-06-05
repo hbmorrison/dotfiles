@@ -240,7 +240,7 @@ function vf {
 # Open vim with results from ripgrep search.
 
 function vg {
-  rg -l $* | xargs -o vim
+  rg -l "$*" | xargs -o vim -c "let @/='\<$*\>'" -c "set hls"
 }
 
 # Open vim with all files that have git changes.
