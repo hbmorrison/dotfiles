@@ -12,7 +12,7 @@ SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml ripgrep \
   vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois"
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
-CHOCO_PACKAGES="7zip autohotkey firacode fzf nmap openjdk ripgrep \
+CHOCO_PACKAGES="7zip autohotkey bitwarden firacode fzf nmap openjdk ripgrep \
   wincrypt-sshagent winscp"
 
 # Work out whether to run commands using sudo.
