@@ -4,6 +4,7 @@ case $(cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash";;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos";;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
+  *Debian*)                  SHELL_ENVIRONMENT="debian";;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian";;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat";;
 esac
@@ -31,6 +32,14 @@ fi
 
 export EDITOR=vi
 export VISUAL=vi
+export FZF_DEFAULT_OPTS="-0 -1 --multi --keep-right --border=none --info=hidden \
+  --bind start:select-all,ctrl-a:toggle-all \
+  --color=bg+:-1,fg+:-1,prompt:-1,pointer:-1,hl:111,hl+:111 \
+  --prompt='$ ' --pointer='>' --marker='*'"
+
+# Set the Proxmox backup repository.
+
+export PBS_REPOSITORY=client@pbs@pbs-remote.gerbil-koi.ts.net:u457113.your-storagebox.de
 
 # Additional paths.
 
@@ -52,8 +61,8 @@ case $SHELL_ENVIRONMENT in
     pathadd "${HOME}/.local/bin"
     ;;
   wsl|redhat)
-    pathadd "/usr/sbin"
     pathadd "/opt/puppetlabs/sbin"
+    pathadd "/usr/sbin"
     pathadd "${HOME}/bin"
     pathadd "${HOME}/.local/bin"
     ;;
@@ -76,7 +85,7 @@ esac
 # Connect to an ssh-agent.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|redhat)
+  chromeos|debian|redhat)
     AGENT_ENV=$HOME/.ssh/agent-env
     if [ -f "$AGENT_ENV" ]
     then

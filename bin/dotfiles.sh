@@ -1,14 +1,10 @@
 #!/bin/bash
-/usr/bin/env > /tmp/update-environment
-
-# Files that must be copied into the roaming profile directory.
-
-ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
 
 # Locate the base directory of the repository.
 
 THIS_SCRIPT=$(readlink -f $0)
-BASE_DIR=$(dirname $THIS_SCRIPT)
+BIN_DIR=$(dirname $THIS_SCRIPT)
+BASE_DIR=$(dirname $BIN_DIR)
 
 # Initialise submodules.
 
@@ -19,12 +15,88 @@ BASE_DIR=$(dirname $THIS_SCRIPT)
 case $(cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
-  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="debian" ;;
+  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
+  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
 
-# Copy the git config file, extracting and replacing the user name and email.
+# Create any directories that are needed.
+
+for DIR in $(cd $BASE_DIR; find . -type d -not -path "."  | sed  's#^./##')
+do
+
+  case $DIR in
+
+    # Ignore the git directory.
+
+    \.git) ;;
+    \.git/*) ;;
+
+    # Ignore submodules.
+
+    vim) ;;
+    vim/*) ;;
+    vim-pathogen) ;;
+    vim-pathogen/*) ;;
+
+    # Ignore directories used for special cases below.
+
+    etc) ;;
+    etc/*) ;;
+
+    # Ignore environment files (for SMTP configuration).
+
+    *.env) ;;
+
+    # Create other directories under the home directory.
+
+    *)
+      if [ ! -d "${HOME}/.${DIR}" ]
+      then
+        mkdir "${HOME}/.${DIR}"
+      fi
+      ;;
+
+  esac
+
+done
+
+# Make sure these directories are secure.
+
+chmod go-rwx $HOME/.ssh $HOME/.eyaml
+
+# Copy the dotfiles.
+
+for ITEM in $(cd $BASE_DIR; find . -type f  | sed  's#^./##')
+do
+
+  case $ITEM in
+
+    # Ignore repo files.
+
+    \.git/*) ;;
+    \.git*) ;;
+
+    # Ignore submodules.
+
+    vim/*) ;;
+    vim-pathogen/*) ;;
+
+    # Ignore scripts and files that are dealt with as special cases.
+
+    *.sh) ;;
+    etc/*) ;;
+
+    # Copy everything else.
+
+    *) cp $BASE_DIR/$ITEM "$HOME/.${ITEM}" ;;
+
+  esac
+
+done
+
+# Copy the gitconfig file, extracting and replacing the user name and email.
 
 if [ -r "${HOME}/.gitconfig" ]
 then
@@ -37,14 +109,14 @@ BEGIN { USER_SECTION = 0; }
 { if ( USER_SECTION == 1 ) { print; } }
 EXTRACT_USER_SECTION
 
-  cp $BASE_DIR/gitconfig $HOME/.gitconfig
+  cp $BASE_DIR/etc/gitconfig $HOME/.gitconfig
   cat $TEMP_USER_SECTION >> $HOME/.gitconfig
 
   rm -f $TEMP_USER_SECTION
 
 else
 
-  cp $BASE_DIR/gitconfig $HOME/.gitconfig
+  cp $BASE_DIR/etc/gitconfig $HOME/.gitconfig
 
 fi
 
@@ -62,41 +134,14 @@ fi
 cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
 mkdir -p "${HOME}/.vim/autoload"
 rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
-cp -f "${BASE_DIR}/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
-
-# Ensure directories exist and are secure.
-
-mkdir -p $HOME/.ssh $HOME/.eyaml
-chmod go-rwx $HOME/.ssh $HOME/.eyaml
-
-# Copy the dotfiles.
-
-for ITEM in $(cd $BASE_DIR; find . -type f)
-do
-
-  case $ITEM in
-
-    # Ignore repo files.
-
-    \./\.git/*) ;;
-    \./\.gitignore) ;;
-    \./update.sh) ;;
-
-    # Copy everything else.
-
-    *)
-      cp $BASE_DIR/$ITEM "$HOME/.${ITEM}"
-      ;;
-
-  esac
-
-done
+cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
 
 # Copy the necessary files to the Windows roaming profile if one is being used.
 
 if [ "${SHELL_ENVIRONMENT}" = "gitbash" ]
 then
 
+  ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
   PROFILEDRIVE=`echo $USERPROFILE | cut -d'\' -f1`
 
   if [ "$PROFILEDRIVE" != "$HOMEDRIVE" ]

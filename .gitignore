@@ -15,5 +15,8 @@ tmtags
 tags
 \.netrwhist
 
+# Ignore environment files in the project root directory
+/*.env
+
 # Ignore pathogen.vim
 /vim/autoload/pathogen.vim
