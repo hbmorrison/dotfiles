@@ -1,0 +1,8 @@
+Host pmaster
+  User hmorris
+Host puppet-filestore
+  User hmorris
+Host bambooapp-live
+  User bamboo
+Host bambooapp-test
+  User bamboo

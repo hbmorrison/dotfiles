@@ -11,8 +11,16 @@ case $(cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash";;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos";;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
+  *Debian*)                  SHELL_ENVIRONMENT="debian";;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian";;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat";;
+esac
+
+# Work out the location of the system32 directory on Windows.
+
+case $SHELL_ENVIRONMENT in
+  wsl)     SYSTEM_DIR="/mnt/c/Windows/System32" ;;
+  gitbash) SYSTEM_DIR="/c/Windows/System32" ;;
 esac
 
 # Don't put duplicate lines or lines starting with space in the history.
@@ -41,8 +49,12 @@ fi
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     source /usr/share/bash-completion/bash_completion
-    source /usr/share/bash-completion/completions/git
-    source /usr/share/bash-completion/completions/git-flow
+    if [ -f /usr/share/bash-completion/completions/git ]; then
+      source /usr/share/bash-completion/completions/git
+    fi
+    if [ -f /usr/share/bash-completion/completions/git-flow ]; then
+      source /usr/share/bash-completion/completions/git-flow
+    fi
   elif [ -f /etc/bash_completion ]; then
     source /etc/bash_completion
   fi
@@ -83,39 +95,49 @@ case $SHELL_ENVIRONMENT in
         parentgitroot=$gitroot
       fi
     }
-    ;;
 
 esac
 
-# Paste PMP password into clipboard.
+case $SHELL_ENVIRONMENT in
+  gitbash|wsl)
+    if [ -f $HOME/.pmp_api_authtoken ]
+    then
 
-function pmp {
-  if [ -z "$PMP_API_AUTHTOKEN" ]
-  then
-    export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
-  fi
-  $HOME/bin/pmp_lookup.rb "$*" | /mnt/c/WINDOWS/system32/clip.exe
-  if [ "$(jobs -s)" != "" ]
-  then
-    fg
-  fi
-}
+      function pmp {
+        if [ -z "$PMP_API_AUTHTOKEN" ]
+        then
+          export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
+        fi
+        if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
+        then
+          $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
+        else
+          $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
+        fi
+        if [ "$(jobs -s)" != "" ]
+        then
+          fg
+        fi
+      }
 
-function pssh {
-  if echo "${1}" | grep '\.'
-  then
-    local userhost=$1
-  else
-    local userhost="${1}.is.ed.ac.uk"
-  fi
-  if [ -z "$PMP_API_AUTHTOKEN" ]
-  then
-    export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
-  fi
-  $HOME/bin/pmp_lookup.rb $1 2> /dev/null | /mnt/c/WINDOWS/system32/clip.exe
-  PMP_LASTHOST=$1
-  /mnt/c/Windows/System32/OpenSSH/ssh.exe $userhost
-}
+      function ssh {
+        if echo "${1}" | grep '\.'
+        then
+          local userhost=$1
+        else
+          local userhost="${1}.is.ed.ac.uk"
+        fi
+        if [ -z "$PMP_API_AUTHTOKEN" ]
+        then
+          export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
+        fi
+        $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
+        PMP_LASTHOST=$1
+        $SYSTEM_DIR/OpenSSH/ssh.exe $userhost
+      }
+
+    fi
+esac
 
 # Tell git to use the real ssh command.
 
@@ -181,7 +203,7 @@ SUB_PROMPT="$PROMPT_COLOUR_PURPLE\$(__sub_ps1)$PROMPT_COLOUR_CLEAR"
 
 # Make sure the hostname is lowercase.
 
-HOSTNAME=`echo $HOSTNAME | tr '[:upper:]' '[:lower:]'`
+HOSTNAME=`hostname -s | tr '[:upper:]' '[:lower:]'`
 
 # Set up a window title prompt.
 
@@ -189,7 +211,7 @@ TITLE_PROMPT="\[\e]0;\u@${HOSTNAME}\$(__git_ps1) \W\a\]"
 
 # Set the entire prompt.
 
-PS1="${TITLE_PROMPT}${debian_chroot:+($debian_chroot)}${PROMPT_COLOUR_CLEAR}\u@${PROMPT_HOSTNAME}${GIT_PROMPT} ${SUB_PROMPT}${DIR_PROMPT} \\$ "
+PS1="${TITLE_PROMPT}${debian_chroot:+($debian_chroot)}${PROMPT_COLOUR_CLEAR}\u@${HOSTNAME}${GIT_PROMPT} ${SUB_PROMPT}${DIR_PROMPT} \\$ "
 
 # Completions for git aliases.
 
@@ -201,23 +223,38 @@ fi
 # Shell aliases.
 
 alias c=clear
-alias ls="LC_COLLATE=C command ls -F --color=auto"
-alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=promicro_rp2040"
+alias ls="command ls -F --color=auto"
+alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
+
+# Open vim with results from fuzzy find.
+
+function vf {
+  if [ "$#" -eq 0 ]
+  then
+    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})'
+  else
+    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})' -q "$*"
+  fi
+}
+
+# Open vim with results from ripgrep search.
+
+function vg {
+  rg -l "$*" | xargs -o vim -c "let @/='\<$*\>'" -c "set hls"
+}
+
+# Open vim with all files that have git changes.
+
+function vc {
+  git status --porcelain | grep -v ^D | cut -c4- | xargs -o vim
+}
 
 # Eyaml aliases for Puppet.
 
 alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.eyaml/isapps_puppet_public_key.pkcs7.pem --password"
 alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.eyaml/isapps_puppet_public_key.pkcs7.pem --file"
 
-# Docker aliases
-
-alias d=docker
-alias dc="docker-compose"
-alias dn="docker network"
-alias dv="docker volume"
-alias dl="docker logs -f"
-
-# Git aliases
+# Git aliases.
 
 alias br="git branch"
 alias bra="git branch -a"
@@ -229,6 +266,7 @@ alias cl="git clone"
 alias co="git commit -a"
 alias dh="git wdiff HEAD^"
 alias di="git wdiff"
+alias ds="git wdiff --staged"
 alias fe="git fetch"
 alias gsa="git submodule add"
 alias gsu="git submodule update --init --recursive"

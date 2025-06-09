@@ -1,0 +1,4 @@
+[DEFAULT]
+allowipv6 = auto
+logtarget = SYSTEMD-JOURNAL
+dbpurgeage = 29d

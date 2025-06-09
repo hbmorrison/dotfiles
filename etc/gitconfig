@@ -1,5 +1,5 @@
 [init]
-	defaultBranch = production
+	defaultBranch = main
 [fetch]
 	prune = true
 [pull]
@@ -12,8 +12,8 @@
 	support = support-
 	versiontag = v
 [gitflow "branch"]
-	master = production
-	develop = development
+	master = main
+	develop = develop
 [format]
 	pretty = format: %C(auto,yellow)%h %C(auto,blue)%cn %C(auto,green)%cr%C(auto,reset)%C(auto,red)%d%C(auto,reset) %s
 [log]
