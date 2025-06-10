@@ -1,6 +1,8 @@
 #Requires AutoHotkey v2
 #SingleInstance Force
 
+SendMode("Input")
+
 A_LocalAppData := EnvGet("LocalAppData")
 A_LocalBitwarden := A_LocalAppData . "\Programs\Bitwarden\Bitwarden.exe"
 A_SystemBitwarden := "shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712dmw3xyy!bitwardendesktop"
@@ -10,9 +12,12 @@ A_SystemBitwarden := "shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712d
   wd := A_WinDelay
   SetWinDelay(0)
   if WinActive("ahk_exe Bitwarden.exe") {
-    SendInput("{Tab}{Tab}{Enter}")
-    Sleep(200)
-    SendInput("^p")
+    Send("^f")
+    Send("{Tab}")
+    Send("{Tab}")
+    Send("{Tab}")
+    Send("{Enter}")
+    Send("^p")
   } else {
     try
       WinActivate("ahk_exe Bitwarden.exe")
@@ -24,14 +29,14 @@ A_SystemBitwarden := "shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712d
       }
     finally
       WinWaitActive("ahk_exe Bitwarden.exe", , 1)
-    SendInput("^f")
+    Send("^f")
   }
   SetWinDelay(wd)
 }
 
 ^!v:: ; Ctrl+Alt+V
 {
-  SendInput(A_ClipBoard)
+  Send(A_ClipBoard)
   Sleep(500)
-  SendInput("{Enter}")
+  Send("{Enter}")
 }
