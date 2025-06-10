@@ -159,6 +159,23 @@ case $SHELL_ENVIRONMENT in
   redhat)              source /usr/share/git-core/contrib/completion/git-prompt.sh ;;
 esac
 
+if [ -z "$(declare -F __git_ps1 2> /dev/null)" ]
+then
+  function __git_ps1 {
+    local head=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+    if [ ! -z ${head:+x} ]
+    then
+      local merging=$(git rev-parse --quiet --verify MERGE_HEAD 2> /dev/null)
+      if [ -n ${merging:+x} ]
+      then
+        echo " (${head})"
+      else
+        echo " (${head}|MERGING)"
+      fi
+    fi
+  }
+fi
+
 GIT_PROMPT="$PROMPT_COLOUR_CYAN\$(__git_ps1)$PROMPT_COLOUR_CLEAR"
 
 # Set up directory prompt.
@@ -203,7 +220,7 @@ SUB_PROMPT="$PROMPT_COLOUR_PURPLE\$(__sub_ps1)$PROMPT_COLOUR_CLEAR"
 
 # Make sure the hostname is lowercase.
 
-HOSTNAME=`hostname -s | tr '[:upper:]' '[:lower:]'`
+HOSTNAME=`uname -n | tr '[:upper:]' '[:lower:]'`
 
 # Set up a window title prompt.
 
