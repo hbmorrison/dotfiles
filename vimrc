@@ -301,15 +301,14 @@ set updatetime=100
 nmap <Leader>n <Plug>(GitGutterNextHunk)
 nmap <Leader>p <Plug>(GitGutterPrevHunk)
 nmap <Leader>a <Plug>(GitGutterStageHunk)
-nmap <Leader>u <Plug>(GitGutterUndoHunk)
 nmap <Leader>hs <Nop>
 nmap <Leader>hu <Nop>
 
 " vim fugitive
-nmap <Leader>S :Git -p status<Return>
-nmap <Leader>D :Git -p diff<Return>
+nmap <Leader>s :Git -p status<Return>
+nmap <Leader>d :Git -p diff<Return>
+nmap <Leader>c :Git commit<Return>
 nmap <Leader>C :Git commit -a<Return>
-nmap <Leader>P :Git -p push<Return>
 
 " vim-ripgrep
 let g:rg_derive_root=1
