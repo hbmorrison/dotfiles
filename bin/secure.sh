@@ -10,14 +10,15 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 # Configuration.
 
 NON_ROOT_USER=hannah
-NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/.dotfiles"
+NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
 DEBIAN_PACKAGES="bash-completion curl fail2ban git python3-systemd sudo vim"
 ADMIN_GROUPS="sudo,users"
+TAILSCALE_ARGS="--accept-risk all --advertise-tags tag:secure"
 
 # Add docker group to the list of admin groups if it exists.
 
-if grep ^docker: /etc/group > /dev/null 2>&1
+if grep ^docker: /etc/group >/dev/null 2>&1
 then
   ADMIN_GROUPS="${ADMIN_GROUPS},docker"
 fi
@@ -66,9 +67,10 @@ case $SHELL_ENVIRONMENT in
 
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
 
-    # Keep root password logins and TCP forwarding enabled on Proxmox VE for cluster management.
+    # Keep root password logins and TCP forwarding enabled on Proxmox VE cluster
+    # management.
 
-    if grep /etc/pve /proc/mounts > /dev/null 2>&1
+    if grep /etc/pve /proc/mounts >/dev/null 2>&1
     then
       sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
       sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
@@ -102,9 +104,35 @@ case $SHELL_ENVIRONMENT in
 
 esac
 
+# Install and configure tailscale.
+
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu)
+    systemctl status tailscaled.service >/dev/null 2>&1
+    if [ $? -eq 4 ]
+    then
+      $BASE_DIR/bin/tailscale.sh >/dev/null
+      tailscale up $TAILSCALE_ARGS
+    fi
+    ;;
+esac
+
+# Secure tailscaled.
+
+if [ -f /etc/default/tailscaled ]
+then
+  cp /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP
+  sed -i -e '/^FLAGS=/s/""/"--no-logs-no-support"/' /etc/default/tailscaled
+  diff  /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP >/dev/null 2>&1
+  if [ $? -ne 0 ]
+  then
+    systemctl restart tailscaled.service
+  fi
+fi
+
 # Only configure ufw on non-Proxmox / non-Docker hosts.
 
-if ! grep /etc/pve /proc/mounts > /dev/null 2>&1
+if ! grep /etc/pve /proc/mounts >/dev/null 2>&1
 then
   systemctl status docker.service >/dev/null 2>&1
   if [ $? -eq 4 ]
@@ -118,7 +146,7 @@ fi
 
 # Configure fail2ban for sshd on non-Proxmox hosts.
 
-if ! grep /etc/pve /proc/mounts > /dev/null 2>&1
+if ! grep /etc/pve /proc/mounts >/dev/null 2>&1
 then
   cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
   cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
@@ -129,7 +157,7 @@ fi
 
 # Create the non-root user if needed.
 
-if ! grep ^$NON_ROOT_USER: /etc/passwd > /dev/null 2>&1
+if ! grep ^$NON_ROOT_USER: /etc/passwd >/dev/null 2>&1
 then
   case $SHELL_ENVIRONMENT in
     debian|ubuntu)
@@ -183,7 +211,7 @@ su -c "$NON_ROOT_DOTFILES/bin/keys.sh" - $NON_ROOT_USER
 
 # Set the user's password.
 
-if [ `grep ^$NON_ROOT_USER: /etc/shadow 2> /dev/null | cut -d: -f2 | wc -c` -lt 3 ]
+if [ `grep ^$NON_ROOT_USER: /etc/shadow 2>/dev/null | cut -d: -f2 | wc -c` -lt 3 ]
 then
   while true
   do
