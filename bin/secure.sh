@@ -80,9 +80,11 @@ case $SHELL_ENVIRONMENT in
   pve)
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
+    ;;
   debian|ubuntu)
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+    ;;
 esac
 
 # Lock down authentication and forwarding.
@@ -105,7 +107,6 @@ esac
 case $SHELL_ENVIRONMENT in
   debian|ubuntu|pve)
     systemctl restart sshd
-    ;;
 esac
 
 # Install and configure tailscale.
@@ -118,7 +119,6 @@ case $SHELL_ENVIRONMENT in
       $BASE_DIR/bin/tailscale.sh >/dev/null
       tailscale up $TAILSCALE_ARGS
     fi
-    ;;
 esac
 
 # Secure tailscaled.
@@ -145,8 +145,7 @@ case $SHELL_ENVIRONMENT in
     ufw allow 68/udp comment 'allow dhcp'
     ufw allow 41641/udp 'allow tailscale'
     ufw --force enable
-  fi
-fi
+esac
 
 # Configure fail2ban for sshd on non-Proxmox hosts.
 
@@ -166,7 +165,6 @@ then
   case $SHELL_ENVIRONMENT in
     debian|ubuntu|pve)
       useradd -s /bin/bash -U -G $ADMIN_GROUPS -m $NON_ROOT_USER
-      ;;
   esac
 fi
 
