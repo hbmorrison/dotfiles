@@ -13,10 +13,10 @@ NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
 DEBIAN_PACKAGES="bash-completion curl fail2ban git python3-systemd sudo vim"
-ADMIN_GROUPS="sudo,users"
 TAILSCALE_ARGS="--accept-risk all --advertise-tags tag:secure"
+ADMIN_GROUPS="sudo,users"
 
-# Add docker group to the list of admin groups if it exists.
+# Add docker to the list of admin groups if it exists.
 
 if grep ^docker: /etc/group >/dev/null 2>&1
 then
@@ -37,19 +37,27 @@ case $(cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
+  *build@proxmox*)           SHELL_ENVIRONMENT="pve" ;;
   *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
   *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
+  # Detect debian on ARM.
   *aarch64-linux-gcc*)
-    . /etc/os-release
-    case $ID in
-      debian)                SHELL_ENVIRONMENT="debian" ;;
-    esac
+    if [ -f /etc/os-release ]
+    then
+      . /etc/os-release
+      case $ID in
+        debian)              SHELL_ENVIRONMENT="debian" ;;
+      esac
+    fi
     ;;
+  *)
+    echo "Error: operating system not detected"
+    exit 1
 esac
 
 case $SHELL_ENVIRONMENT in
-  debian|ubuntu)
+  debian|ubuntu|pve)
       apt update
       apt install -y $DEBIAN_PACKAGES
       ;;
@@ -58,56 +66,52 @@ case $SHELL_ENVIRONMENT in
     exit 1
 esac
 
-# Secure sshd.
+# Make a backup copy of the sshd_config file.
 
 case $SHELL_ENVIRONMENT in
-  debian|ubuntu)
-
-    # Keep a backup copy of the sshd_config file.
-
+  debian|ubuntu|pve)
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
+esac
 
-    # Keep root password logins and TCP forwarding enabled on Proxmox VE cluster
-    # management.
+# Keep root password logins and TCP forwarding enabled on Proxmox VE cluster
+# management.
 
-    if grep /etc/pve /proc/mounts >/dev/null 2>&1
-    then
-      sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
-      sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
-    else
-      sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
-      sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
-    fi
+case $SHELL_ENVIRONMENT in
+  pve)
+    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
+  debian|ubuntu)
+    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
+esac
 
-    # Lock down authentication and forwarding.
+# Lock down authentication and forwarding.
 
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu|pve)
     sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
-
-    # Ensure that authorized_keys will be read.
-
     sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
-
-    # Only allow root and the non-root user access.
-
     sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
     sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
+esac
 
-    # Restart sshd to pick up the changes.
+# Restart sshd to pick up the changes.
 
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu|pve)
     systemctl restart sshd
     ;;
-
 esac
 
 # Install and configure tailscale.
 
 case $SHELL_ENVIRONMENT in
-  debian|ubuntu)
+  debian|ubuntu|pve)
     systemctl status tailscaled.service >/dev/null 2>&1
     if [ $? -eq 4 ]
     then
@@ -130,49 +134,47 @@ then
   fi
 fi
 
-# Only configure ufw on non-Proxmox / non-Docker hosts.
+# Only configure ufw on non-Proxmox hosts.
 
-if ! grep /etc/pve /proc/mounts >/dev/null 2>&1
-then
-  systemctl status docker.service >/dev/null 2>&1
-  if [ $? -eq 4 ]
-  then
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu)
     apt install -y ufw
-    ufw allow 22/tcp     # allow ssh
-    ufw allow 41641/udp  # allow direct tailscale connections
+    ufw allow 22/tcp comment 'allow ssh'
+    ufw allow 53/udp comment 'allow dns'
+    ufw allow 53/tcp comment 'allow dns'
+    ufw allow 68/udp comment 'allow dhcp'
+    ufw allow 41641/udp 'allow tailscale'
     ufw --force enable
   fi
 fi
 
 # Configure fail2ban for sshd on non-Proxmox hosts.
 
-if ! grep /etc/pve /proc/mounts >/dev/null 2>&1
-then
-  cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
-  cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
-  systemctl enable fail2ban
-  systemctl restart fail2ban
-  journalctl -u fail2ban -n 10
-fi
+case $SHELL_ENVIRONMENT in
+  debian|ubuntu)
+    cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
+    cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
+    systemctl enable fail2ban
+    systemctl restart fail2ban
+    journalctl -u fail2ban -n 10
+esac
 
 # Create the non-root user if needed.
 
 if ! grep ^$NON_ROOT_USER: /etc/passwd >/dev/null 2>&1
 then
   case $SHELL_ENVIRONMENT in
-    debian|ubuntu)
+    debian|ubuntu|pve)
       useradd -s /bin/bash -U -G $ADMIN_GROUPS -m $NON_ROOT_USER
       ;;
   esac
 fi
 
-# Check that sudo rights are granted to the sudo group without NOPASSWD.
+# Ensure that sudo requires a password.
 
 cp /etc/sudoers /etc/sudoers.$TIMESTAMP
 
 sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers
-
-# Remove NOPASSWD from sudoers.d rules.
 
 for SUDO_ITEM in $(ls -1 /etc/sudoers.d/*)
 do
@@ -215,18 +217,18 @@ if [ `grep ^$NON_ROOT_USER: /etc/shadow 2>/dev/null | cut -d: -f2 | wc -c` -lt 3
 then
   while true
   do
-    read -s -p "${SCRIPT_NAME} new password for ${NON_ROOT_USER}: " PASSWORD
+    read -s -p "${SCRIPT_NAME} enter new password for ${NON_ROOT_USER}: " PASSWORD
     echo
     read -s -p "${SCRIPT_NAME} retype new password for ${NON_ROOT_USER}: " RETYPE
     echo
     if [ "${PASSWORD}" != "${RETYPE}" ]
     then
-      echo "${SCRIPT_NAME} sorry, passwords do not match."
+      echo "${SCRIPT_NAME} passwords do not match."
       continue
     fi
     if [ "${PASSWORD}" = "" ]
     then
-      echo "${SCRIPT_NAME} sorry, password must not be empty."
+      echo "${SCRIPT_NAME} password must not be empty."
       continue
     fi
     if echo "${NON_ROOT_USER}:${PASSWORD}" | chpasswd
