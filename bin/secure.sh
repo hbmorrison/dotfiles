@@ -165,7 +165,6 @@ case $SHELL_ENVIRONMENT in
     cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
     systemctl enable fail2ban
     systemctl restart fail2ban
-    journalctl -u fail2ban -n 10
 esac
 
 # Create the non-root user if needed.
