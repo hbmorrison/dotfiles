@@ -143,8 +143,18 @@ case $SHELL_ENVIRONMENT in
     ufw allow 53/udp comment 'allow dns'
     ufw allow 53/tcp comment 'allow dns'
     ufw allow 68/udp comment 'allow dhcp'
-    ufw allow 41641/udp 'allow tailscale'
+    ufw allow 41641/udp comment 'allow tailscale'
     ufw --force enable
+
+    # Configure ufw to work with docker.
+
+    systemctl status docker.service >/dev/null 2>&1
+    if [ $? -lt 4 ]
+    then
+      cp $BASE_DIR/bin/ufw-docker /usr/local/bin
+      $BASE_DIR/bin/ufw-docker install
+      systemctl restart ufw
+    fi
 esac
 
 # Configure fail2ban for sshd on non-Proxmox hosts.
