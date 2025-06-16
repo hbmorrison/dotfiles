@@ -268,8 +268,8 @@ function vc {
 
 # Eyaml aliases for Puppet.
 
-alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.eyaml/isapps_puppet_public_key.pkcs7.pem --password"
-alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.eyaml/isapps_puppet_public_key.pkcs7.pem --file"
+alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --password"
+alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --file"
 
 # Git aliases.
 
