@@ -1,0 +1,10 @@
+Host router nas-01 nas-02 pbs-local pbs-remote
+  User hannah
+Host docker-apps docker-media docker-test docker-remote
+  User hannah
+Host *.home
+  User hannah
+Host *.gerbil-koi.ts.net
+  User hannah
+Host *.frogstar.party
+  User hannah
