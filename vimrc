@@ -5,6 +5,9 @@ syntax on
 filetype plugin indent on
 set hlsearch
 
+" use fancy symbols
+set encoding=utf8
+
 " set colour range for modern terminals
 set t_Co=256
 
