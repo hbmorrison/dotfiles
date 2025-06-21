@@ -38,11 +38,12 @@ case $(cat /proc/version 2>/dev/null) in
   *build@proxmox*)
     lXC=`systemd-detect-virt &> /dev/null`
     if [ "${LXC:-none}" = "lxc" ]
+    then
       if [ -f /etc/os-release ]
       then
         . /etc/os-release
         case $ID in
-          debian)            SHELL_ENVIRONMENT="debian" ;;
+          debian) SHELL_ENVIRONMENT="debian" ;;
         esac
       fi
     else
@@ -55,12 +56,12 @@ case $(cat /proc/version 2>/dev/null) in
     then
       . /etc/os-release
       case $ID in
-        debian)              SHELL_ENVIRONMENT="debian" ;;
+        debian) SHELL_ENVIRONMENT="debian" ;;
       esac
     fi
     ;;
-  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
-  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
+  *Debian*) SHELL_ENVIRONMENT="debian" ;;
+  *Ubuntu*) SHELL_ENVIRONMENT="ubuntu" ;;
   *)
     echo "Error: operating system not detected"
     exit 1
