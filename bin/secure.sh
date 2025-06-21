@@ -36,7 +36,7 @@ fi
 case $(cat /proc/version 2>/dev/null) in
   # Detect lxc containers running on Proxmox.
   *build@proxmox*)
-    lXC=`systemd-detect-virt &> /dev/null`
+    LXC=`systemd-detect-virt 2> /dev/null`
     if [ "${LXC:-none}" = "lxc" ]
     then
       if [ -f /etc/os-release ]
