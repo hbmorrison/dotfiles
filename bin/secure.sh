@@ -12,7 +12,7 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
-DEBIAN_PACKAGES="bash-completion curl fail2ban git python3-systemd sudo vim"
+DEBIAN_DEPENDENCIES="bash-completion curl fail2ban git python3-systemd sudo vim"
 TAILSCALE_ARGS="--accept-risk all --advertise-tags tag:secure"
 ADMIN_GROUPS="sudo,users"
 
@@ -34,13 +34,21 @@ fi
 # Work out which OS and terminal is being used.
 
 case $(cat /proc/version 2>/dev/null) in
-  MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
-  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
-  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
-  *build@proxmox*)           SHELL_ENVIRONMENT="pve" ;;
-  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
-  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
-  *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
+  # Detect lxc containers running on Proxmox.
+  *build@proxmox*)
+    lXC=`systemd-detect-virt &> /dev/null`
+    if [ "${LXC:-none}" = "lxc" ]
+      if [ -f /etc/os-release ]
+      then
+        . /etc/os-release
+        case $ID in
+          debian)            SHELL_ENVIRONMENT="debian" ;;
+        esac
+      fi
+    else
+      SHELL_ENVIRONMENT="pve"
+    fi
+    ;;
   # Detect debian on ARM.
   *aarch64-linux-gcc*)
     if [ -f /etc/os-release ]
@@ -51,19 +59,20 @@ case $(cat /proc/version 2>/dev/null) in
       esac
     fi
     ;;
+  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
+  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
   *)
     echo "Error: operating system not detected"
     exit 1
 esac
 
+# Install dependencies.
+
 case $SHELL_ENVIRONMENT in
   debian|ubuntu|pve)
       apt update
-      apt install -y $DEBIAN_PACKAGES
+      apt install -y $DEBIAN_DEPENDENCIES
       ;;
-  *)
-    echo "Error: operating system not supported"
-    exit 1
 esac
 
 # Make a backup copy of the sshd_config file.
