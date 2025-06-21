@@ -35,6 +35,10 @@ case $(cat /proc/version 2>/dev/null) in
     ;;
 esac
 
+# Install dependencies.
+
+$SUDO apt install --no-install-recommends -y $DOCKER_DEPENDENCIES
+
 # Install docker.
 
 case $SHELL_ENVIRONMENT in
@@ -54,7 +58,7 @@ case $SHELL_ENVIRONMENT in
     fi
     if [ ! -f /usr/bin/dockerd ]
     then
-      $SUDO apt install --no-install-recommends -y $DOCKER_DEPENDENCIES $DOCKER_PACKAGES
+      $SUDO apt install --no-install-recommends -y $DOCKER_PACKAGES
     fi
     ;;
 esac
