@@ -5,6 +5,9 @@ syntax on
 filetype plugin indent on
 set hlsearch
 
+" clear search highlighting with q,
+nnoremap <silent> q, :let @/ = ""<CR>
+
 " use fancy symbols
 set encoding=utf8
 
@@ -352,6 +355,16 @@ endfunction
 let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetCursorLine', }
 
 " FIXES
+
+" fix search misbehaviour after search pattern has been cleared
+function! ExecuteSearch(command)
+  if strlen(@/) > 0
+    execute "normal! " .. a:command
+  endif
+endfunction
+
+nnoremap <silent> n :call ExecuteSearch("n")<CR>
+nnoremap <silent> N :call ExecuteSearch("N")<CR>
 
 " WSL yank support
 let s:clip = '/mnt/c/Windows/System32/clip.exe'
