@@ -19,8 +19,8 @@ esac
 # Work out the location of the system32 directory on Windows.
 
 case $SHELL_ENVIRONMENT in
-  wsl)     SYSTEM_DIR="/mnt/c/Windows/System32" ;;
-  gitbash) SYSTEM_DIR="/c/Windows/System32" ;;
+  wsl)     SYSTEM_DIR="/mnt/c/Windows/System32";;
+  gitbash) SYSTEM_DIR="/c/Windows/System32";;
 esac
 
 # Don't put duplicate lines or lines starting with space in the history.
@@ -46,16 +46,21 @@ fi
 
 # Enable programmable completion features.
 
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
+if ! shopt -oq posix
+then
+  if [ -f /usr/share/bash-completion/bash_completion ]
+  then
     source /usr/share/bash-completion/bash_completion
-    if [ -f /usr/share/bash-completion/completions/git ]; then
+    if [ -f /usr/share/bash-completion/completions/git ]
+    then
       source /usr/share/bash-completion/completions/git
     fi
-    if [ -f /usr/share/bash-completion/completions/git-flow ]; then
+    if [ -f /usr/share/bash-completion/completions/git-flow ]
+    then
       source /usr/share/bash-completion/completions/git-flow
     fi
-  elif [ -f /etc/bash_completion ]; then
+  elif [ -f /etc/bash_completion ]
+  then
     source /etc/bash_completion
   fi
 fi
@@ -155,8 +160,8 @@ export PROMPT_COLOUR_CLEAR='\[\033[00m\]'
 # Set up git prompt.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|wsl|debian) source /usr/lib/git-core/git-sh-prompt ;;
-  redhat)              source /usr/share/git-core/contrib/completion/git-prompt.sh ;;
+  chromeos|wsl|debian) source /usr/lib/git-core/git-sh-prompt;;
+  redhat)              source /usr/share/git-core/contrib/completion/git-prompt.sh;;
 esac
 
 if [ -z "$(declare -F __git_ps1 2> /dev/null)" ]
