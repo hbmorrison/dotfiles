@@ -359,7 +359,10 @@ let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetC
 " fix search misbehaviour after search pattern has been cleared
 function! ExecuteSearch(command)
   if strlen(@/) > 0
-    execute "normal! " .. a:command
+    try
+      execute "normal! " .. a:command
+    catch /:E486:/
+    endtry
   endif
 endfunction
 
