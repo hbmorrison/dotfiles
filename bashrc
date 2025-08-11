@@ -70,34 +70,34 @@ fi
 case $SHELL_ENVIRONMENT in
 
   chromeos|wsl|debian)
+    # Overload cd to put git root directories onto the directory stack.
     function cd {
-      local gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
-      if [ "${gitroot}" != "" -a "${1}" == "" ]
+      local target_dir next_gitroot prev_gitroot
+      # If the target directory exists.
+      if target_dir=$(readlink -e "${1}")
       then
-        if [ "${gitroot}" != "$PWD" ]
+        # And if the target directory is inside a git repo.
+        if next_gitroot=$(git -C "${target_dir}" rev-parse --show-toplevel 2>/dev/null)
         then
-          builtin cd "${gitroot}"
-        else
-          if [ "${parentgitroot}" != "" ]
+          # Pop the previous git root directory from the directory stack if it
+          # is not a parent directory of this git root directory.
+          if prev_gitroot=$(dirs -l +1 2>/dev/null)
           then
-            builtin cd "${parentgitroot}"
-            parentgitroot=""
-          else
-            builtin cd
+            echo "${next_gitroot}" | grep "^${prev_gitroot}." &>/dev/null || popd -n &>/dev/null
           fi
-        fi
-      else
-        if [ "${1}" == "" ]
-        then
-          builtin cd
-        else
-          builtin cd "${1}"
+          # Push the next git root directory onto the stack.
+          pushd -n "${next_gitroot}" &>/dev/null
         fi
       fi
-      is_parent=$(git rev-parse --show-toplevel 2>/dev/null | grep "^${gitroot}.")
-      if [ "${gitroot}" != "" -a "${is_parent}" != "" ]
+      # Decide how to cd now that the git root directories have been handled.
+      if [ $# -gt 0 ]
       then
-        parentgitroot=$gitroot
+        builtin cd $@
+      else
+        if ! popd &>/dev/null
+        then
+          builtin cd
+        fi
       fi
     }
 
