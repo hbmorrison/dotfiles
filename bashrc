@@ -1,5 +1,4 @@
 # If not running interactively, don't do anything.
-# test comment
 
 case $- in
   *i*) ;;

@@ -34,3 +34,6 @@
 [diff]
 	submodule = log
 	algorithm = patience
+[rebase]
+	autosquash = true
+	updateRefs = true
