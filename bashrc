@@ -96,12 +96,27 @@ case $SHELL_ENVIRONMENT in
         # If a directory has been specified, then change to it.
         builtin cd $@
       else
-        # Pop the git root directory from the stack. If that fails there are no
+        # If the next directory on the stack is actually the current directory,
+        # remove it since cd with no arguments should always go to a parent
+        # directory.
+        local next_dir=$(dirs -l +1 2>/dev/null)
+        if [ "${next_dir}" == "${PWD}" ]
+        then
+          popd -n &>/dev/null
+        fi
+        # Pop the next directory from the stack. If that fails there are no
         # more git roots so just use the built in cd to change to the home
         # directory.
         if ! popd &>/dev/null
         then
           builtin cd
+        fi
+        # If the new working directory is a git root, it will not have been
+        # added in the first section of this function since we got here with a
+        # bare cd, so add it to the stack.
+        if next_gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+        then
+          pushd -n "${next_gitroot}" &>/dev/null
         fi
       fi
     }
@@ -198,24 +213,24 @@ case $SHELL_ENVIRONMENT in
   gitbash)
     function __dir_ps1 {
       local gitroot gitparent
-      gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+      gitroot=$(dirs -l +1 2>/dev/null)
       if gitparent=$(dirname $gitroot 2>/dev/null)
       then
-        cygpath -m $PWD | sed "s#^${gitparent}/##"
+        cygpath -m "${PWD}" | sed "s#^${gitparent}/##"
       else
-        echo "$PWD" | sed "s#${HOME}#~#"
+        cygpath -m "${PWD}" | sed "s#${HOME}#~#"
       fi
     }
     ;;
   *)
     function __dir_ps1 {
       local gitroot gitparent
-      gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+      gitroot=$(dirs -l +1 2>/dev/null)
       if gitparent=$(dirname $gitroot 2>/dev/null)
       then
-        echo $PWD | sed "s#^${gitparent}/##"
+        pwd | sed "s#^${gitparent}/##"
       else
-        echo "$PWD" | sed "s#${HOME}#~#"
+        pwd | sed "s#${HOME}#~#"
       fi
     }
     ;;
