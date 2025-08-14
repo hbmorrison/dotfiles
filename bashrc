@@ -197,10 +197,11 @@ GIT_PROMPT="$COLOUR_CYAN\$(__git_ps1)$COLOUR_CLEAR"
 case $SHELL_ENVIRONMENT in
   gitbash)
     function __dir_ps1 {
-      local gitroot=$(git rev-parse --show-toplevel 2>/dev/null | sed 's#[^/][^/]*$##')
-      if [ "${gitroot}" != "" ]
+      local gitroot gitparent
+      gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+      if gitparent=$(dirname $gitroot 2>/dev/null)
       then
-        cygpath -m $PWD | sed "s#^${gitroot}##"
+        cygpath -m $PWD | sed "s#^${gitparent}/##"
       else
         echo "$PWD" | sed "s#${HOME}#~#"
       fi
@@ -208,10 +209,11 @@ case $SHELL_ENVIRONMENT in
     ;;
   *)
     function __dir_ps1 {
-      local gitroot=$(git rev-parse --show-toplevel 2>/dev/null | sed 's#[^/][^/]*$##')
-      if [ "${gitroot}" != "" ]
+      local gitroot gitparent
+      gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+      if gitparent=$(dirname $gitroot 2>/dev/null)
       then
-        echo $PWD | sed "s#^${gitroot}##"
+        echo $PWD | sed "s#^${gitparent}/##"
       else
         echo "$PWD" | sed "s#${HOME}#~#"
       fi
