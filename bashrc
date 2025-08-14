@@ -65,12 +65,13 @@ then
   fi
 fi
 
-# cd to git root first then home directory.
+# cd to git root first then home directory. This overloads the cd command to put
+# git root directories onto the directory stack, then pops them out of the
+# stack when cd is run with no arguments.
 
 case $SHELL_ENVIRONMENT in
 
   chromeos|wsl|debian)
-    # Overload cd to put git root directories onto the directory stack.
     function cd {
       local target_dir next_gitroot prev_gitroot
       # If the target directory exists.
@@ -79,21 +80,25 @@ case $SHELL_ENVIRONMENT in
         # And if the target directory is inside a git repo.
         if next_gitroot=$(git -C "${target_dir}" rev-parse --show-toplevel 2>/dev/null)
         then
-          # Pop the previous git root directory from the directory stack if it
-          # is not a parent directory of this git root directory.
+          # Check the previous git root directory from the directory stack. If
+          # it is not a parent directory of this git root directory, remove it.
           if prev_gitroot=$(dirs -l +1 2>/dev/null)
           then
             echo "${next_gitroot}" | grep "^${prev_gitroot}." &>/dev/null || popd -n &>/dev/null
           fi
-          # Push the next git root directory onto the stack.
+          # Push the git root directory onto the stack.
           pushd -n "${next_gitroot}" &>/dev/null
         fi
       fi
       # Decide how to cd now that the git root directories have been handled.
       if [ $# -gt 0 ]
       then
+        # If a directory has been specified, then change to it.
         builtin cd $@
       else
+        # Pop the git root directory from the stack. If that fails there are no
+        # more git roots so just use the built in cd to change to the home
+        # directory.
         if ! popd &>/dev/null
         then
           builtin cd
@@ -102,6 +107,8 @@ case $SHELL_ENVIRONMENT in
     }
 
 esac
+
+# Password Manager Pro integration.
 
 case $SHELL_ENVIRONMENT in
   gitbash|wsl)
@@ -150,12 +157,12 @@ export GIT_SSH_COMMAND="/usr/bin/ssh"
 
 # Set shell prompt colours.
 
-export PROMPT_COLOUR_RED='\[\033[00;31m\]'
-export PROMPT_COLOUR_GREEN='\[\033[00;32m\]'
-export PROMPT_COLOUR_YELLOW='\[\033[00;33m\]'
-export PROMPT_COLOUR_PURPLE='\[\033[00;35m\]'
-export PROMPT_COLOUR_CYAN='\[\033[00;36m\]'
-export PROMPT_COLOUR_CLEAR='\[\033[00m\]'
+COLOUR_RED='\[\033[00;31m\]'
+COLOUR_GREEN='\[\033[00;32m\]'
+COLOUR_YELLOW='\[\033[00;33m\]'
+COLOUR_PURPLE='\[\033[00;35m\]'
+COLOUR_CYAN='\[\033[00;36m\]'
+COLOUR_CLEAR='\[\033[00m\]'
 
 # Set up git prompt.
 
@@ -163,6 +170,8 @@ case $SHELL_ENVIRONMENT in
   chromeos|wsl|debian) source /usr/lib/git-core/git-sh-prompt;;
   redhat)              source /usr/share/git-core/contrib/completion/git-prompt.sh;;
 esac
+
+# If there are no git prompt helper functions, use this simple one.
 
 if [ -z "$(declare -F __git_ps1 2> /dev/null)" ]
 then
@@ -181,7 +190,7 @@ then
   }
 fi
 
-GIT_PROMPT="$PROMPT_COLOUR_CYAN\$(__git_ps1)$PROMPT_COLOUR_CLEAR"
+GIT_PROMPT="$COLOUR_CYAN\$(__git_ps1)$COLOUR_CLEAR"
 
 # Set up directory prompt.
 
@@ -210,18 +219,7 @@ case $SHELL_ENVIRONMENT in
     ;;
 esac
 
-DIR_PROMPT="$PROMPT_COLOUR_YELLOW\$(__dir_ps1)$PROMPT_COLOUR_CLEAR"
-
-# Set up the submodule prompt
-
-function __sub_ps1 {
-  if [ "${parentgitroot}" != "" ]
-  then
-    echo "(s) "
-  fi
-}
-
-SUB_PROMPT="$PROMPT_COLOUR_PURPLE\$(__sub_ps1)$PROMPT_COLOUR_CLEAR"
+DIR_PROMPT="$COLOUR_YELLOW\$(__dir_ps1)$COLOUR_CLEAR"
 
 # Make sure the hostname is lowercase.
 
@@ -233,53 +231,18 @@ TITLE_PROMPT="\[\e]0;\u@${HOSTNAME}\$(__git_ps1) \W\a\]"
 
 # Set the entire prompt.
 
-PS1="${TITLE_PROMPT}${debian_chroot:+($debian_chroot)}${PROMPT_COLOUR_CLEAR}\u@${HOSTNAME}${GIT_PROMPT} ${SUB_PROMPT}${DIR_PROMPT} \\$ "
+PS1="${TITLE_PROMPT}${COLOUR_CLEAR}\u@${HOSTNAME}${GIT_PROMPT} ${DIR_PROMPT} \\$ "
 
-# Completions for git aliases.
-
-if [ -s /usr/share/bash-completion/completions/git ]
-then
-  __git_complete ch _git_checkout
-fi
-
-# Shell aliases.
+# Basic shell aliases.
 
 alias c=clear
 alias ls="command ls -F --color=auto"
-alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
-
-# Open vim with results from fuzzy find.
-
-function vf {
-  if [ "$#" -eq 0 ]
-  then
-    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})'
-  else
-    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})' -q "$*"
-  fi
-}
-
-# Open vim with results from ripgrep search.
-
-function vg {
-  rg -l "$*" | xargs -o vim -c "let @/='\<$*\>'" -c "set hls"
-}
-
-# Open vim with all files that have git changes.
-
-function vc {
-  git status --porcelain | grep -v ^D | cut -c4- | xargs -o vim
-}
-
-# Eyaml aliases for Puppet.
-
-alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --password"
-alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --file"
 
 # Git aliases.
 
 alias br="git branch"
 alias bra="git branch -a"
+alias brd="git branch -D"
 alias ch="git checkout"
 alias chd="git checkout develop"
 alias chm="git checkout main"
@@ -305,3 +268,52 @@ alias bugfix="git flow bugfix"
 alias release="git flow release"
 alias hotfix="git flow hotfix"
 alias support="git flow support"
+
+# Completions for git aliases.
+
+if declare -f __git_complete &>/dev/null
+then
+  __git_complete brd _git_branch
+  __git_complete ch _git_checkout
+  __git_complete lo _git_log
+  __git_complete pu _git_push
+  __git_complete gsa _git_submodule
+  __git_complete gsu _git_submodule
+  __git_complete feature __git_flow_feature
+  __git_complete bugfix __git_flow_bugfix
+  __git_complete release __git_flow_release
+  __git_complete hotfix __git_flow_hotfix
+  __git_complete support __git_flow_support
+fi
+
+# Eyaml aliases for Puppet.
+
+alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --password"
+alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --file"
+
+# QMK aliases.
+
+alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
+
+# Open vim with results from fuzzy find.
+
+function vf {
+  if [ "$#" -eq 0 ]
+  then
+    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})'
+  else
+    fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})' -q "$*"
+  fi
+}
+
+# Open vim with results from ripgrep search.
+
+function vg {
+  rg -l "$*" | xargs -o vim -c "let @/='\<$*\>'" -c "set hls"
+}
+
+# Open vim with all files that have git changes.
+
+function vc {
+  git status --porcelain | grep -v ^D | cut -c4- | xargs -o vim
+}
