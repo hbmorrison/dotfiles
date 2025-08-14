@@ -1,9 +1,17 @@
-[init]
-	defaultBranch = main
+# Default behaviours.
+[diff]
+	submodule = log
+	algorithm = patience
 [fetch]
 	prune = true
 [pull]
-	rebase = false
+	rebase = true
+[push]
+	autoSetupRemote = true
+[rebase]
+	autosquash = true
+	updateRefs = true
+# Branch names.
 [gitflow "prefix"]
 	feature = feature-
 	bugfix = bugfix-
@@ -14,26 +22,18 @@
 [gitflow "branch"]
 	master = main
 	develop = develop
+[init]
+	defaultBranch = main
+# Make things pretty.
+[blame]
+	coloring = highlightRecent
+	date = short
 [format]
 	pretty = format: %C(auto,yellow)%h %C(auto,blue)%cn %C(auto,green)%cr%C(auto,reset)%C(auto,red)%d%C(auto,reset) %s
 [log]
 	abbrevCommit = true
-[blame]
-	coloring = highlightRecent
-	date = short
+# Useful aliases.
 [alias]
 	user = config --get-regexp '^user\\.'
 	chmod = update-index --chmod=+x
 	wdiff = diff --word-diff=color
-[push]
-	recurseSubmodules = check
-[status]
-	submodulesummary = 1
-[submodule]
-	recurse = true
-[diff]
-	submodule = log
-	algorithm = patience
-[rebase]
-	autosquash = true
-	updateRefs = true
