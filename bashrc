@@ -258,6 +258,7 @@ alias gsu="git submodule update --init --recursive"
 alias lo="git log"
 alias pl="git pull"
 alias pu="git push"
+alias puo="git push -u origin"
 alias st="git status"
 
 # Git flow aliases.
@@ -275,10 +276,11 @@ if declare -f __git_complete &>/dev/null
 then
   __git_complete brd _git_branch
   __git_complete ch _git_checkout
-  __git_complete lo _git_log
-  __git_complete pu _git_push
   __git_complete gsa _git_submodule
   __git_complete gsu _git_submodule
+  __git_complete lo _git_log
+  __git_complete pu _git_push
+  __git_complete puo _git_push
   __git_complete feature __git_flow_feature
   __git_complete bugfix __git_flow_bugfix
   __git_complete release __git_flow_release
