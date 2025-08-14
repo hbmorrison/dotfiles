@@ -265,18 +265,20 @@ alias chd="git checkout develop"
 alias chm="git checkout main"
 alias chp="git checkout production"
 alias cl="git clone"
-alias co="git commit -a"
+alias co="git commit"
 alias dh="git diff HEAD^"
 alias di="git diff"
 alias ds="git diff --staged"
-alias fe="git fetch"
 alias gsa="git submodule add"
-alias gsu="git submodule update --init --recursive"
+alias gsu="git submodule update --recursive"
 alias lo="git log"
 alias pl="git pull"
 alias pu="git push"
 alias puo="git push -u origin"
 alias st="git status"
+
+alias amend="git commit --amend"
+alias fixup="git commit --fixup"
 
 # Git flow aliases.
 
