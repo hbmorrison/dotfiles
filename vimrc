@@ -27,15 +27,6 @@ let g:darkfg=15
 let g:lightbg=15
 let g:lightfg=0
 
-" set base colours properly for ChromeOS
-let g:proc_version = substitute(system("cat /proc/version | grep 'Chromium OS' 2>/dev/null"), '\n', '', 'g')
-if g:proc_version != ""
-  let g:darkbg=8
-  let g:darkfg=15
-  let g:lightbg=8
-  let g:lightfg=15
-end
-
 " set highlighting common to light and dark backgrounds
 highlight Constant term=NONE cterm=NONE ctermfg=37
 highlight Noise term=NONE cterm=NONE ctermfg=245
