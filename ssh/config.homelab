@@ -1,6 +1,6 @@
 Host router router.home router.gerbil-koi.ts.net
   User root
-Host router nas-01 nas-02 pbs-local pbs-remote
+Host nas-01 nas-02 pbs-local pbs-remote
   User hannah
 Host docker-apps docker-fabric docker-media docker-remote docker-test
   User hannah
