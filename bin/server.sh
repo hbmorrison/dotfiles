@@ -45,17 +45,10 @@ case $(cat /proc/version 2>/dev/null) in
     fi
     ;;
   *Debian*)
-    if dpkg -s proxmox-ve >& /dev/null
-    then
-      SHELL_ENVIRONMENT="pve"
-      break
-    fi
-    if dpkg -s proxmox-backup-server >& /dev/null
-    then
-      SHELL_ENVIRONMENT="pbs"
-      break
-    fi
     SHELL_ENVIRONMENT="debian"
+    # Proxmox VE and Backup Server are special cases of Debian.
+    dpkg -s proxmox-ve >& /dev/null && SHELL_ENVIRONMENT="pve"
+    dpkg -s proxmox-backup-server >& /dev/null && SHELL_ENVIRONMENT="pbs"
     ;;
   *Ubuntu*)
     SHELL_ENVIRONMENT="ubuntu"
@@ -64,7 +57,7 @@ case $(cat /proc/version 2>/dev/null) in
     echo "Error: operating system not detected"
     exit 1
 esac
-
+echo $SHELL_ENVIRONMENT
 # Install required packages.
 
 apt update
@@ -151,15 +144,12 @@ case $SHELL_ENVIRONMENT in
     fi
 esac
 
-# Configure fail2ban for sshd on non-Proxmox hosts.
+# Configure fail2ban for sshd.
 
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu)
-    cp $BASE_DIR/etc/fail2ban.local /etc/fail2ban/fail2ban.local
-    cp $BASE_DIR/etc/jail.local /etc/fail2ban/jail.local
-    systemctl enable fail2ban
-    systemctl restart fail2ban
-esac
+cp $BASE_DIR/etc/jail.d/default.local /etc/fail2ban/jail.d/
+cp $BASE_DIR/etc/jail.d/sshd.local /etc/fail2ban/jail.d/
+systemctl enable fail2ban
+systemctl restart fail2ban
 
 # Create the non-root user if needed.
 
@@ -179,18 +169,14 @@ do
   sed -i -e '/NOPASSWD:/s/NOPASSWD://' $SUDO_ITEM
 done
 
-# Update the non-root user with the correct shell and groups.
-
-usermod -s /bin/bash -U -G $ADMIN_GROUPS $NON_ROOT_USER
-
-# Configure the user home directory.
+# Configure the non-root user home directory.
 
 if [ ! -d $NON_ROOT_DOTFILES ]
 then
   cp -r $BASE_DIR $NON_ROOT_DOTFILES
   chown -R $NON_ROOT_USER:$NON_ROOT_USER $NON_ROOT_DOTFILES
 else
-  su -c "git -C $NON_ROOT_DOTFILES pull" - $NON_ROOT_USER
+  su -c "git -C $NON_ROOT_DOTFILES pull" $NON_ROOT_USER
 fi
 
 if [ ! -x $NON_ROOT_DOTFILES/bin/dotfiles.sh ]
@@ -199,7 +185,7 @@ then
   exit 1
 fi
 
-su -c "$NON_ROOT_DOTFILES/bin/dotfiles.sh" - $NON_ROOT_USER
+su -c "$NON_ROOT_DOTFILES/bin/dotfiles.sh" $NON_ROOT_USER
 
 if [ ! -x $NON_ROOT_DOTFILES/bin/keys.sh ]
 then
@@ -207,7 +193,7 @@ then
   exit 1
 fi
 
-su -c "$NON_ROOT_DOTFILES/bin/keys.sh" - $NON_ROOT_USER
+su -c "$NON_ROOT_DOTFILES/bin/keys.sh" $NON_ROOT_USER
 
 # Set the user's password.
 
@@ -236,6 +222,10 @@ then
     fi
   done
 fi
+
+# Update the non-root user with the correct shell and groups.
+
+usermod -s /bin/bash -U -G $ADMIN_GROUPS $NON_ROOT_USER
 
 # Run the dotfiles and keys scripts.
 
