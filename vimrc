@@ -5,6 +5,12 @@ syntax on
 filetype plugin indent on
 set hlsearch
 
+" clear search highlighting with q,
+nnoremap <silent> q, :let @/ = ""<CR>
+
+" use fancy symbols
+set encoding=utf8
+
 " set colour range for modern terminals
 set t_Co=256
 
@@ -12,20 +18,14 @@ set t_Co=256
 set nocompatible
 set viminfo='20,<500,/50,:50,h
 
-" set default base colours
-let g:darkbg=8
-let g:darkfg=15
-let g:lightbg=8
-let g:lightfg=15
+" set leader key
+let mapleader=","
 
-" set base colours properly for ChromeOS
-let g:proc_version = substitute(system("cat /proc/version | grep 'Chromium OS' 2>/dev/null"), '\n', '', 'g')
-if g:proc_version == ""
-  let g:darkbg=0
-  let g:darkfg=15
-  let g:lightbg=15
-  let g:lightfg=0
-end
+" set default base colours
+let g:darkbg=0
+let g:darkfg=15
+let g:lightbg=15
+let g:lightfg=0
 
 " set highlighting common to light and dark backgrounds
 highlight Constant term=NONE cterm=NONE ctermfg=37
@@ -298,15 +298,14 @@ set updatetime=100
 nmap <Leader>n <Plug>(GitGutterNextHunk)
 nmap <Leader>p <Plug>(GitGutterPrevHunk)
 nmap <Leader>a <Plug>(GitGutterStageHunk)
-nmap <Leader>u <Plug>(GitGutterUndoHunk)
 nmap <Leader>hs <Nop>
 nmap <Leader>hu <Nop>
 
 " vim fugitive
-nmap <Leader>S :Git -p status<Return>
-nmap <Leader>D :Git -p diff<Return>
+nmap <Leader>s :Git -p status<Return>
+nmap <Leader>d :Git -p diff<Return>
+nmap <Leader>c :Git commit<Return>
 nmap <Leader>C :Git commit -a<Return>
-nmap <Leader>P :Git -p push<Return>
 
 " vim-ripgrep
 let g:rg_derive_root=1
@@ -347,6 +346,19 @@ endfunction
 let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetCursorLine', }
 
 " FIXES
+
+" fix search misbehaviour after search pattern has been cleared
+function! ExecuteSearch(command)
+  if strlen(@/) > 0
+    try
+      execute "normal! " .. a:command
+    catch /:E486:/
+    endtry
+  endif
+endfunction
+
+nnoremap <silent> n :call ExecuteSearch("n")<CR>
+nnoremap <silent> N :call ExecuteSearch("N")<CR>
 
 " WSL yank support
 let s:clip = '/mnt/c/Windows/System32/clip.exe'

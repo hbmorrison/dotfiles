@@ -1,13 +1,5 @@
 AddressFamily inet
 GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
-Include config.github
+Include config.homelab
 Include config.work
-Host router.home
-  User root
-Host *.home
-  User hannah
-Host *.gerbil-koi.ts.net
-  User hannah
-Host *.frogstar.party
-  User hannah
