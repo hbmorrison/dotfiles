@@ -185,7 +185,7 @@ case $SHELL_ENVIRONMENT in
   wsl) $SUDO hwclock -s ;;
 esac
 
-# Run the dotfiles and keys scripts.
+# Run the dotfiles and git scripts.
 
 if [ ! -x $BASE_DIR/bin/dotfiles.sh ]
 then
@@ -195,10 +195,10 @@ fi
 
 source $BASE_DIR/bin/dotfiles.sh
 
-if [ ! -x $BASE_DIR/bin/keys.sh ]
+if [ ! -x $BASE_DIR/bin/git.sh ]
 then
-  echo "Error: keys script not found"
+  echo "Error: git script not found"
   exit 1
 fi
 
-source $BASE_DIR/bin/keys.sh
+source $BASE_DIR/bin/git.sh
