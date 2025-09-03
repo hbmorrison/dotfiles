@@ -195,10 +195,10 @@ fi
 
 source $BASE_DIR/bin/dotfiles.sh
 
-if [ ! -x $BASE_DIR/bin/git.sh ]
+if [ ! -x $BASE_DIR/bin/gitconfig.sh ]
 then
-  echo "Error: git script not found"
+  echo "Error: gitconfig script not found"
   exit 1
 fi
 
-source $BASE_DIR/bin/git.sh
+source $BASE_DIR/bin/gitconfig.sh
