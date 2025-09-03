@@ -185,6 +185,20 @@ case $SHELL_ENVIRONMENT in
   wsl) $SUDO hwclock -s ;;
 esac
 
-# Run the dotfiles script.
+# Run the dotfiles and keys scripts.
+
+if [ ! -x $BASE_DIR/bin/dotfiles.sh ]
+then
+  echo "Error: dotfiles script not found"
+  exit 1
+fi
 
 source $BASE_DIR/bin/dotfiles.sh
+
+if [ ! -x $BASE_DIR/bin/keys.sh ]
+then
+  echo "Error: keys script not found"
+  exit 1
+fi
+
+source $BASE_DIR/bin/keys.sh

@@ -12,8 +12,8 @@ SCRIPT_NAME=$(basename $THIS_SCRIPT)
 NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
-DEBIAN_DEPENDENCIES="bash-completion curl fail2ban git python3-systemd sudo vim"
-TAILSCALE_ARGS="--accept-dns=false --accept-risk=all --advertise-tags=tag:secure "
+PACKAGES="bash-completion curl fail2ban git git-flow python3-systemd sudo vim"
+TAILSCALE_ARGS="--accept-risk=all --advertise-tags=tag:secure"
 ADMIN_GROUPS="sudo,users"
 
 # Add docker to the list of admin groups if it exists.
@@ -34,22 +34,6 @@ fi
 # Work out which OS and terminal is being used.
 
 case $(cat /proc/version 2>/dev/null) in
-  # Detect lxc containers running on Proxmox.
-  *build@proxmox*)
-    LXC=`systemd-detect-virt 2> /dev/null`
-    if [ "${LXC:-none}" = "lxc" ]
-    then
-      if [ -f /etc/os-release ]
-      then
-        . /etc/os-release
-        case $ID in
-          debian) SHELL_ENVIRONMENT="debian" ;;
-        esac
-      fi
-    else
-      SHELL_ENVIRONMENT="pve"
-    fi
-    ;;
   # Detect debian on ARM.
   *aarch64-linux-gcc*)
     if [ -f /etc/os-release ]
@@ -60,38 +44,44 @@ case $(cat /proc/version 2>/dev/null) in
       esac
     fi
     ;;
-  *Debian*) SHELL_ENVIRONMENT="debian" ;;
-  *Ubuntu*) SHELL_ENVIRONMENT="ubuntu" ;;
+  *Debian*)
+    if dpkg -s proxmox-ve >& /dev/null
+    then
+      SHELL_ENVIRONMENT="pve"
+      break
+    fi
+    if dpkg -s proxmox-backup-server >& /dev/null
+    then
+      SHELL_ENVIRONMENT="pbs"
+      break
+    fi
+    SHELL_ENVIRONMENT="debian"
+    ;;
+  *Ubuntu*)
+    SHELL_ENVIRONMENT="ubuntu"
+    ;;
   *)
     echo "Error: operating system not detected"
     exit 1
 esac
 
-# Install dependencies.
+# Install required packages.
 
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu|pve)
-      apt update
-      apt install -y $DEBIAN_DEPENDENCIES
-      ;;
-esac
+apt update
+apt install -y $PACKAGES
 
 # Make a backup copy of the sshd_config file.
 
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu|pve)
-    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
-esac
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.$TIMESTAMP
 
-# Keep root password logins and TCP forwarding enabled on Proxmox VE cluster
-# management.
+# Keep root password logins and TCP forwarding enabled on Proxmox VE.
 
 case $SHELL_ENVIRONMENT in
   pve)
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
     ;;
-  debian|ubuntu)
+  debian|ubuntu|pbs)
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' /etc/ssh/sshd_config
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' /etc/ssh/sshd_config
     ;;
@@ -99,37 +89,28 @@ esac
 
 # Lock down authentication and forwarding.
 
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu|pve)
-    sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
-    sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
-    sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
-    sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
-esac
+sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' /etc/ssh/sshd_config
+sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' /etc/ssh/sshd_config
+sed -i -e 's/^AllowUsers/#AllowUsers/' /etc/ssh/sshd_config
+sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" /etc/ssh/sshd_config
 
 # Restart sshd to pick up the changes.
 
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu|pve)
-    systemctl restart sshd
-esac
+systemctl restart sshd
 
 # Install and configure tailscale.
 
-case $SHELL_ENVIRONMENT in
-  debian|ubuntu|pve)
-    systemctl status tailscaled.service >/dev/null 2>&1
-    if [ $? -eq 4 ]
-    then
-      $BASE_DIR/bin/tailscale.sh >/dev/null
-      tailscale up $TAILSCALE_ARGS
-    fi
-esac
+systemctl status tailscaled.service >/dev/null 2>&1
+if [ $? -eq 4 ]
+then
+  $BASE_DIR/bin/tailscale.sh >/dev/null
+  tailscale up $TAILSCALE_ARGS
+fi
 
 # Secure tailscaled.
 
@@ -161,9 +142,12 @@ case $SHELL_ENVIRONMENT in
     systemctl status docker.service >/dev/null 2>&1
     if [ $? -lt 4 ]
     then
-      cp $BASE_DIR/bin/ufw-docker /usr/local/bin
-      $BASE_DIR/bin/ufw-docker install
-      systemctl restart ufw
+      if [ ! -f /usr/local/bin/ufw-docker ]
+      then
+        cp $BASE_DIR/etc/ufw-docker /usr/local/bin
+        $BASE_DIR/etc/ufw-docker install
+        systemctl restart ufw
+      fi
     fi
 esac
 
@@ -181,10 +165,7 @@ esac
 
 if ! grep ^$NON_ROOT_USER: /etc/passwd >/dev/null 2>&1
 then
-  case $SHELL_ENVIRONMENT in
-    debian|ubuntu|pve)
-      useradd -s /bin/bash -U -G $ADMIN_GROUPS -m $NON_ROOT_USER
-  esac
+  useradd -s /bin/bash -U -G $ADMIN_GROUPS -m $NON_ROOT_USER
 fi
 
 # Ensure that sudo requires a password.
@@ -214,7 +195,7 @@ fi
 
 if [ ! -x $NON_ROOT_DOTFILES/bin/dotfiles.sh ]
 then
-  echo "Error: dotfiles dotfiles script not found"
+  echo "Error: dotfiles script not found for $NON_ROOT_USER"
   exit 1
 fi
 
@@ -222,7 +203,7 @@ su -c "$NON_ROOT_DOTFILES/bin/dotfiles.sh" - $NON_ROOT_USER
 
 if [ ! -x $NON_ROOT_DOTFILES/bin/keys.sh ]
 then
-  echo "Error: dotfiles keys script not found"
+  echo "Error: keys script not found for $NON_ROOT_USER"
   exit 1
 fi
 
@@ -255,3 +236,21 @@ then
     fi
   done
 fi
+
+# Run the dotfiles and keys scripts.
+
+if [ ! -x $BASE_DIR/bin/dotfiles.sh ]
+then
+  echo "Error: dotfiles script not found"
+  exit 1
+fi
+
+source $BASE_DIR/bin/dotfiles.sh
+
+if [ ! -x $BASE_DIR/bin/keys.sh ]
+then
+  echo "Error: keys script not found"
+  exit 1
+fi
+
+source $BASE_DIR/bin/keys.sh
