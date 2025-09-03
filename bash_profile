@@ -11,15 +11,15 @@ esac
 
 # Set local home directory if a roaming profile is in use.
 
-if [ "${SHELL_ENVIRONMENT}" = "gitbash" ]
-then
-  PROFILEDRIVE=`echo $USERPROFILE | cut -d'\' -f1`
-  if [ "$PROFILEDRIVE" != "$HOMEDRIVE" ]
-  then
-    export HOME=`cygpath $USERPROFILE`
-    cd
-  fi
-fi
+case $SHELL_ENVIRONMENT in
+  gitbash)
+    PROFILEDRIVE=`echo $USERPROFILE | cut -d'\' -f1`
+    if [ "$PROFILEDRIVE" != "$HOMEDRIVE" ]
+    then
+      export HOME=`cygpath $USERPROFILE`
+      cd
+    fi
+esac
 
 # Change to home directory if the shell starts in the root directory.
 
@@ -32,6 +32,10 @@ fi
 
 export EDITOR=vi
 export VISUAL=vi
+export LESS=-FRSX
+
+# Set the default fzf options.
+
 export FZF_DEFAULT_OPTS="-0 -1 --multi --keep-right --border=none --info=hidden \
   --bind start:select-all,ctrl-a:toggle-all \
   --color=bg+:-1,fg+:-1,prompt:-1,pointer:-1,hl:111,hl+:111 \
@@ -102,7 +106,8 @@ case $SHELL_ENVIRONMENT in
   wsl)
     export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock
     ss -lnx | grep -q $SSH_AUTH_SOCK
-    if [ $? -ne 0 ]; then
+    if [ $? -ne 0 ]
+    then
       rm -f $SSH_AUTH_SOCK
       (setsid nohup socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000 >/dev/null 2>&1 & disown)
     fi
@@ -112,6 +117,16 @@ case $SHELL_ENVIRONMENT in
     unset GIT_SSH_COMMAND
     ;;
 esac
+
+# Load the default ssh key if it does not already appear in the agent.
+
+for key in $(basename -s .pub ${HOME}/.ssh/*.pub)
+do
+  case $key in
+    id_rsa|id_ecdsa|id_ecdsa_sk|id_ed25519|id_ed25519_sk)
+      ssh-add -T "${HOME}/.ssh/${key}" &>/dev/null || ssh-add "${HOME}/.ssh/${key}"
+  esac
+done
 
 # Source the bashrc.
 

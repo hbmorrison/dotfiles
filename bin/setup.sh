@@ -14,6 +14,7 @@ NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
 CHOCO_PACKAGES="7zip autohotkey bitwarden firacode fzf nmap openjdk ripgrep \
   wincrypt-sshagent winscp"
+SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
 
 # Work out whether to run commands using sudo.
 
@@ -52,13 +53,16 @@ case $SHELL_ENVIRONMENT in
     ;;
 esac
 
-# Check that WSL2 is configured correctly.
+# Check that environments are configured correctly.
 
 case $SHELL_ENVIRONMENT in
+
   wsl)
 
+    # Override wsl.conf to enable systemd.
+
     echo -n "Checking if WSL is configured correctly... "
-    if ! diff $BASE_DIR/etc/wsl.conf /etc/wsl.conf > /dev/null 2>&1
+    if ! diff $BASE_DIR/etc/wsl.conf /etc/wsl.conf >& /dev/null
     then
       echo "No"
       $SUDO cp $BASE_DIR/etc/wsl.conf /etc/wsl.conf
@@ -75,6 +79,22 @@ case $SHELL_ENVIRONMENT in
       echo "Yes"
     fi
     ;;
+
+  chromeos)
+
+    # Fix search domains.
+
+    echo -n "Adding search domains to resolv.conf... "
+    $SUDO sed -i.orig -e "/domain-name/s/^\\(#\\|\\)\\(supersede\\|prepend\\) domain-name .*$/prepend domain-name \"${SEARCH_DOMAINS} \";/" /etc/dhcp/dhclient.conf
+    echo "Done"
+    if ! diff /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.orig >& /dev/null
+    then
+      echo -n "Restarting networking... "
+      $SUDO systemctl restart networking
+      echo "Done"
+    fi
+    ;;
+
 esac
 
 # Update and install required packages.
@@ -165,6 +185,20 @@ case $SHELL_ENVIRONMENT in
   wsl) $SUDO hwclock -s ;;
 esac
 
-# Run the dotfiles script.
+# Run the dotfiles and git scripts.
+
+if [ ! -x $BASE_DIR/bin/dotfiles.sh ]
+then
+  echo "Error: dotfiles script not found"
+  exit 1
+fi
 
 source $BASE_DIR/bin/dotfiles.sh
+
+if [ ! -x $BASE_DIR/bin/gitconfig.sh ]
+then
+  echo "Error: gitconfig script not found"
+  exit 1
+fi
+
+source $BASE_DIR/bin/gitconfig.sh

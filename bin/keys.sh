@@ -6,6 +6,15 @@ THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
 BASE_DIR=$(dirname $BIN_DIR)
 
+# Work out which keys to add - use PVE keys for root.
+
+KEYS_FILE="${BASE_DIR}/etc/public_keys.user"
+
+if [ `id -u` -eq 0 ]
+then
+  KEYS_FILE="${BASE_DIR}/etc/public_keys.pve"
+fi
+
 # Check that the authorized_keys file exists.
 
 SSH_DIR="$HOME/.ssh"
@@ -30,4 +39,4 @@ do
     echo "${COMMENT} added to authorized keys"
     echo "${TYPE} ${KEY} ${COMMENT}" >> $AUTHORIZED_KEYS
   fi
-done < "${BASE_DIR}/etc/authorized_keys"
+done < "${KEYS_FILE}"

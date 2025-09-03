@@ -41,6 +41,8 @@ then
   exit 1
 fi
 
+SENDER_DOMAIN=`echo $SENDER_ADDR | cut -d@ -f2`
+
 # Work out which OS and terminal is being used.
 
 if [ -f /etc/os-release ]
@@ -91,16 +93,24 @@ done
 
 # Create Postfix main.cf.
 
-echo "relayhost = [${SMTP_SERVER}]:587" > /etc/postfix/main.cf
-cat $BASE_DIR/etc/main.cf >> /etc/postfix.main.cf
+cat  > /etc/postfix/main.cf <<MAIN_CF
+relayhost = [${SMTP_SERVER}]:587
 
-sed -i -e 's/^root:/#root:/' /etc/aliases
-sed -i -e "\$a root: ${RCPT_ADDR}" /etc/aliases
+alias_maps = regexp:{
+ {/.*/i $RCPT_ADDR}
+}
+alias_database = \$alias_maps
+
+myorigin = $SENDER_DOMAIN" >> /etc/postfix/main.cf
+mydestination = $SENDER_DOMAIN, \$myhostname, localhost.\$mydomain, localhost
+MAIN_CF
+
+cat $BASE_DIR/etc/main.cf >> /etc/postfix.main.cf
 
 # Create SASL password file and canonical sender file.
 
-echo "${SMTP_SERVER}  ${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
-echo "/.+/  ${SENDER_ADDR}" > /etc/postfix/sender_canonical
+echo "${SMTP_SERVER}	${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
+echo "/.+/	${SENDER_ADDR}" > /etc/postfix/sender_canonical
 
 # Secure the files and reload them.
 

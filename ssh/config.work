@@ -6,3 +6,5 @@ Host bambooapp-live
   User bamboo
 Host bambooapp-test
   User bamboo
+Host *.is.ed.ac.uk
+  User isapps

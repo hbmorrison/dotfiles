@@ -11,6 +11,7 @@ BASE_DIR=$(dirname $BIN_DIR)
 DOCKER_DEPENDENCIES="apt-transport-https ca-certificates curl gnupg-agent \
   software-properties-common"
 DOCKER_PACKAGES="docker-ce docker-ce-cli docker-compose-plugin containerd.io"
+TMP_SOURCE_LIST=`mktemp`
 
 # Work out whether to run commands using sudo.
 
@@ -34,25 +35,30 @@ case $(cat /proc/version 2>/dev/null) in
     ;;
 esac
 
+# Install dependencies.
+
+$SUDO apt install --no-install-recommends -y $DOCKER_DEPENDENCIES
+
 # Install docker.
 
 case $SHELL_ENVIRONMENT in
   chromeos|wsl|debian|ubuntu)
     source /etc/os-release
-    if [ ! -f /usr/share/keyrings/docker-archive-keyring.gpg ]
+    if [ ! -f /etc/apt/trusted.gpg.d/docker-apt-keyring.gpg ]
     then
       curl -fsSL "https://download.docker.com/linux/${ID}/gpg" \
-        | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        | $SUDO gpg --dearmor -o /etc/apt/trusted.gpg.d/docker-apt-keyring.gpg
     fi
-    if [ ! -f /etc/apt/sources.list.d/docker.list ]
+    echo "deb [signed-by=/etc/apt/trusted.gpg.d/docker-apt-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > $TMP_SOURCE_LIST
+    diff $TMP_SOURCE_LIST /etc/apt/sources.list.d/docker.list &>/dev/null;
+    if [ $? -ne 0 ]
     then
-      echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" \
-        | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
+      cat $TMP_SOURCE_LIST | $SUDO tee /etc/apt/sources.list.d/docker.list
+      $SUDO apt update
     fi
     if [ ! -f /usr/bin/dockerd ]
     then
-      $SUDO apt-get update
-      $SUDO apt-get install --no-install-recommends -y $DOCKER_DEPENDENCIES $DOCKER_PACKAGES
+      $SUDO apt install --no-install-recommends -y $DOCKER_PACKAGES
     fi
     ;;
 esac

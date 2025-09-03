@@ -64,7 +64,7 @@ done
 
 # Make sure these directories are secure.
 
-chmod go-rwx $HOME/.ssh $HOME/.eyaml
+chmod go-rwx $HOME/.ssh $HOME/.local
 
 # Copy the dotfiles.
 
