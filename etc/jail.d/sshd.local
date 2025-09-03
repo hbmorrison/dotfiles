@@ -1,0 +1,5 @@
+[sshd]
+enabled = true
+mode = aggressive
+backend = systemd
+journalmatch = _SYSTEMD_UNIT=ssh.service + _COMM=sshd
