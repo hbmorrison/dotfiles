@@ -13,7 +13,7 @@ NON_ROOT_USER=hannah
 NON_ROOT_DOTFILES="/home/${NON_ROOT_USER}/dotfiles"
 TIMESTAMP=`date '+%Y%M%dT%H%M'`
 PACKAGES="bash-completion curl fail2ban git git-flow python3-systemd sudo vim"
-TAILSCALE_ARGS="--accept-risk=all --advertise-tags=tag:secure"
+TAILSCALE_ARGS="--accept-routes --accept-risk=all"
 ADMIN_GROUPS="sudo,users"
 
 # Add docker to the list of admin groups if it exists.
