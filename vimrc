@@ -5,8 +5,9 @@ syntax on
 filetype plugin indent on
 set hlsearch
 
-" clear search highlighting with q,
-nnoremap <silent> q, :let @/ = ""<CR>
+" clear search highlighting with return and q,
+nnoremap <silent> <cr> :let @/ = ""<cr><cr>
+nnoremap <silent> q, :let @/ = ""<cr>
 
 " use fancy symbols
 set encoding=utf8
