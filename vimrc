@@ -69,6 +69,10 @@ set mouse=nv
 " toggle the expanded paste mode for mouse selections
 nnoremap <silent> <Leader>v :call TogglePastemode()<cr>
 
+" use space to fold, unfold and set a visual fold
+nnoremap <silent> <Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
+vnoremap <Space> zf
+
 " set tab completion menu
 set wildmenu
 set wildignorecase
@@ -81,7 +85,7 @@ set path=.,**
 let g:space = ' '
 set laststatus=2
 set statusline=
-set statusline+=%{b:git_branch}
+set statusline+=%{get(b:,'git_branch','')}
 set statusline+=%{g:space}
 set statusline+=%t
 set statusline+=%{g:space}
@@ -92,7 +96,7 @@ set statusline+=%{&paste?'\ [paste]':''}
 set statusline+=%{g:space}
 set statusline+=%m%r%h
 set statusline+=%=
-set statusline+=%<%{b:git_root}
+set statusline+=%<%{get(b:,'git_root','')}
 set statusline+=%{g:space}
 set statusline+=%c
 set statusline+=%{g:space}
@@ -112,11 +116,13 @@ function SetHighlight()
   if &background == "dark"
     highlight Normal term=NONE cterm=NONE ctermbg=0 ctermfg=15
     highlight Comment term=NONE cterm=NONE ctermbg=0 ctermfg=242
+    highlight Folded term=NONE cterm=NONE ctermbg=0 ctermfg=214
     highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=0
     highlight Search term=NONE cterm=NONE ctermbg=115 ctermfg=0
     highlight Error term=NONE cterm=NONE ctermbg=0 ctermfg=196
     highlight MatchParen term=NONE cterm=NONE ctermbg=0 ctermfg=196
     highlight SignColumn term=NONE cterm=NONE ctermbg=0
+    highlight FoldColumn term=NONE cterm=NONE ctermbg=0
     highlight EndOfBuffer term=NONE cterm=NONE ctermbg=0 ctermfg=0
     highlight LineNr term=NONE cterm=NONE ctermbg=0 ctermfg=244
     highlight CursorLineNr term=NONE cterm=NONE ctermbg=0 ctermfg=111
@@ -144,11 +150,13 @@ function SetHighlight()
   else
     highlight Normal term=NONE cterm=NONE ctermbg=15 ctermfg=0
     highlight Comment term=NONE cterm=NONE ctermbg=15 ctermfg=248
+    highlight Folded term=NONE cterm=NONE ctermbg=15 ctermfg=166
     highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=0
     highlight Search term=NONE cterm=NONE ctermbg=115 ctermfg=15
     highlight Error term=NONE cterm=NONE ctermbg=15 ctermfg=196
     highlight MatchParen term=NONE cterm=NONE ctermbg=15 ctermfg=196
     highlight SignColumn term=NONE cterm=NONE ctermbg=15
+    highlight FoldColumn term=NONE cterm=NONE ctermbg=15
     highlight EndOfBuffer term=NONE cterm=NONE ctermbg=15 ctermfg=15
     highlight LineNr term=NONE cterm=NONE ctermbg=15 ctermfg=248
     highlight CursorLineNr term=NONE cterm=NONE ctermbg=15 ctermfg=111
@@ -176,7 +184,7 @@ function SetHighlight()
   endif
 endfunction
 
-" set highlighting when entering a buffer
+" set highlighting at startup
 autocmd VimEnter * call SetHighlight()
 
 " set highlighting when background changes

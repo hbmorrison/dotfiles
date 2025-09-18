@@ -21,6 +21,17 @@ case $(cat /proc/version 2>/dev/null) in
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
 
+# Backup vim directory.
+
+if [ -d $HOME/.vim ]
+then
+  if [ -d $HOME/.vim.old ]
+  then
+    rm -rf "${HOME}/.vim.old" 2> /dev/null
+  fi
+  mv "${HOME}/.vim" "${HOME}/.vim.old" 2> /dev/null
+fi
+
 # Create any directories that are needed.
 
 for DIR in $(cd $BASE_DIR; find . -type d -not -path "."  | sed  's#^./##')
@@ -33,7 +44,7 @@ do
     \.git) ;;
     \.git/*) ;;
 
-    # Ignore submodules.
+    # Ignore vim-plug submodule.
 
     vim-plug) ;;
     vim-plug/*) ;;
@@ -76,7 +87,7 @@ do
     \.git/*) ;;
     \.git*) ;;
 
-    # Ignore submodules.
+    # Ignore vim-plug submodule.
 
     vim-plug/*) ;;
 
@@ -119,19 +130,9 @@ fi
 
 # Configure Vim.
 
-if [ -d $HOME/.vim ]
-then
-  if [ -d $HOME/.vim.old ]
-  then
-    rm -rf "${HOME}/.vim.old" 2> /dev/null
-  fi
-  mv "${HOME}/.vim" "${HOME}/.vim.old" 2> /dev/null
-fi
-
-cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
 mkdir -p "${HOME}/.vim/autoload"
-rm -f "${HOME}/.vim/autoload/plug.vim" 2> /dev/null
 cp -f "${BASE_DIR}/vim-plug/plug.vim" "${HOME}/.vim/autoload/plug.vim"
+vim -c :PlugInstall -c :qa! >&/dev/null
 
 # Copy the necessary files to the Windows roaming profile if one is being used.
 
