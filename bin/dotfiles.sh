@@ -35,10 +35,8 @@ do
 
     # Ignore submodules.
 
-    vim) ;;
-    vim/*) ;;
-    vim-pathogen) ;;
-    vim-pathogen/*) ;;
+    vim-plug) ;;
+    vim-plug/*) ;;
 
     # Ignore directories used for special cases below.
 
@@ -80,8 +78,7 @@ do
 
     # Ignore submodules.
 
-    vim/*) ;;
-    vim-pathogen/*) ;;
+    vim-plug/*) ;;
 
     # Ignore scripts and files that are dealt with as special cases.
 
@@ -133,8 +130,8 @@ fi
 
 cp -r "${BASE_DIR}/vim" "${HOME}/.vim"
 mkdir -p "${HOME}/.vim/autoload"
-rm -f "${HOME}/.vim/autoload/pathogen.vim" 2> /dev/null
-cp -f "${BASE_DIR}/vim-pathogen/autoload/pathogen.vim" "${HOME}/.vim/autoload/pathogen.vim"
+rm -f "${HOME}/.vim/autoload/plug.vim" 2> /dev/null
+cp -f "${BASE_DIR}/vim-plug/plug.vim" "${HOME}/.vim/autoload/plug.vim"
 
 # Copy the necessary files to the Windows roaming profile if one is being used.
 
