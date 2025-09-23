@@ -280,6 +280,10 @@ alias st="git status"
 alias amend="git commit --amend"
 alias fixup="git commit --fixup"
 
+# Open vim with a list of modified files in the quickfix list.
+
+alias vm="vim -q <(git ls-files -m)"
+
 # Git flow aliases.
 
 alias feature="git flow feature"
@@ -316,7 +320,7 @@ alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.l
 
 alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
 
-# Open vim with results from fuzzy find.
+# Open vim with results from fuzzy find in buffers.
 
 function vf {
   if [ "$#" -eq 0 ]
@@ -327,14 +331,8 @@ function vf {
   fi
 }
 
-# Open vim with results from ripgrep search.
+# Open vim with results from ripgrep search in the quickfix list.
 
 function vg {
-  rg -l "$*" | xargs -o vim -c "let @/='\<$*\>'" -c "set hls"
-}
-
-# Open vim with all files that have git changes.
-
-function vc {
-  git status --porcelain | grep -v ^D | cut -c4- | xargs -o vim
+  vim -c "let @/='\<$*\>'" -c "set hls" -q <(rg --vimgrep --smart-case "$*")
 }

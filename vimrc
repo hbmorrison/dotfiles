@@ -35,6 +35,9 @@ set t_Co=256
 set nocompatible
 set viminfo='20,<500,/50,:50,h
 
+" shorten warning messages and hide startup banner
+set shortmess=aI
+
 " set leader key
 let mapleader=","
 
@@ -53,7 +56,7 @@ set smarttab
 set expandtab
 
 " use shift-tab to insert a literal tab character
-inoremap <S-Tab> <C-Q><Tab>
+inoremap <s-tab> <c-q><tab>
 
 " mark tabs and trailing whitepace
 set listchars=tab:▸·,trail:×
@@ -67,18 +70,18 @@ autocmd InsertLeave * setlocal listchars=tab:▸·,trail:×
 set mouse=nv
 
 " toggle the expanded paste mode for mouse selections
-nnoremap <silent> <Leader>v :call TogglePastemode()<cr>
+nnoremap <silent> <leader>v :call TogglePastemode()<cr>
 
 " use space to fold, unfold and set a visual fold
-nnoremap <silent> <Space> @=(foldlevel('.')?'za':"\<Space>")<CR>
-vnoremap <Space> zf
+nnoremap <silent> <space> @=(foldlevel('.')?'za':"\<space>")<cr>
+vnoremap <space> zf
 
 " set tab completion menu
 set wildmenu
 set wildignorecase
 set wildignore+=*.so,*.swp,*.zip
 set wildmode=longest:full,full
-set wildcharm=<Tab>
+set wildcharm=<tab>
 set path=.,**
 
 " set the status line
@@ -194,33 +197,37 @@ catch /:E216:/
 endtry
 
 " toggle the background from dark to light
-nnoremap <silent> <Leader>b :let &bg=(&bg=='light'?'dark':'light')<CR>
+nnoremap <silent> <leader>b :let &bg=(&bg=='light'?'dark':'light')<cr>
 
-" use :make to load changed files according to git into quickfix
-set makeprg=git\ status\ --porcelain
+" parse results from ripgrep and a basic list of files for the quickfix list
+set errorformat=%f:%l:%c:%m,%f
 
-" parse results from external ripgrep and makeprg in the quickfix list
-set errorformat=\ %m\ %f,%m\ \ %f
+" use :make to load modified files according to git into the quickfix list
+set makeprg=git\ ls-files\ -m
+nnoremap <silent> <leader>m :make<cr><cr><cr>
 
-" internal grep using ripgrep
+" internal grep into the quickfix list using ripgrep
 set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat^=%f:%l:%c:%m
 
+" search current selection with ripgrep as above
+vnoremap <silent> <leader>g y:grep! "<c-r>"" %<cr><cr>
+
 " automatically close the quickfix window when a file is selected with Enter
-:autocmd FileType qf nnoremap <buffer> <CR> <CR>:cclose<CR>
+:autocmd FileType qf nnoremap <buffer> <cr> <cr>:cclose<cr>
 
 " enable navigation with control key for splits
-nnoremap <C-H> <C-W><C-H>
-nnoremap <C-J> <C-W><C-J>
-nnoremap <C-K> <C-W><C-K>
-nnoremap <C-L> <C-W><C-L>
-nnoremap <C-Left>  <C-W><C-H>
-nnoremap <C-Down>  <C-W><C-J>
-nnoremap <C-Up>    <C-W><C-K>
-nnoremap <C-Right> <C-W><C-L>
+nnoremap <c-h> <c-w><c-h>
+nnoremap <c-j> <c-w><c-j>
+nnoremap <c-k> <c-w><c-k>
+nnoremap <c-l> <c-w><c-l>
+nnoremap <c-left>  <c-w><c-h>
+nnoremap <c-down>  <c-w><c-j>
+nnoremap <c-up>    <c-w><c-k>
+nnoremap <c-right> <c-w><c-l>
 
 " go to previous window and close all other windows
-nmap <leader>o <C-W>p<C-W>o
+nmap <leader>o <c-w>p<c-w>o
 
 " prettify netrw
 let g:netrw_banner = 0
@@ -236,7 +243,7 @@ catch /:E117:/
 endtry
 
 " toggle netrw
-nnoremap <silent> <Leader>e :Lexplore<CR>
+nnoremap <silent> <leader>e :Lexplore<cr>
 
 " FUNCTIONS
 
@@ -297,7 +304,7 @@ function! ToggleQuickFix()
     cclose
   endif
 endfunction
-nnoremap <silent> <Leader>q :call ToggleQuickFix()<cr>
+nnoremap <silent> <leader>q :call ToggleQuickFix()<cr>
 
 " PLUGINS
 
@@ -311,34 +318,33 @@ try
 catch /:E518:/
 endtry
 set updatetime=100
-nmap <Leader>n <Plug>(GitGutterNextHunk)
-nmap <Leader>p <Plug>(GitGutterPrevHunk)
-nmap <Leader>a <Plug>(GitGutterStageHunk)
-nmap <Leader>hs <Nop>
-nmap <Leader>hu <Nop>
+nmap <leader>n <plug>(GitGutterNextHunk)
+nmap <leader>p <plug>(GitGutterPrevHunk)
+nmap <leader>a <plug>(GitGutterStageHunk)
+nmap <leader>hs <nop>
+nmap <leader>hu <nop>
 
 " tabular
-nmap <Leader>t :Tabularize /=<Return>
-nmap <Leader>T :Tabularize /=><Return>
-nmap <Leader>, :Tabularize /,\zs<Return>
-nmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
-vmap <Leader>t :Tabularize /=<Return>
-vmap <Leader>T :Tabularize /=><Return>
-vmap <Leader>, :Tabularize /,\zs<Return>
-vmap <Leader>. :Tabularize /^  *[^ ]* \zs/<Return>
+nmap <leader>t= :Tab /=<cr>
+nmap <leader>t> :Tab /=><cr>
+nmap <leader>t, :Tab /,\zs/l0r1<cr>
+vmap <leader>t= :Tab /=<cr>
+vmap <leader>t> :Tab /=><cr>
+vmap <leader>t, :Tab /,\zs/l0r1<cr>
 
 " ctrlp
 let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
 let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:10,results:0'
-if exists("g:loaded_pathogen")
-  nnoremap f :CtrlP<CR>
-  nnoremap F :CtrlPMRU<CR>
-  nnoremap <Tab> :CtrlPBuffer<CR>
+if &rtp =~ '/ctrlp.vim'
+  nnoremap f :CtrlP<cr>
+  nnoremap F :CtrlPMRU<cr>
+  nnoremap <tab> :CtrlPBuffer<cr>
 else
-  nnoremap f :Explore<CR>
-  nnoremap F :browse old<CR>
-  nnoremap <Tab> :buffer<Space><Tab><Tab><Tab>
+  " use internal vim replacements if ctrlp is not available
+  nnoremap f :Explore<cr>
+  nnoremap F :browse old<cr>
+  nnoremap <tab> :buffer<space><tab><tab><tab>
 endif
 
 " turn on the cursorline when in ctrlp
@@ -353,11 +359,14 @@ let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetC
 " osc yank
 let g:oscyank_silent = 0
 let g:oscyank_trim = 0
-nmap <leader>c <Plug>OSCYankOperator
+nmap <leader>c <plug>OSCYankOperator
 nmap <leader>cc <leader>c_
-vmap <leader>c <Plug>OSCYankVisual
+vmap <leader>c <plug>OSCYankVisual
 
 " FIXES
+
+" stop vi starting in replace mode in WSL
+nnoremap <esc>^[ <esc>^[
 
 " fix search misbehaviour after search pattern has been cleared
 function! ExecuteSearch(command)
@@ -369,48 +378,28 @@ function! ExecuteSearch(command)
   endif
 endfunction
 
-nnoremap <silent> n :call ExecuteSearch("n")<CR>
-nnoremap <silent> N :call ExecuteSearch("N")<CR>
-
-" stop vi starting in replace mode in WSL
-nnoremap <Esc>^[ <Esc>^[
-
-" shorten warning messages and hide startup banner
-set shortmess=aI
-
-" exit vim if netrw is the only window or tab remaining
-autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&filetype") == "netrw" |
-      \ quit |
-      \ endif
-autocmd BufEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&filetype") == "netrw" |
-      \ quit |
-      \ endif
-
-" exit vim if quickfix is the only window or tab remaining
-autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&buftype") == "quickfix" |
-      \ quit |
-      \ endif
-autocmd BufEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&buftype") == "quickfix" |
-      \ quit |
-      \ endif
+nnoremap <silent> n :call ExecuteSearch("n")<cr>
+nnoremap <silent> N :call ExecuteSearch("N")<cr>
 
 " stop netrw from leaving [No Name] buffers and make sure other buffers continue
 " to be hidden to avoid save warnings
 set nohidden
 autocmd FileType netrw setl bufhidden=wipe
 augroup netrw_bufhidden_fix
-    autocmd!
-    autocmd BufWinEnter *
-                \  if &ft != 'netrw'
-                \|     set bufhidden=hide
-                \| endif
+  autocmd!
+  autocmd BufWinEnter * if &ft != 'netrw' | set bufhidden=hide | endif
 augroup END
+
+" exit vim if netrw is the only window or tab remaining
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&filetype") == "netrw" | quit | endif
+autocmd BufEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&filetype") == "netrw" | quit | endif
+
+" exit vim if quickfix is the only window or tab remaining
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&buftype") == "quickfix" | quit | endif
+autocmd BufEnter * if winnr('$') == 1 && getbufvar(winbufnr(winnr()), "&buftype") == "quickfix" | quit | endif
 
 " fix git commit buffers not working with paragraph formatting
 augroup gitcommit_fo_fix
-    autocmd!
-    autocmd BufWinEnter *
-                \  if &ft == 'gitcommit'
-                \|     setlocal formatoptions-=a
-                \| endif
+  autocmd!
+  autocmd BufWinEnter * if &ft == 'gitcommit' | setlocal formatoptions-=a | endif
 augroup END
