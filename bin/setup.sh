@@ -8,7 +8,7 @@ BASE_DIR=$(dirname $BIN_DIR)
 
 # Configuration.
 
-SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml ripgrep \
+SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml jq ripgrep \
   vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois"
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
