@@ -8,8 +8,8 @@ BASE_DIR=$(dirname $BIN_DIR)
 
 # Configuration.
 
-SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml jq ripgrep \
-  vim wget xclip zip"
+SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml jq man-db \
+  ripgrep vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois"
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
 CHOCO_PACKAGES="7zip autohotkey bitwarden firacode fzf nmap openjdk ripgrep \
