@@ -36,12 +36,12 @@ esac
 
 case $SHELL_ENVIRONMENT in
   wsl|debian)
-    if [ ! -r  /etc/apt/trusted.gpg.d/kubernetes-apt-keyring.gpg ]
+    if [ ! -r  /etc/apt/keyrings/kubernetes-apt-keyring.gpg ]
     then
       curl -fsSL "https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION}/deb/Release.key" \
-        | $SUDO gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes-apt-keyring.gpg
+        | $SUDO gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     fi
-    echo "deb [signed-by=/etc/apt/trusted.gpg.d/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION}/deb/ /" > $TMP_SOURCE_LIST
+    echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v${KUBERNETES_VERSION}/deb/ /" > $TMP_SOURCE_LIST
     diff $TMP_SOURCE_LIST /etc/apt/sources.list.d/kubernetes.list &>/dev/null;
     if [ $? -ne 0 ]
     then

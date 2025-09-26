@@ -44,12 +44,12 @@ $SUDO apt install --no-install-recommends -y $DOCKER_DEPENDENCIES
 case $SHELL_ENVIRONMENT in
   chromeos|wsl|debian|ubuntu)
     source /etc/os-release
-    if [ ! -f /etc/apt/trusted.gpg.d/docker-apt-keyring.gpg ]
+    if [ ! -f /etc/apt/keyrings/docker-apt-keyring.gpg ]
     then
       curl -fsSL "https://download.docker.com/linux/${ID}/gpg" \
-        | $SUDO gpg --dearmor -o /etc/apt/trusted.gpg.d/docker-apt-keyring.gpg
+        | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker-apt-keyring.gpg
     fi
-    echo "deb [signed-by=/etc/apt/trusted.gpg.d/docker-apt-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > $TMP_SOURCE_LIST
+    echo "deb [signed-by=/etc/apt/keyrings/docker-apt-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > $TMP_SOURCE_LIST
     diff $TMP_SOURCE_LIST /etc/apt/sources.list.d/docker.list &>/dev/null;
     if [ $? -ne 0 ]
     then
