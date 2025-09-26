@@ -12,6 +12,7 @@ SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml jq man-db \
   ripgrep vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat whois"
 CHOCO="/c/ProgramData/chocolatey/bin/choco"
+CHOCO_INSTALLER="https://community.chocolatey.org/install.ps1"
 CHOCO_PACKAGES="7zip autohotkey bitwarden firacode fzf nmap openjdk ripgrep \
   wincrypt-sshagent winscp"
 SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
@@ -108,7 +109,7 @@ case $SHELL_ENVIRONMENT in
   gitbash)
     if [ ! -r $CHOCO ]
     then
-      powershell Start-Process -Verb runas -Wait powershell -ArgumentList "\"-NoExit Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))\""
+      powershell Start-Process -Verb runas -Wait powershell -ArgumentList "\"-NoExit Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('${CHOCO_INSTALLER}'))\""
     fi
     TO_BE_INSTALLED=""
     for PACKAGE in $CHOCO_PACKAGES
@@ -154,7 +155,6 @@ case $SHELL_ENVIRONMENT in
     STARTUP_DIR="${APPDATA}/Roaming/Microsoft/Windows/Start Menu/Programs/Startup"
     BACKSLASHED_HOME_DIR="C:\\Users\\${USER:-$USERNAME}"
     BACKSLASHED_STARTUP_DIR="C:\\Users\\${USER:-$USERNAME}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
-
     NOT_INSTALLED_SHORTCUTS=""
     for SHORTCUT_PS1 in $(ls -1 ${BASE_DIR}/etc/*.ps1)
     do
