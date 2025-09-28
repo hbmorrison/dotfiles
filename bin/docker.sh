@@ -11,7 +11,7 @@ BASE_DIR=$(dirname $BIN_DIR)
 DOCKER_DEPENDENCIES="apt-transport-https ca-certificates curl gnupg-agent \
   software-properties-common"
 DOCKER_PACKAGES="docker-ce docker-ce-cli docker-compose-plugin containerd.io"
-TMP_SOURCE_LIST=`mktemp`
+TMP_DOCKER_LIST=$(mktemp)
 
 # Work out whether to run commands using sudo.
 
@@ -49,17 +49,17 @@ case $SHELL_ENVIRONMENT in
       curl -fsSL "https://download.docker.com/linux/${ID}/gpg" \
         | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker-apt-keyring.gpg
     fi
-    echo "deb [signed-by=/etc/apt/keyrings/docker-apt-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > $TMP_SOURCE_LIST
-    diff $TMP_SOURCE_LIST /etc/apt/sources.list.d/docker.list &>/dev/null;
-    if [ $? -ne 0 ]
+    echo "deb [signed-by=/etc/apt/keyrings/docker-apt-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > $TMP_DOCKER_LIST
+    if ! diff $TMP_DOCKER_LIST /etc/apt/sources.list.d/docker.list &>/dev/null
     then
-      cat $TMP_SOURCE_LIST | $SUDO tee /etc/apt/sources.list.d/docker.list
+      cat $TMP_DOCKER_LIST | $SUDO tee /etc/apt/sources.list.d/docker.list
       $SUDO apt update
     fi
     if [ ! -f /usr/bin/dockerd ]
     then
       $SUDO apt install --no-install-recommends -y $DOCKER_PACKAGES
     fi
+    rm -f $TMP_DOCKER_LIST &>/dev/null
     ;;
 esac
 
@@ -67,7 +67,7 @@ esac
 
 case $SHELL_ENVIRONMENT in
   chromeos|wsl|debian|ubuntu)
-    if ! docker info > /dev/null 2>&1
+    if ! docker info &>/dev/null
     then
       $SUDO systemctl start docker
       $SUDO systemctl enable docker
@@ -77,7 +77,7 @@ esac
 
 # Check that the current user has permission to interact with docker.
 
-if ! groups "${USER:-$USERNAME}" | grep " docker" > /dev/null 2>&1
+if ! groups "${USER:-$USERNAME}" | grep " docker" &>/dev/null
 then
   echo -n "Adding user ${USER:-$USERNAME} to docker group... "
   $SUDO usermod -aG docker "${USER:-$USERNAME}"
