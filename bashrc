@@ -65,62 +65,29 @@ then
   fi
 fi
 
-# cd to git root first then home directory. This overloads the cd command to put
-# git root directories onto the directory stack, then pops them out of the
-# stack when cd is run with no arguments.
+# Change directory to git root first then home directory.
 
 case $SHELL_ENVIRONMENT in
-
   chromeos|wsl|debian)
     function cd {
-      local target_dir next_gitroot prev_gitroot
-      # If the target directory exists.
-      if target_dir=$(readlink -e "${1}")
+      if [ $# -eq 0 ]
       then
-        # And if the target directory is inside a git repo.
-        if next_gitroot=$(git -C "${target_dir}" rev-parse --show-toplevel 2>/dev/null)
+        local gitroot
+        if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
         then
-          # Check the previous git root directory from the directory stack. If
-          # it is not a parent directory of this git root directory, remove it.
-          if prev_gitroot=$(dirs -l +1 2>/dev/null)
+          if [ "${gitroot}" != "${PWD}" ]
           then
-            echo "${next_gitroot}" | grep "^${prev_gitroot}." &>/dev/null || popd -n &>/dev/null
+            builtin cd "${gitroot}"
+          else
+            builtin cd
           fi
-          # Push the git root directory onto the stack.
-          pushd -n "${next_gitroot}" &>/dev/null
-        fi
-      fi
-      # Decide how to cd now that the git root directories have been handled.
-      if [ $# -gt 0 ]
-      then
-        # If a directory has been specified, then change to it.
-        builtin cd $@
-      else
-        # If the next directory on the stack is actually the current directory,
-        # remove it since cd with no arguments should always go to a parent
-        # directory.
-        local next_dir=$(dirs -l +1 2>/dev/null)
-        if [ "${next_dir}" == "${PWD}" ]
-        then
-          popd -n &>/dev/null
-        fi
-        # Pop the next directory from the stack. If that fails there are no
-        # more git roots so just use the built in cd to change to the home
-        # directory.
-        if ! popd &>/dev/null
-        then
+        else
           builtin cd
         fi
-        # If the new working directory is a git root, it will not have been
-        # added in the first section of this function since we got here with a
-        # bare cd, so add it to the stack.
-        if next_gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
-        then
-          pushd -n "${next_gitroot}" &>/dev/null
-        fi
+      else
+        builtin cd "$@"
       fi
     }
-
 esac
 
 # Password Manager Pro integration.
@@ -209,32 +176,15 @@ GIT_PROMPT="$COLOUR_CYAN\$(__git_ps1)$COLOUR_CLEAR"
 
 # Set up directory prompt.
 
-case $SHELL_ENVIRONMENT in
-  gitbash)
-    function __dir_ps1 {
-      local gitroot gitparent
-      gitroot=$(dirs -l +1 2>/dev/null)
-      if gitparent=$(dirname $gitroot 2>/dev/null)
-      then
-        cygpath -m "${PWD}" | sed "s#^${gitparent}/##"
-      else
-        cygpath -m "${PWD}" | sed "s#${HOME}#~#"
-      fi
-    }
-    ;;
-  *)
-    function __dir_ps1 {
-      local gitroot gitparent
-      gitroot=$(dirs -l +1 2>/dev/null)
-      if gitparent=$(dirname $gitroot 2>/dev/null)
-      then
-        pwd | sed "s#^${gitparent}/##"
-      else
-        pwd | sed "s#${HOME}#~#"
-      fi
-    }
-    ;;
-esac
+function __dir_ps1 {
+  local gitroot
+  if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+  then
+    pwd | sed "s#^$(dirname "${gitroot}")/##"
+  else
+    pwd | sed "s#${HOME}#~#"
+  fi
+}
 
 DIR_PROMPT="$COLOUR_YELLOW\$(__dir_ps1)$COLOUR_CLEAR"
 
@@ -254,6 +204,7 @@ PS1="${TITLE_PROMPT}${COLOUR_CLEAR}\u@${HOSTNAME}${GIT_PROMPT} ${DIR_PROMPT} \\$
 
 alias c=clear
 alias ls="command ls -F --color=auto"
+alias more=less
 
 # Git aliases.
 
@@ -299,6 +250,7 @@ if declare -f __git_complete &>/dev/null
 then
   __git_complete brd _git_branch
   __git_complete ch _git_checkout
+  __git_complete co _git_commit
   __git_complete gsa _git_submodule
   __git_complete gsu _git_submodule
   __git_complete lo _git_log
