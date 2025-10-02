@@ -128,10 +128,16 @@ do
   esac
 done
 
-# Set vagrant environment.
+# Set the environments for vagrant and packer.
 
-export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
-export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH="/mnt/c"
+export VAGRANT_DEFAULT_PROVIDER="hyperv"
+
+case $SHELL_ENVIRONMENT in
+  wsl)
+    export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
+    export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH="/mnt/c/Users/${USER}"
+    export PACKER_CACHE_DIR="/mnt/c/Users/${USER}/.packer"
+esac
 
 # Source the bashrc.
 
