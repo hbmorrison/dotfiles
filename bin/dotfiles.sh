@@ -6,6 +6,10 @@ THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
 BASE_DIR=$(dirname $BIN_DIR)
 
+# Configuration.
+
+ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
+
 # Initialise submodules.
 
 (cd "$BASE_DIR"; git submodule update --init --recursive)
@@ -20,6 +24,18 @@ case $(cat /proc/version 2>/dev/null) in
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
 esac
+
+# Set the home directory correctly in gitbash.
+
+if [ "${SHELL_ENVIRONMENT}" = "gitbash" ]
+then
+  CYG_USERPROFILE=`cygpath $USERPROFILE`
+  if [ "$HOME" != "$CYG_USERPROFILE" ]
+  then
+    export HOME=$CYG_USERPROFILE
+    cd
+  fi
+fi
 
 # Backup vim directory.
 
@@ -138,29 +154,26 @@ vim -c :PlugInstall -c :qa! >&/dev/null
 
 if [ "${SHELL_ENVIRONMENT}" = "gitbash" ]
 then
-
-  ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
   PROFILEDRIVE=`echo $USERPROFILE | cut -d'\' -f1`
-
   if [ "$PROFILEDRIVE" != "$HOMEDRIVE" ]
   then
-
     ROAMING_HOME=`cygpath $HOMEDRIVE$HOMEPATH`
-    export HOME=`cygpath $USERPROFILE`
+    if [ -d "${ROAMING_HOME}" ]
+    then
 
-    # Make sure the minimum set of files appear in the roaming home directory.
+      # Make sure the minimum set of files appear in the roaming home directory.
 
-    for FILE in $ROAMING_PROFILE_FILES
-    do
-      cp $HOME/$FILE $ROAMING_HOME/$FILE
-    done
+      for FILE in $ROAMING_PROFILE_FILES
+      do
+        cp $HOME/$FILE $ROAMING_HOME/$FILE
+      done
 
-    # Make a copy of the SSH directory in the roaming home directory.
+      # Make a copy of the SSH directory in the roaming home directory.
 
-    mkdir -p $ROAMING_HOME/.ssh
-    cp -f $HOME/.ssh/config $ROAMING_HOME/.ssh
-    chmod go-rwx $ROAMING_HOME/.ssh
+      mkdir -p $ROAMING_HOME/.ssh
+      cp -f $HOME/.ssh/config $ROAMING_HOME/.ssh
+      chmod go-rwx $ROAMING_HOME/.ssh
 
+    fi
   fi
-
 fi

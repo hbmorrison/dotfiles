@@ -13,10 +13,10 @@ esac
 
 case $SHELL_ENVIRONMENT in
   gitbash)
-    PROFILEDRIVE=`echo $USERPROFILE | cut -d'\' -f1`
-    if [ "$PROFILEDRIVE" != "$HOMEDRIVE" ]
+    CYG_USERPROFILE=`cygpath $USERPROFILE`
+    if [ "$HOME" != "$CYG_USERPROFILE" ]
     then
-      export HOME=`cygpath $USERPROFILE`
+      export HOME=$CYG_USERPROFILE
       cd
     fi
 esac
