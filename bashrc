@@ -207,8 +207,16 @@ PS1="${TITLE_PROMPT}${COLOUR_CLEAR}\u@${HOSTNAME}${GIT_PROMPT} ${DIR_PROMPT} \\$
 # Basic shell aliases.
 
 alias c=clear
-alias ls="command ls -F --color=auto"
+alias ls="LC_COLLATE=C command ls -F --color=auto"
 alias more=less
+
+# OS specific shell aliases.
+
+
+case $SHELL_ENVIRONMENT in
+  gitbash)
+    alias ls="LC_COLLATE=C command ls -hFG --color=auto -I NTUSER.DAT\* -I ntuser.dat\*"
+esac
 
 # Git aliases.
 
