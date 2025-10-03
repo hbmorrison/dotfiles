@@ -367,7 +367,8 @@ vmap <leader>c <plug>OSCYankVisual
 
 " fix vim starting with light background in git bash.
 
-if $MSYSTEM =~? 'MSYS'
+let g:proc_version = substitute(system("cat /proc/version | grep 'MSYS' 2>/dev/null"), '\n', '', 'g')
+if g:proc_version != ""
   set background=dark
 endif
 
