@@ -8,6 +8,7 @@ BASE_DIR=$(dirname $BIN_DIR)
 
 # Configuration.
 
+HASHICORP_APPS="packer vagrant"
 TMP_SOURCE_LIST=`mktemp`
 
 # Work out whether to run commands using sudo.
@@ -49,9 +50,12 @@ case $SHELL_ENVIRONMENT in
       cat $TMP_SOURCE_LIST | $SUDO tee /etc/apt/sources.list.d/hashicorp.list
       $SUDO apt update
     fi
-    if [ ! -f /usr/bin/vagrant ]
-    then
-      $SUDO apt install --no-install-recommends -y vagrant
-    fi
+    for app in $HASHICORP_APPS
+    do
+      if [ ! -f "/usr/bin/${app}" ]
+      then
+        $SUDO apt install --no-install-recommends -y $app
+      fi
+    done
     ;;
 esac
