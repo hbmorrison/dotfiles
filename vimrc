@@ -365,7 +365,13 @@ vmap <leader>c <plug>OSCYankVisual
 
 " FIXES
 
-" stop vi starting in replace mode in WSL
+" fix vim starting with light background in git bash.
+
+if $MSYSTEM =~? 'MSYS'
+  set background=dark
+endif
+
+" fix vi starting in replace mode in WSL
 nnoremap <esc>^[ <esc>^[
 
 " fix search misbehaviour after search pattern has been cleared
