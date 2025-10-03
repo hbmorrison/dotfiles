@@ -155,7 +155,7 @@ esac
 
 # If there are no git prompt helper functions, use this simple one.
 
-if [ -z "$(declare -F __git_ps1 2> /dev/null)" ]
+if ! declare -F __git_ps1 &>/dev/null
 then
   function __git_ps1 {
     local head=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
@@ -238,16 +238,65 @@ alias vm="vim -q <(git ls-files -m)"
 # Git flow aliases.
 
 alias feature="git flow feature"
-alias publish="git flow feature publish"
 alias bugfix="git flow bugfix"
 alias release="git flow release"
 alias hotfix="git flow hotfix"
 alias support="git flow support"
 
+alias fs="git flow feature start"
+alias fch="git flow feature checkout"
+alias ff="git flow feature finish"
+alias fp="git flow feature publish"
+
+# Re-declare bash completion functions for flow branch lookups to allow wildcards.
+
+if declare -F __git_flow_init &>/dev/null
+then
+
+  function __git_flow_list_branches () {
+    local origin="$(git config gitflow.origin 2> /dev/null || echo "origin")";
+    if [ -n "$1" ]; then
+        local prefix="$(__git_flow_prefix $1)";
+        git for-each-ref --shell --format="ref=%(refname:short)" refs/heads/$prefix\* refs/remotes/$origin/$prefix\* | while read -r entry; do
+            eval "$entry";
+            ref="${ref##$prefix}";
+            echo "$ref";
+        done | sort;
+    else
+        git for-each-ref --format="%(refname:short)" refs/heads/ refs/remotes/$origin | sort;
+    fi
+  }
+
+  function __git_flow_list_local_branches () {
+    if [ -n "$1" ]; then
+        local prefix="$(__git_flow_prefix $1)";
+        git for-each-ref --shell --format="ref=%(refname:short)" refs/heads/$prefix\* | while read -r entry; do
+            eval "$entry";
+            ref="${ref#$prefix}";
+            echo "$ref";
+        done | sort;
+    else
+        git for-each-ref --format="ref=%(refname:short)" refs/heads/ | sort;
+    fi
+  }
+
+  __git_flow_list_remote_branches () {
+    local prefix="$(__git_flow_prefix $1)";
+    local origin="$(git config gitflow.origin 2> /dev/null || echo "origin")";
+    git for-each-ref --shell --format='%(refname:short)' refs/remotes/$origin/$prefix\* | while read -r entry; do
+        eval "$entry";
+        ref="${ref##$prefix}";
+        echo "$ref";
+    done | sort
+  }
+
+fi
+
 # Completions for git aliases.
 
 if declare -f __git_complete &>/dev/null
 then
+
   __git_complete brd _git_branch
   __git_complete ch _git_checkout
   __git_complete co _git_commit
@@ -256,11 +305,59 @@ then
   __git_complete lo _git_log
   __git_complete pu _git_push
   __git_complete puo _git_push
-  __git_complete feature __git_flow_feature
-  __git_complete bugfix __git_flow_bugfix
-  __git_complete release __git_flow_release
-  __git_complete hotfix __git_flow_hotfix
-  __git_complete support __git_flow_support
+
+  # Only complete git flow shortcuts if bash completion for git flow is present.
+
+  if declare -F __git_flow_init &>/dev/null
+  then
+
+    __git_complete feature __git_flow_feature
+    __git_complete bugfix __git_flow_bugfix
+    __git_complete release __git_flow_release
+    __git_complete hotfix __git_flow_hotfix
+    __git_complete support __git_flow_support
+
+    # Add completion functions for git flow feature checkout, publish and
+    # finish. These mirror what appears in the case statement in the
+    # __git_flow_feature completion function for each command.
+
+    function __git_flow_feature_checkout () {
+      __gitcomp_nl "$(__git_flow_list_local_branches 'feature')";
+      return
+    }
+
+    function __git_flow_feature_publish () {
+      __gitcomp_nl "$(__git_flow_list_branches 'feature')";
+      return
+    }
+
+    function __git_flow_feature_finish () {
+      case "$cur" in
+        --*)
+          __gitcomp "
+            --nofetch --fetch
+            --norebase --rebase
+            --nopreserve-merges --preserve-merges
+            --nokeep --keep
+            --keepremote
+            --keeplocal
+            --noforce_delete --force_delete
+            --nosquash --squash
+            --no-ff
+          ";
+          return
+          ;;
+      esac;
+      __gitcomp_nl "$(__git_flow_list_local_branches 'feature')";
+      return
+    }
+
+    __git_complete fch __git_flow_feature_checkout
+    __git_complete fp __git_flow_feature_publish
+    __git_complete ff __git_flow_feature_finish
+
+  fi
+
 fi
 
 # Eyaml aliases for Puppet.
