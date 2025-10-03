@@ -1,6 +1,6 @@
 # Figure out which OS and terminal is being used.
 
-case $(cat /proc/version 2>/dev/null) in
+case $(/bin/cat /proc/version 2>/dev/null) in
   MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash";;
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos";;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
@@ -13,7 +13,7 @@ esac
 
 case $SHELL_ENVIRONMENT in
   gitbash)
-    CYG_USERPROFILE=`cygpath $USERPROFILE`
+    CYG_USERPROFILE=`/bin/cygpath $USERPROFILE`
     if [ "$HOME" != "$CYG_USERPROFILE" ]
     then
       export HOME=$CYG_USERPROFILE
@@ -50,7 +50,7 @@ export PBS_REPOSITORY=client@pbs@pbs-remote.gerbil-koi.ts.net:u457113.your-stora
 pathadd () {
   if [ -n "$1" ]
   then
-    REMOVED=$(echo ":$PATH:" | sed "s#:$1:#:#")
+    REMOVED=$(/bin/echo ":$PATH:" | /bin/sed "s#:$1:#:#")
     if [ "$REMOVED" = ":$PATH:" ]
     then
       PATH=$PATH:$1
@@ -71,6 +71,9 @@ case $SHELL_ENVIRONMENT in
     pathadd "${HOME}/.local/bin"
     ;;
   gitbash)
+    pathadd "/bin"
+    pathadd "/usr/bin"
+    pathadd "/usr/local/bin"
     pathadd "/c/ProgramData/chocolatey/bin"
     pathadd "/c/Program Files/Git/cmd"
     pathadd "/c/HashiCorp/Vagrant/bin"
@@ -113,7 +116,7 @@ case $SHELL_ENVIRONMENT in
     fi
     ;;
   gitbash)
-    export SSH_AUTH_SOCK=`cygpath -w "${HOME}/wincrypt-cygwin.sock"`
+    export SSH_AUTH_SOCK=`/bin/cygpath -w "${HOME}/wincrypt-cygwin.sock"`
     unset GIT_SSH_COMMAND
     ;;
 esac
