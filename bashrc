@@ -68,27 +68,30 @@ fi
 # Change directory to git root first then home directory.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|wsl|debian)
-    function cd {
-      if [ $# -eq 0 ]
-      then
-        local gitroot
-        if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
-        then
-          if [ "${gitroot}" != "${PWD}" ]
-          then
-            builtin cd "${gitroot}"
-          else
-            builtin cd
-          fi
-        else
-          builtin cd
-        fi
-      else
-        builtin cd "$@"
-      fi
-    }
+  chromeos|wsl|debian) alias unixpath=echo ;;
+  gitbash)             alias unixpath=cygpath ;;
 esac
+
+function cd {
+  if [ $# -eq 0 ]
+  then
+    local gitroot
+    if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
+    then
+      unixgitroot=$(unixpath "${gitroot}")
+      if [ "${unixgitroot}" != "${PWD}" ]
+      then
+        builtin cd "${unixgitroot}"
+      else
+        builtin cd
+      fi
+    else
+      builtin cd
+    fi
+  else
+    builtin cd "$@"
+  fi
+}
 
 # Password Manager Pro integration.
 
@@ -177,10 +180,11 @@ GIT_PROMPT="$COLOUR_CYAN\$(__git_ps1)$COLOUR_CLEAR"
 # Set up directory prompt.
 
 function __dir_ps1 {
-  local gitroot
+  local gitroot unixgitroot
   if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
   then
-    pwd | sed "s#^$(dirname "${gitroot}")/##"
+    unixgitroot=$(unixpath "${gitroot}")
+    pwd | sed "s#^$(dirname "${unixgitroot}")/##"
   else
     pwd | sed "s#${HOME}#~#"
   fi
