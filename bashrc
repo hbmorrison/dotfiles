@@ -257,8 +257,8 @@ alias support="git flow support"
 
 alias fs="git flow feature start"
 alias fch="git flow feature checkout"
-alias ff="git flow feature finish"
 alias fp="git flow feature publish"
+alias ff="git flow feature finish -S"
 
 # Re-declare bash completion functions for flow branch lookups to allow wildcards.
 
