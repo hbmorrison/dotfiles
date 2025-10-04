@@ -3,3 +3,4 @@ GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
 Include config.homelab
 Include config.work
+Include config.github
