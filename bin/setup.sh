@@ -26,10 +26,6 @@ then
   SUDO=""
 fi
 
-# Initialise submodules.
-
-(cd "$BASE_DIR"; git submodule update --init --recursive)
-
 # Work out which OS and terminal is being used.
 
 case $(cat /proc/version 2>/dev/null) in

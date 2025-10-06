@@ -8,11 +8,8 @@ BASE_DIR=$(dirname $BIN_DIR)
 
 # Configuration.
 
+VIM_PLUG_URL="https://raw.githubusercontent.com/junegunn/vim-plug/refs/heads/master/plug.vim"
 ROAMING_PROFILE_FILES=".bash_profile .minttyrc"
-
-# Initialise submodules.
-
-(cd "$BASE_DIR"; git submodule update --init --recursive)
 
 # Work out which OS and terminal is being used.
 
@@ -60,19 +57,13 @@ do
     \.git) ;;
     \.git/*) ;;
 
-    # Ignore vim-plug submodule.
+    # Ignore scripts and special cases directories.
 
-    vim-plug) ;;
-    vim-plug/*) ;;
-
-    # Ignore directories used for special cases below.
+    bin) ;;
+    bin/*) ;;
 
     etc) ;;
     etc/*) ;;
-
-    # Ignore environment files (for SMTP configuration).
-
-    *.env) ;;
 
     # Create other directories under the home directory.
 
@@ -103,13 +94,9 @@ do
     \.git/*) ;;
     \.git*) ;;
 
-    # Ignore vim-plug submodule.
+    # Ignore scripts and files that are special cases.
 
-    vim-plug/*) ;;
-
-    # Ignore scripts and files that are dealt with as special cases.
-
-    *.sh) ;;
+    bin/*) ;;
     etc/*) ;;
 
     # Copy everything else.
@@ -144,10 +131,24 @@ else
 
 fi
 
-# Configure Vim.
+# Check if vim-plug has changed.
+
+VIM_PLUG_TMP=$(mktemp)
+if curl -fs -o $VIM_PLUG_TMP $VIM_PLUG_URL
+then
+  if ! diff "${BASE_DIR}/etc/plug.vim" "${VIM_PLUG_TMP}" &>/dev/null
+  then
+    echo
+    echo "Warning: please review upstream changes to etc/vim-plug with"
+    echo "curl -o ${BASE_DIR}/etc/plug.vim $VIM_PLUG_URL"
+    echo
+  fi
+fi
+
+# Configure Vim using our copy of vim-plug.
 
 mkdir -p "${HOME}/.vim/autoload"
-cp -f "${BASE_DIR}/vim-plug/plug.vim" "${HOME}/.vim/autoload/plug.vim"
+cp -f "${BASE_DIR}/etc/plug.vim" "${HOME}/.vim/autoload/plug.vim"
 vim -c :PlugInstall -c :qa! >&/dev/null
 
 # Copy the necessary files to the Windows roaming profile if one is being used.
