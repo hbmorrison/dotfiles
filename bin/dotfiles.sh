@@ -133,10 +133,10 @@ fi
 
 # Check if vim-plug has changed.
 
-VIM_PLUG_TMP=$(mktemp)
-if curl -fs -o $VIM_PLUG_TMP $VIM_PLUG_URL
+TEMP_VIM_PLUG=$(mktemp)
+if curl -fs -o $TEMP_VIM_PLUG $VIM_PLUG_URL
 then
-  if ! diff "${BASE_DIR}/etc/plug.vim" "${VIM_PLUG_TMP}" &>/dev/null
+  if ! diff "${BASE_DIR}/etc/plug.vim" "${TEMP_VIM_PLUG}" &>/dev/null
   then
     echo
     echo "Warning: please review upstream changes to etc/vim-plug with"
@@ -144,6 +144,7 @@ then
     echo
   fi
 fi
+rm -f $TEMP_VIM_PLUG
 
 # Configure Vim using our copy of vim-plug.
 
