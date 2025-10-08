@@ -125,10 +125,6 @@ case $SHELL_ENVIRONMENT in
   debian|ubuntu)
     apt install -y ufw
     ufw allow 22/tcp comment 'allow ssh'
-    ufw allow 53/udp comment 'allow dns'
-    ufw allow 53/tcp comment 'allow dns'
-    ufw allow 68/udp comment 'allow dhcp'
-    ufw allow 41641/udp comment 'allow tailscale'
     ufw --force enable
 
     # Configure ufw to work with docker.
