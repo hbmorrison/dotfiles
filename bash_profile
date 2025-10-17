@@ -32,7 +32,7 @@ fi
 
 export EDITOR=vi
 export VISUAL=vi
-export LESS=-FRSX
+export LESS=-FRX
 
 # Set the default fzf options.
 
