@@ -20,6 +20,14 @@ case $(cat /proc/version 2>/dev/null) in
   *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
+  *)
+    if [ -f /etc/os-release ]
+    then
+      source /etc/os-release
+      case $ID in
+        openwrt)             SHELL_ENVIRONMENT="openwrt" ;;
+      esac
+    fi
 esac
 
 # Set the home directory correctly in gitbash.

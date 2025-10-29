@@ -14,6 +14,14 @@ case $(cat /proc/version 2>/dev/null) in
   *Debian*)                  SHELL_ENVIRONMENT="debian";;
   *Ubuntu*)                  SHELL_ENVIRONMENT="debian";;
   *Red\ Hat*)                SHELL_ENVIRONMENT="redhat";;
+  *)
+    if [ -f /etc/os-release ]
+    then
+      source /etc/os-release
+      case $ID in
+        openwrt)             SHELL_ENVIRONMENT="openwrt" ;;
+      esac
+    fi
 esac
 
 # Work out the location of the system32 directory on Windows.
@@ -68,8 +76,8 @@ fi
 # Change directory to git root first then home directory.
 
 case $SHELL_ENVIRONMENT in
-  chromeos|wsl|debian) alias unixpath=echo ;;
-  gitbash)             alias unixpath=cygpath ;;
+  gitbash) alias unixpath=cygpath ;;
+  *)       alias unixpath=echo ;;
 esac
 
 function cd {
