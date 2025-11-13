@@ -24,6 +24,8 @@
 	develop = develop
 [init]
 	defaultBranch = main
+[advice]
+	skippedCherryPicks = false
 # Make things pretty.
 [blame]
 	coloring = highlightRecent
