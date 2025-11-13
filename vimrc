@@ -43,6 +43,7 @@ let mapleader=","
 " enable line numbers
 set number
 set cursorline
+set cursorlineopt=number
 
 " disable bell
 set visualbell
@@ -56,6 +57,9 @@ set expandtab
 
 " use shift-tab to insert a literal tab character
 inoremap <s-tab> <c-q><tab>
+
+" turn off vertical split and end of buffer markers
+set fillchars+=vert:\ ,eob:\ 
 
 " mark tabs and trailing whitepace
 set listchars=tab:▸·,trail:×
@@ -78,7 +82,7 @@ vnoremap <space> zf
 " set tab completion menu
 set wildmenu
 set wildignorecase
-set wildignore+=*.so,*.swp,*.zip
+set wildignore+=.git,*.swp,*.zip
 set wildmode=longest:full,full
 set wildcharm=<tab>
 set path=.,**
@@ -103,86 +107,93 @@ set statusline+=%{g:space}
 set statusline+=%c
 set statusline+=%{g:space}
 
-" set highlighting common to light and dark backgrounds
-highlight Constant term=NONE cterm=NONE ctermfg=37
-highlight Noise term=NONE cterm=NONE ctermfg=245
-highlight NonText term=NONE cterm=NONE ctermfg=203
-highlight Number term=NONE cterm=NONE ctermfg=37
-highlight SpecialKey term=NONE cterm=NONE ctermfg=203
-highlight Special term=NONE cterm=NONE ctermfg=245
-highlight String term=NONE cterm=NONE ctermfg=37
-highlight vimSynType term=NONE cterm=NONE ctermfg=37
+" turn off bold and underlines
+highlight CursorLine term=NONE cterm=NONE
+highlight CursorLineNr term=NONE cterm=NONE
+highlight FoldColumn term=NONE cterm=NONE
+highlight StatusLine term=NONE cterm=NONE
+highlight StatusLineTerm term=NONE cterm=NONE
+
+" reverse background for visual mode and search
+highlight Visual ctermbg=111 ctermfg=0
+highlight Search ctermbg=115 ctermfg=0
+
+" common highlighting
+highlight Constant ctermfg=37
+highlight Noise ctermfg=245
+highlight NonText ctermfg=203
+highlight Number ctermfg=37
+highlight SpecialKey ctermfg=203
+highlight Special ctermfg=245
+highlight String ctermfg=37
+highlight vimSynType ctermfg=37
+highlight netrwDir ctermfg=68
+highlight Error ctermfg=196
+highlight MatchParen ctermfg=196
+highlight CursorLineNr ctermfg=111
 
 " set additional highlighting based on light or dark background
 function SetHighlight()
-  if &background == "dark"
-    highlight Normal term=NONE cterm=NONE ctermbg=0 ctermfg=15
-    highlight Comment term=NONE cterm=NONE ctermbg=0 ctermfg=242
-    highlight Folded term=NONE cterm=NONE ctermbg=0 ctermfg=214
-    highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=0
-    highlight Search term=NONE cterm=NONE ctermbg=115 ctermfg=0
-    highlight Error term=NONE cterm=NONE ctermbg=0 ctermfg=196
-    highlight MatchParen term=NONE cterm=NONE ctermbg=0 ctermfg=196
-    highlight SignColumn term=NONE cterm=NONE ctermbg=0
-    highlight FoldColumn term=NONE cterm=NONE ctermbg=0
-    highlight EndOfBuffer term=NONE cterm=NONE ctermbg=0 ctermfg=0
-    highlight LineNr term=NONE cterm=NONE ctermbg=0 ctermfg=244
-    highlight CursorLineNr term=NONE cterm=NONE ctermbg=0 ctermfg=111
-    highlight CursorLine term=NONE cterm=NONE ctermbg=0
-    highlight StatusLine term=NONE cterm=NONE ctermbg=242 ctermfg=0
-    highlight StatusLineTerm term=NONE cterm=NONE ctermbg=242 ctermfg=0
-    highlight VertSplit term=NONE cterm=NONE ctermbg=0 ctermfg=0
-    highlight netrwTreeBar term=NONE cterm=NONE ctermbg=0 ctermfg=0
-    highlight netrwPlain term=NONE cterm=NONE ctermbg=0 ctermfg=248
-    highlight netrwClassify term=NONE cterm=NONE ctermbg=0 ctermfg=248
-    highlight netrwLink term=NONE cterm=NONE ctermbg=0 ctermfg=248
-    highlight netrwDir term=NONE cterm=NONE ctermbg=0 ctermfg=68
-    highlight GitGutterDelete term=NONE cterm=NONE ctermbg=0 ctermfg=1
-    highlight GitGutterAdd term=NONE cterm=NONE ctermbg=0 ctermfg=2
-    highlight GitGutterChange term=NONE cterm=NONE ctermbg=0 ctermfg=3
-    highlight CtrlPMode1 term=NONE cterm=NONE ctermbg=242 ctermfg=0
-    highlight CtrlPMode2 term=NONE cterm=NONE ctermbg=242 ctermfg=0
-    highlight StatusLineNC term=NONE cterm=NONE ctermbg=242 ctermfg=242
-    highlight StatusLineTermNC term=NONE cterm=NONE ctermbg=242 ctermfg=242
-    highlight qfFileName term=NONE cterm=NONE ctermfg=214
-    highlight Identifier term=NONE cterm=NONE ctermfg=39
-    highlight Type term=NONE cterm=NONE ctermfg=39
-    highlight PreProc term=NONE cterm=NONE ctermfg=202
-    highlight Statement term=NONE cterm=NONE ctermfg=214
+  " apply highlights for light or dark backgrounds
+  if &background == "light"
+    " set light background where needed
+    highlight Normal ctermbg=0 ctermfg=15
+    highlight SignColumn ctermbg=0
+    highlight VertSplit ctermfg=0
+    highlight GitGutterDelete ctermbg=0 ctermfg=160
+    highlight GitGutterAdd ctermbg=0 ctermfg=70
+    highlight GitGutterChange ctermbg=0 ctermfg=178
+    " custom highlights to suit light background
+    highlight Folded ctermfg=166
+    highlight qfFileName ctermfg=136
+    highlight Identifier cterm=NONE ctermfg=32
+    highlight Type ctermfg=32
+    highlight PreProc ctermfg=166
+    highlight Statement ctermfg=136
+    " grey things
+    highlight Comment ctermfg=248
+    highlight CursorLine ctermbg=248 ctermfg=15
+    highlight StatusLine ctermbg=248 ctermfg=0
+    highlight StatusLineTerm ctermbg=248 ctermfg=0
+    highlight CtrlPMode1 ctermbg=248 ctermfg=0
+    highlight CtrlPMode2 ctermbg=248 ctermfg=0
+    highlight StatusLineNC ctermbg=248 ctermfg=248
+    highlight StatusLineTermNC ctermbg=248 ctermfg=248
+    highlight netrwPlain ctermfg=248
+    highlight netrwClassify ctermfg=248
+    highlight netrwLink ctermfg=248
+    highlight LineNr ctermfg=248
+    " set comment here to override syntax highlighting
+    highlight Comment ctermfg=248
   else
-    highlight Normal term=NONE cterm=NONE ctermbg=15 ctermfg=0
-    highlight Comment term=NONE cterm=NONE ctermbg=15 ctermfg=248
-    highlight Folded term=NONE cterm=NONE ctermbg=15 ctermfg=166
-    highlight Visual term=NONE cterm=NONE ctermbg=111 ctermfg=0
-    highlight Search term=NONE cterm=NONE ctermbg=115 ctermfg=15
-    highlight Error term=NONE cterm=NONE ctermbg=15 ctermfg=196
-    highlight MatchParen term=NONE cterm=NONE ctermbg=15 ctermfg=196
-    highlight SignColumn term=NONE cterm=NONE ctermbg=15
-    highlight FoldColumn term=NONE cterm=NONE ctermbg=15
-    highlight EndOfBuffer term=NONE cterm=NONE ctermbg=15 ctermfg=15
-    highlight LineNr term=NONE cterm=NONE ctermbg=15 ctermfg=248
-    highlight CursorLineNr term=NONE cterm=NONE ctermbg=15 ctermfg=111
-    highlight CursorLine term=NONE cterm=NONE ctermbg=15
-    highlight StatusLine term=NONE cterm=NONE ctermbg=248 ctermfg=15
-    highlight StatusLineTerm term=NONE cterm=NONE ctermbg=248 ctermfg=15
-    highlight VertSplit term=NONE cterm=NONE ctermbg=15 ctermfg=15
-    highlight netrwTreeBar term=NONE cterm=NONE ctermbg=15 ctermfg=15
-    highlight netrwPlain term=NONE cterm=NONE ctermbg=15 ctermfg=242
-    highlight netrwClassify term=NONE cterm=NONE ctermbg=15 ctermfg=242
-    highlight netrwLink term=NONE cterm=NONE ctermbg=15 ctermfg=242
-    highlight netrwDir term=NONE cterm=NONE ctermbg=15 ctermfg=68
-    highlight GitGutterDelete term=NONE cterm=NONE ctermbg=15 ctermfg=160
-    highlight GitGutterAdd term=NONE cterm=NONE ctermbg=15 ctermfg=70
-    highlight GitGutterChange term=NONE cterm=NONE ctermbg=15 ctermfg=178
-    highlight CtrlPMode1 term=NONE cterm=NONE ctermbg=248 ctermfg=15
-    highlight CtrlPMode2 term=NONE cterm=NONE ctermbg=248 ctermfg=15
-    highlight StatusLineNC term=NONE cterm=NONE ctermbg=248 ctermfg=248
-    highlight StatusLineTermNC term=NONE cterm=NONE ctermbg=248 ctermfg=248
-    highlight qfFileName term=NONE cterm=NONE ctermfg=136
-    highlight Identifier term=NONE cterm=NONE ctermfg=32
-    highlight Type term=NONE cterm=NONE ctermfg=32
-    highlight PreProc term=NONE cterm=NONE ctermfg=166
-    highlight Statement term=NONE cterm=NONE ctermfg=136
+    " set dark background where needed
+    highlight Normal ctermbg=15 ctermfg=0
+    highlight SignColumn ctermbg=15
+    highlight VertSplit ctermfg=15
+    highlight GitGutterDelete ctermbg=15 ctermfg=1
+    highlight GitGutterAdd ctermbg=15 ctermfg=2
+    highlight GitGutterChange ctermbg=15 ctermfg=3
+    " custom highlights to suit dark background
+    highlight Folded ctermfg=214
+    highlight qfFileName ctermfg=214
+    highlight Identifier cterm=NONE ctermfg=39
+    highlight Type ctermfg=39
+    highlight PreProc ctermfg=202
+    highlight Statement ctermfg=214
+    " grey things
+    highlight CursorLine ctermbg=242 ctermfg=0
+    highlight StatusLine ctermbg=242 ctermfg=15
+    highlight StatusLineTerm ctermbg=242 ctermfg=15
+    highlight CtrlPMode1 ctermbg=242 ctermfg=15
+    highlight CtrlPMode2 ctermbg=242 ctermfg=15
+    highlight StatusLineNC ctermbg=242 ctermfg=242
+    highlight StatusLineTermNC ctermbg=242 ctermfg=242
+    highlight netrwPlain ctermfg=242
+    highlight netrwClassify ctermfg=242
+    highlight netrwLink ctermfg=242
+    highlight LineNr ctermfg=242
+    " set comment here to override syntax highlighting
+    highlight Comment ctermfg=242
   endif
 endfunction
 
@@ -228,21 +239,25 @@ nnoremap <c-right> <c-w><c-l>
 " go to previous window and close all other windows
 nmap <leader>o <c-w>p<c-w>o
 
-" prettify netrw
-let g:netrw_banner = 0
-let g:netrw_cursor = 5
-let g:netrw_liststyle = 0
-let g:netrw_browse_split = 0
-let g:netrw_winsize = 25
-let g:netrw_keepdir = 1
-let g:netrw_sizestyle = "h"
-try
-  let g:netrw_list_hide= netrw_gitignore#Hide().',.*\.swp$,.*\.git$,^\.git/$,.*\.gitmodules,.*\.netrwhist'
-catch /:E117:/
-endtry
-
 " toggle netrw
 nnoremap <silent> <leader>e :Lexplore<cr>
+
+" prettify netrw
+let g:netrw_banner=0
+let g:netrw_cursor=8
+let g:netrw_liststyle=0
+let g:netrw_browse_split=0
+let g:netrw_winsize=25
+let g:netrw_keepdir=0
+let g:netrw_sizestyle="h"
+let g:netrw_hide=1
+let g:netrw_list_hide='\(^\|\s\s\)\zs\.\S\+'
+
+" highlight the current line in netrw
+augroup netrw_set_cursorlineopt
+  autocmd!
+  autocmd FileType netrw set cursorlineopt=line
+augroup end
 
 " FUNCTIONS
 
@@ -334,19 +349,20 @@ vmap <leader>t, :Tab /,\zs/l0r1<cr>
 " ctrlp
 let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
-let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:10,results:0'
+let g:ctrlp_match_window = 'bottom,order:btt'
+
+" use internal vim replacements if ctrlp is not available
 if &rtp =~ '/ctrlp.vim'
   nnoremap f :CtrlP<cr>
   nnoremap F :CtrlPMRU<cr>
   nnoremap <tab> :CtrlPBuffer<cr>
 else
-  " use internal vim replacements if ctrlp is not available
   nnoremap f :Explore<cr>
   nnoremap F :browse old<cr>
   nnoremap <tab> :buffer<space><tab><tab><tab>
 endif
 
-" turn on the cursorline when in ctrlp
+" highlight the current line in ctrlp
 function! CtrlPSetCursorLine()
   set cursorlineopt=line
 endfunction
