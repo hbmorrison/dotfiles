@@ -5,11 +5,18 @@
 THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
 BASE_DIR=$(dirname $BIN_DIR)
+ARCH=$(uname -m)
 
 # Configuration.
 
-QMK_DEPENDENCIES="dfu-programmer gcc-arm-none-eabi make python3 pipx"
-QMK_DEPENDENCIES="python3 pipx"
+QMK_DEPENDENCIES="build-essential clang-format diffutils dos2unix \
+ libhidapi-hidraw0 python3 pipx unzip wget zip zstd"
+
+if [ "${ARCH}" == "aarch64" ]
+then
+  QMK_DEPENDENCIES="$QMK_DEPENDENCIES arm-none-eabi-gcc avr-gcc avrdude \
+   dfu-programmer dfu-util"
+fi
 
 # Work out which OS and terminal is being used.
 
