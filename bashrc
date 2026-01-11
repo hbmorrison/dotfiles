@@ -5,31 +5,24 @@ case $- in
     *) return;;
 esac
 
-# Figure out which OS and terminal is being used.
+# Figure out which shell environment is being used.
 
-case $(cat /proc/version 2>/dev/null) in
-  MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash";;
+if [ -f /etc/os-release ]
+then
+  source /etc/os-release
+  SHELL_ENVIRONMENT=$ID
+fi
+
+# Deal with special cases.
+
+case $(/bin/cat /proc/version 2>/dev/null) in
   *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos";;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
-  *Debian*)                  SHELL_ENVIRONMENT="debian";;
-  *Ubuntu*)                  SHELL_ENVIRONMENT="debian";;
-  *Red\ Hat*)                SHELL_ENVIRONMENT="redhat";;
-  *)
-    if [ -f /etc/os-release ]
-    then
-      source /etc/os-release
-      case $ID in
-        openwrt)             SHELL_ENVIRONMENT="openwrt" ;;
-      esac
-    fi
 esac
 
 # Work out the location of the system32 directory on Windows.
 
-case $SHELL_ENVIRONMENT in
-  wsl)     SYSTEM_DIR="/mnt/c/Windows/System32";;
-  gitbash) SYSTEM_DIR="/c/Windows/System32";;
-esac
+SYSTEM_DIR="/mnt/c/Windows/System32"
 
 # Don't put duplicate lines or lines starting with space in the history.
 
@@ -75,21 +68,15 @@ fi
 
 # Change directory to git root first then home directory.
 
-case $SHELL_ENVIRONMENT in
-  gitbash) alias unixpath=cygpath ;;
-  *)       alias unixpath=echo ;;
-esac
-
 function cd {
   if [ $# -eq 0 ]
   then
     local gitroot
     if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
     then
-      unixgitroot=$(unixpath "${gitroot}")
-      if [ "${unixgitroot}" != "${PWD}" ]
+      if [ "${gitroot}" != "${PWD}" ]
       then
-        builtin cd "${unixgitroot}"
+        builtin cd "${gitroot}"
       else
         builtin cd
       fi
@@ -103,46 +90,43 @@ function cd {
 
 # Password Manager Pro integration.
 
-case $SHELL_ENVIRONMENT in
-  gitbash|wsl)
-    if [ -f $HOME/.pmp_api_authtoken ]
+if [ -f $HOME/.pmp_api_authtoken ]
+then
+
+  function pmp {
+    if [ -z "$PMP_API_AUTHTOKEN" ]
     then
-
-      function pmp {
-        if [ -z "$PMP_API_AUTHTOKEN" ]
-        then
-          export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
-        fi
-        if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
-        then
-          $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
-        else
-          $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
-        fi
-        if [ "$(jobs -s)" != "" ]
-        then
-          fg
-        fi
-      }
-
-      function ssh {
-        if echo "${1}" | grep '\.'
-        then
-          local userhost=$1
-        else
-          local userhost="${1}.is.ed.ac.uk"
-        fi
-        if [ -z "$PMP_API_AUTHTOKEN" ]
-        then
-          export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
-        fi
-        $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
-        PMP_LASTHOST=$1
-        $SYSTEM_DIR/OpenSSH/ssh.exe $userhost
-      }
-
+      export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
     fi
-esac
+    if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
+    then
+      $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
+    else
+      $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
+    fi
+    if [ "$(jobs -s)" != "" ]
+    then
+      fg
+    fi
+  }
+
+  function ssh {
+    if echo "${1}" | grep '\.'
+    then
+      local userhost=$1
+    else
+      local userhost="${1}.is.ed.ac.uk"
+    fi
+    if [ -z "$PMP_API_AUTHTOKEN" ]
+    then
+      export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
+    fi
+    $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
+    PMP_LASTHOST=$1
+    command ssh $userhost
+  }
+
+fi
 
 # Tell git to use the real ssh command.
 
@@ -218,14 +202,6 @@ alias c=clear
 alias ls="LC_COLLATE=C command ls -F --color=auto"
 alias more=less
 
-# OS specific shell aliases.
-
-
-case $SHELL_ENVIRONMENT in
-  gitbash)
-    alias ls="LC_COLLATE=C command ls -hFG --color=auto -I NTUSER.DAT\* -I ntuser.dat\*"
-esac
-
 # Git aliases.
 
 alias br="git branch"
@@ -249,13 +225,8 @@ alias pl="git pull"
 alias pu="git push"
 alias puo="git push -u origin"
 alias st="git status"
-
 alias amend="git commit --amend"
 alias fixup="git commit --fixup"
-
-# Open vim with a list of modified files in the quickfix list.
-
-alias vm="vim -q <(git ls-files -m)"
 
 # Git flow aliases.
 
@@ -269,6 +240,10 @@ alias fs="git flow feature start"
 alias fch="git flow feature checkout"
 alias fp="git flow feature publish"
 alias ff="git flow feature finish -S"
+
+# Open vim with a list of modified files in the quickfix list.
+
+alias vm="vim -q <(git ls-files -m)"
 
 # Re-declare bash completion functions for flow branch lookups to allow wildcards.
 
