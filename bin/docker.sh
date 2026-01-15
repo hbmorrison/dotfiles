@@ -8,72 +8,31 @@ BASE_DIR=$(dirname $BIN_DIR)
 
 # Configuration.
 
-DOCKER_DEPENDENCIES="apt-transport-https ca-certificates curl gnupg-agent \
+source /etc/os-release
+
+KEYRING_URL="https://download.docker.com/linux/${ID}/gpg"
+KEYRING_FILE="docker-archive-keyring.gpg"
+
+APT_SOURCE_URL="https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable"
+APT_SOURCE_FILE="docker.list"
+
+DEPENDENCIES="apt-transport-https ca-certificates curl gnupg-agent \
   software-properties-common"
-DOCKER_PACKAGES="docker-ce docker-ce-cli docker-compose-plugin containerd.io"
-TMP_DOCKER_LIST=$(mktemp)
+PACKAGES="docker-ce docker-ce-cli docker-compose-plugin containerd.io"
 
-# Work out whether to run commands using sudo.
-
-SUDO=sudo
-
-if [ `id -u` -eq 0 ]
-then
-  SUDO=""
-fi
-
-# Work out which OS is being used.
-
-case $(cat /proc/version 2>/dev/null) in
-  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
-  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
-  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
-  *Ubuntu*)                  SHELL_ENVIRONMENT="ubuntu" ;;
-  *)
-    echo "This environment is not supported."
-    exit 1
-    ;;
-esac
-
-# Install dependencies.
-
-$SUDO apt install --no-install-recommends -y $DOCKER_DEPENDENCIES
+BINARY="/usr/bin/docker"
 
 # Install docker.
 
-case $SHELL_ENVIRONMENT in
-  chromeos|wsl|debian|ubuntu)
-    source /etc/os-release
-    if [ ! -f /etc/apt/keyrings/docker-apt-keyring.gpg ]
-    then
-      curl -fsSL "https://download.docker.com/linux/${ID}/gpg" \
-        | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker-apt-keyring.gpg
-    fi
-    echo "deb [signed-by=/etc/apt/keyrings/docker-apt-keyring.gpg] https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable" > $TMP_DOCKER_LIST
-    if ! diff $TMP_DOCKER_LIST /etc/apt/sources.list.d/docker.list &>/dev/null
-    then
-      cat $TMP_DOCKER_LIST | $SUDO tee /etc/apt/sources.list.d/docker.list
-      $SUDO apt update
-    fi
-    if [ ! -f /usr/bin/dockerd ]
-    then
-      $SUDO apt install --no-install-recommends -y $DOCKER_PACKAGES
-    fi
-    rm -f $TMP_DOCKER_LIST &>/dev/null
-    ;;
-esac
+source "${BASE_DIR}/bin/install.sh"
 
 # Start docker service.
 
-case $SHELL_ENVIRONMENT in
-  chromeos|wsl|debian|ubuntu)
-    if ! docker info &>/dev/null
-    then
-      $SUDO systemctl start docker
-      $SUDO systemctl enable docker
-    fi
-    ;;
-esac
+if ! docker info &>/dev/null
+then
+  $SUDO systemctl start docker
+  $SUDO systemctl enable docker
+fi
 
 # Check that the current user has permission to interact with docker.
 
