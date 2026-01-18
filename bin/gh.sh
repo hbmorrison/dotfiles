@@ -19,6 +19,6 @@ PACKAGES="gh"
 
 BINARY="/usr/bin/gh"
 
-# Install github-cli.
+# Install.
 
 source "${BASE_DIR}/bin/install.sh"

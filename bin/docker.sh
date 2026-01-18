@@ -12,7 +12,6 @@ source /etc/os-release
 
 KEYRING_URL="https://download.docker.com/linux/${ID}/gpg"
 KEYRING_FILE="docker-archive-keyring.gpg"
-
 APT_SOURCE_URL="https://download.docker.com/linux/${ID} ${VERSION_CODENAME} stable"
 APT_SOURCE_FILE="docker.list"
 
@@ -21,24 +20,9 @@ DEPENDENCIES="apt-transport-https ca-certificates curl gnupg-agent \
 PACKAGES="docker-ce docker-ce-cli docker-compose-plugin containerd.io"
 
 BINARY="/usr/bin/docker"
+SERVICE="docker"
+ADDITIONAL_GROUP="docker"
 
-# Install docker.
+# Install.
 
 source "${BASE_DIR}/bin/install.sh"
-
-# Start docker service.
-
-if ! docker info &>/dev/null
-then
-  $SUDO systemctl start docker
-  $SUDO systemctl enable docker
-fi
-
-# Check that the current user has permission to interact with docker.
-
-if ! groups "${USER:-$USERNAME}" | grep " docker" &>/dev/null
-then
-  echo -n "Adding user ${USER:-$USERNAME} to docker group... "
-  $SUDO usermod -aG docker "${USER:-$USERNAME}"
-  echo "Done"
-fi
