@@ -206,13 +206,10 @@ alias more=less
 
 alias br="git branch"
 alias bra="git branch -a"
-alias brd="git branch -D"
 alias ch="git checkout"
-alias chb="git checkout -b"
 alias chd="git checkout develop"
 alias chm="git checkout main"
 alias chp="git checkout production"
-alias cl="git clone"
 alias co="git commit"
 alias coa="git commit -a"
 alias dh="git diff HEAD^"
@@ -223,7 +220,6 @@ alias gsu="git submodule update --recursive"
 alias lo="git log --no-merges --first-parent"
 alias pl="git pull"
 alias pu="git push"
-alias puo="git push -u origin"
 alias st="git status"
 alias amend="git commit --amend"
 alias fixup="git commit --fixup"
@@ -241,11 +237,7 @@ alias fch="git flow feature checkout"
 alias fp="git flow feature publish"
 alias ff="git flow feature finish -S"
 
-# Open vim with a list of modified files in the quickfix list.
-
-alias vm="vim -q <(git ls-files -m)"
-
-# Re-declare bash completion functions for flow branch lookups to allow wildcards.
+# Re-declare bash completion functions for git flow branch lookups to allow wildcards.
 
 if declare -F __git_flow_init &>/dev/null
 then
@@ -301,7 +293,6 @@ then
   __git_complete gsu _git_submodule
   __git_complete lo _git_log
   __git_complete pu _git_push
-  __git_complete puo _git_push
 
   # Only complete git flow shortcuts if bash completion for git flow is present.
 
@@ -376,6 +367,10 @@ function vf {
     fzf --bind 'start:select-all,ctrl-a:toggle-all,enter:become(vim {+})' -q "$*"
   fi
 }
+
+# Open vim with a list of modified files in the quickfix list.
+
+alias vm="vim -q <(git ls-files -m)"
 
 # Open vim with results from ripgrep search in the quickfix list.
 

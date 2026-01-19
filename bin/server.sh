@@ -58,7 +58,7 @@ case $(cat /proc/version 2>/dev/null) in
     echo "Error: operating system not detected"
     exit 1
 esac
-echo $SHELL_ENVIRONMENT
+
 # Install required packages.
 
 apt update

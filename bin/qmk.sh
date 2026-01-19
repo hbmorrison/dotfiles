@@ -5,45 +5,62 @@
 THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
 BASE_DIR=$(dirname $BIN_DIR)
-ARCH=$(uname -m)
 
 # Configuration.
 
-QMK_DEPENDENCIES="build-essential clang-format diffutils dos2unix \
+DEPENDENCIES="build-essential clang-format diffutils dos2unix \
  libhidapi-hidraw0 python3 pipx unzip wget zip zstd"
 
-if [ "${ARCH}" == "aarch64" ]
+if [ "$(uname -m)" == "aarch64" ]
 then
-  QMK_DEPENDENCIES="$QMK_DEPENDENCIES arm-none-eabi-gcc avr-gcc avrdude \
+  DEPENDENCIES="$DEPENDENCIES arm-none-eabi-gcc avr-gcc avrdude \
    dfu-programmer dfu-util"
 fi
 
-# Work out which OS and terminal is being used.
+# Work out whether to run commands using sudo.
 
-case $(cat /proc/version 2>/dev/null) in
-  MSYS*|MINGW64*)            SHELL_ENVIRONMENT="gitbash" ;;
-  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos" ;;
-  *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl" ;;
-  *Debian*)                  SHELL_ENVIRONMENT="debian" ;;
-  *Ubuntu*)                  SHELL_ENVIRONMENT="debian" ;;
-  *Red\ Hat*)                SHELL_ENVIRONMENT="redhat" ;;
-esac
+SUDO=sudo
+
+if [ `id -u` -eq 0 ]
+then
+  SUDO=""
+fi
 
 # Install dependencies.
 
-sudo apt-get update
-sudo apt-get -y dist-upgrade
-sudo apt-get install --no-install-recommends -y $QMK_DEPENDENCIES
+echo -n "Updating package lists... "
+if $SUDO apt update -y &>/dev/null
+then
+  echo "Done"
+else
+  echo
+  echo "Error: run $SUDO apt update -y"
+  exit 1
+fi
+echo -n "Installing dependencies... "
+if $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null
+then
+  echo "Done"
+else
+  echo
+  echo "Error: run $SUDO apt install --no-install-recommends -y $DEPENDENCIES"
+  exit 1
+fi
 
 # Install QMK.
 
-echo -n "Checking if QMK is installed... "
-if [ -r "${HOME}/.local/bin/qmk" ]
-then
-  echo "Yes"
-else
-  echo "No"
-  echo -n "Installing QMK... "
-  pipx install qmk 2> /dev/null
-  echo "Done"
-fi
+for PACKAGE in uv qmk
+do
+  if [ ! -r "${HOME}/.local/bin/${PACKAGE}" ]
+  then
+    echo -n "Installing ${PACKAGE}... "
+    if pipx install $PACKAGE &>/dev/null
+    then
+      echo "Done"
+    else
+      echo
+      echo "Error: run pipx install $PACKAGE"
+      exit 1
+    fi
+  fi
+done
