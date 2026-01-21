@@ -243,20 +243,6 @@ alias ft="git flow feature track"
 if declare -F __git_flow_init &>/dev/null
 then
 
-  function __git_flow_list_branches () {
-    local origin="$(git config gitflow.origin 2> /dev/null || echo "origin")";
-    if [ -n "$1" ]; then
-        local prefix="$(__git_flow_prefix $1)";
-        git for-each-ref --shell --format="ref=%(refname:short)" refs/heads/$prefix\* refs/remotes/$origin/$prefix\* | while read -r entry; do
-            eval "$entry";
-            ref="${ref##$prefix}";
-            echo "$ref";
-        done | sort;
-    else
-        git for-each-ref --format="%(refname:short)" refs/heads/ refs/remotes/$origin | sort;
-    fi
-  }
-
   function __git_flow_list_local_branches () {
     if [ -n "$1" ]; then
         local prefix="$(__git_flow_prefix $1)";
@@ -270,14 +256,18 @@ then
     fi
   }
 
-  __git_flow_list_remote_branches () {
-    local prefix="$(__git_flow_prefix $1)";
-    local origin="$(git config gitflow.origin 2> /dev/null || echo "origin")";
-    git for-each-ref --shell --format='%(refname:short)' refs/remotes/$origin/$prefix\* | while read -r entry; do
-        eval "$entry";
-        ref="${ref##$prefix}";
-        echo "$ref";
-    done | sort
+  function __git_flow_list_remote_branches () {
+    if [ -n "$1" ]; then
+        local prefix="$(__git_flow_prefix $1)";
+        local origin="$(git config gitflow.origin 2> /dev/null || echo "origin")";
+        git for-each-ref --shell --format="ref=%(refname:short)" refs/remotes/$origin/$prefix\* | while read -r entry; do
+            eval "$entry";
+            ref="${ref#$origin/$prefix}";
+            echo "$ref";
+        done | sort;
+    else
+        git for-each-ref --format="ref=%(refname:short)" refs/heads/ | sort;
+    fi
   }
 
 fi
@@ -338,12 +328,12 @@ then
     }
 
     function __git_flow_feature_publish () {
-      __gitcomp_nl "$(__git_flow_list_branches 'feature')";
+      __gitcomp_nl "$(__git_flow_list_local_branches 'feature')";
       return
     }
 
     function __git_flow_feature_track () {
-      __gitcomp_nl "$(__git_flow_list_branches 'feature')";
+      __gitcomp_nl "$(__git_flow_list_remote_branches 'feature')";
       return
     }
 
