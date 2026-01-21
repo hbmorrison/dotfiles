@@ -1,6 +1,32 @@
-#!/bin/bash
-
 # Configuration.
+
+# Setup the user shell by default.
+
+INSTALL_ENV=$1
+shift
+
+# Work out the name of the environment file.
+
+ENV_FILE="${ETC_DIR}/install_${INSTALL_ENV}.env"
+
+if [ ! -f $ENV_FILE ]
+then
+  AVAILABLE_ENVS="("
+  for FILE in $ETC_DIR/install_*.env
+  do
+    NAME=$(basename -s .env $FILE | sed 's/^install_//')
+    AVAILABLE_ENVS+="${NAME}|"
+  done
+  ARGS=$(echo $AVAILABLE_ENVS | sed 's/|$/)/')
+  echo "Usage: ${SETUP_SCRIPT} ${SUB_SCRIPT} ${ARGS}"
+  exit 1
+fi
+
+# Source the environment file.
+
+source ${ENV_FILE} $*
+
+# Check that the required variables are set.
 
 if [ -z "${KEYRING_URL}" ]
 then
@@ -141,8 +167,7 @@ then
   if ! systemctl status $SERVICE &>/dev/null
   then
     echo -n "Starting ${SERVICE} and enabling at boot... "
-    $SUDO systemctl start $SERVICE &>/dev/null
-    $SUDO systemctl enable $SERVICE &>/dev/null
+    $SUDO systemctl enable --now $SERVICE &>/dev/null
     echo "Done"
   fi
 fi

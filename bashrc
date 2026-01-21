@@ -175,8 +175,7 @@ function __dir_ps1 {
   local gitroot unixgitroot
   if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
   then
-    unixgitroot=$(unixpath "${gitroot}")
-    pwd | sed "s#^$(dirname "${unixgitroot}")/##"
+    pwd | sed "s#^$(dirname "${gitroot}")/##"
   else
     pwd | sed "s#${HOME}#~#"
   fi
@@ -215,6 +214,7 @@ alias coa="git commit -a"
 alias dh="git diff HEAD^"
 alias di="git diff"
 alias ds="git diff --staged"
+alias fe="git fetch"
 alias gsa="git submodule add"
 alias gsu="git submodule update --recursive"
 alias lo="git log --no-merges --first-parent"
@@ -232,10 +232,11 @@ alias release="git flow release"
 alias hotfix="git flow hotfix"
 alias support="git flow support"
 
-alias fs="git flow feature start"
 alias fch="git flow feature checkout"
-alias fp="git flow feature publish"
 alias ff="git flow feature finish -S"
+alias fp="git flow feature publish"
+alias fs="git flow feature start"
+alias ft="git flow feature track"
 
 # Re-declare bash completion functions for git flow branch lookups to allow wildcards.
 
@@ -289,6 +290,7 @@ then
   __git_complete brd _git_branch
   __git_complete ch _git_checkout
   __git_complete co _git_commit
+  __git_complete fe _git_fetch
   __git_complete gsa _git_submodule
   __git_complete gsu _git_submodule
   __git_complete lo _git_log
@@ -314,11 +316,6 @@ then
       return
     }
 
-    function __git_flow_feature_publish () {
-      __gitcomp_nl "$(__git_flow_list_branches 'feature')";
-      return
-    }
-
     function __git_flow_feature_finish () {
       case "$cur" in
         --*)
@@ -340,9 +337,20 @@ then
       return
     }
 
+    function __git_flow_feature_publish () {
+      __gitcomp_nl "$(__git_flow_list_branches 'feature')";
+      return
+    }
+
+    function __git_flow_feature_track () {
+      __gitcomp_nl "$(__git_flow_list_branches 'feature')";
+      return
+    }
+
     __git_complete fch __git_flow_feature_checkout
-    __git_complete fp __git_flow_feature_publish
     __git_complete ff __git_flow_feature_finish
+    __git_complete fp __git_flow_feature_publish
+    __git_complete ft __git_flow_feature_track
 
   fi
 

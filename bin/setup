@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Locate the base directory of the repository.
+
+if [ -f /etc/os-release ]
+then
+  source /etc/os-release
+fi
+
+THIS_SCRIPT=$(readlink -f $0)
+BIN_DIR=$(dirname $THIS_SCRIPT)
+BASE_DIR=$(dirname $BIN_DIR)
+ETC_DIR="${BASE_DIR}/etc"
+SETUP_SCRIPT=$(basename $0)
+LOCAL_BIN="${HOME}/.local/bin"
+
+# Check that symlink is set up.
+
+if [ ! -d $LOCAL_BIN ]
+then
+  mkdir -p $LOCAL_BIN
+fi
+
+if [ ! -L $LOCAL_BIN/setup ]
+then
+  ln -s $BIN_DIR/setup $LOCAL_BIN/setup
+fi
+
+# Work out whether to run commands using sudo.
+
+SUDO=sudo
+
+if [ `id -u` -eq 0 ]
+then
+  SUDO=""
+fi
+
+# Setup the user shell by default.
+
+SUB_SCRIPT=""
+
+if [ ! -z ${1:+z} ]
+then
+  SUB_SCRIPT=$1
+  shift
+fi
+
+# Work out the name of the setup script.
+
+SUB_SCRIPT_FILE="${BIN_DIR}/setup_${SUB_SCRIPT}.sh"
+
+if [ ! -f $SUB_SCRIPT_FILE ]
+then
+  AVAILABLE_SCRIPTS="("
+  for FILE in $BIN_DIR/setup_*.sh
+  do
+    NAME=$(basename -s .sh $FILE | sed 's/^setup_//')
+    AVAILABLE_SCRIPTS+="${NAME}|"
+  done
+  ARGS=$(echo $AVAILABLE_SCRIPTS | sed 's/|$/)/')
+  echo "Usage: ${SETUP_SCRIPT} ${ARGS}"
+  exit 1
+fi
+
+# Run the setup script.
+
+source ${SUB_SCRIPT_FILE} $*
