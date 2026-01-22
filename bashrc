@@ -234,6 +234,7 @@ alias support="git flow support"
 
 alias fch="git flow feature checkout"
 alias ff="git flow feature finish -S"
+alias fl="git branch -a | grep feature-"
 alias fp="git flow feature publish"
 alias fs="git flow feature start"
 alias ft="git flow feature track"
