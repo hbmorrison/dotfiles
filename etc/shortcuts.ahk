@@ -9,26 +9,32 @@ A_LocalAppData := EnvGet("LocalAppData")
 A_LocalBitwarden := A_LocalAppData . "\Programs\Bitwarden\Bitwarden.exe"
 A_SystemBitwarden := "shell:AppsFolder\8bitSolutionsLLC.bitwardendesktop_h4e712dmw3xyy!bitwardendesktop"
 
-; Shortcuts
+; Shortcuts - mapped to both Meh and AltGr keys
 
-^!+p::SwitchToBitwarden()
-^!+n::SwitchToTerminal()
-^!+e::SwitchToMSEdge()
-^!+x::SwitchToExplorer()
-^!+r::SwitchTo("mstsc.exe", "mstsc.exe")
-^!+t::SwitchTo("ms-teams.exe", "ms-teams.exe")
+^!+p::
+<^>!p::SwitchToBitwarden()
+^!+n::
+<^>!n::SwitchToTerminal()
+^!+b::
+<^>!b::SwitchToBrowser()
+^!+e::
+<^>!e::SwitchToExplorer()
+^!+r::
+<^>!r::SwitchTo("mstsc.exe", "mstsc.exe")
+^!+t::
+<^>!t::SwitchTo("ms-teams.exe", "ms-teams.exe")
 
 ; Bring the Window Hello dialog box to the front
 
 ^!+h::
-{
-  WinActivate("ahk_class Credential Dialog Xaml Host")
-}
+<^>!h::WinActivate("ahk_class Credential Dialog Xaml Host")
 
  ; Type out whatever is in the clipboard
 
 ^!+v::
+<^>!v::
 {
+  WaitForModKeyUp()
   Send(A_ClipBoard)
   Sleep(500)
   Send("{Enter}")
@@ -56,9 +62,9 @@ SwitchToExplorer() {
   }
 }
 
-; Switch to Microsoft Edge or make a new tab if it is already active
+; Switch to browser or make a new tab if it is already active
 
-SwitchToMSEdge() {
+SwitchToBrowser() {
   wd := A_WinDelay
   SetWinDelay(0)
   if WinActive("ahk_exe msedge.exe") {
@@ -99,6 +105,7 @@ SwitchToBitwarden() {
   wd := A_WinDelay
   SetWinDelay(0)
   if WinActive("ahk_exe Bitwarden.exe") {
+    WaitForModKeyUp()
     Send("^f")
     Send("{Tab}")
     Send("{Tab}")
@@ -115,7 +122,21 @@ SwitchToBitwarden() {
       }
     finally
       WinWaitActive("ahk_exe Bitwarden.exe", , 1)
+    WaitForModKeyUp()
     Send("^f")
   }
   SetWinDelay(wd)
+}
+
+; Wait for modifier keys to stop being pressed
+
+WaitForModKeyUp() {
+  if (GetKeyState("LControl", "P") && GetKeyState("RAlt", "P")) {
+    KeyWait("LControl")
+    KeyWait("RAlt")
+  } else {
+    KeyWait("LControl")
+    KeyWait("LAlt")
+    KeyWait("LShift")
+  }
 }

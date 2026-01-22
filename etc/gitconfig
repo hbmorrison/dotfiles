@@ -24,6 +24,8 @@
 	develop = develop
 [init]
 	defaultBranch = main
+[advice]
+	skippedCherryPicks = false
 # Make things pretty.
 [blame]
 	coloring = highlightRecent
@@ -32,8 +34,13 @@
 	pretty = format: %C(auto,yellow)%h %C(auto,blue)%cn %C(auto,green)%cr%C(auto,reset)%C(auto,red)%d%C(auto,reset) %s
 [log]
 	abbrevCommit = true
+[difftool "idiff"]
+	cmd = diff --unified=3 --color=always --ignore-case $LOCAL $REMOTE | less --raw-control-chars
+[difftool]
+	prompt = 0
 # Useful aliases.
 [alias]
 	user = config --get-regexp '^user\\.'
 	chmod = update-index --chmod=+x
 	wdiff = diff --word-diff=color
+	idiff = difftool --tool idiff
