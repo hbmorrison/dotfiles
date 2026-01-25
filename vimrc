@@ -1,15 +1,3 @@
-" install plugins
-call plug#begin()
-Plug 'airblade/vim-gitgutter'
-Plug 'airblade/vim-rooter'
-Plug 'godlygeek/tabular'
-Plug 'kien/ctrlp.vim'
-Plug 'ojroques/vim-oscyank'
-Plug 'puppetlabs/puppet-syntax-vim'
-Plug 'tpope/vim-unimpaired'
-Plug 'tpope/vim-vinegar'
-call plug#end()
-
 " enable syntax highlighting and indenting
 syntax on
 filetype plugin indent on
@@ -95,7 +83,7 @@ set statusline+=%{get(b:,'git_branch','')}
 set statusline+=%{g:space}
 set statusline+=%t
 set statusline+=%{g:space}
-set statusline+=%{&ff}
+set statusline+=[%{&ff}]
 set statusline+=%{g:space}
 set statusline+=[%{&fileencoding?&fileencoding:&encoding}]
 set statusline+=%{&paste?'\ [paste]':''}
@@ -104,7 +92,7 @@ set statusline+=%m%r%h
 set statusline+=%=
 set statusline+=%<%{get(b:,'git_root','')}
 set statusline+=%{g:space}
-set statusline+=%c
+set statusline+=c%c
 set statusline+=%{g:space}
 
 " turn off bold and underlines
@@ -284,7 +272,7 @@ endfunction
 function! GitBranch()
   let s:branch=substitute(system("git -C " . expand("%:h") . " branch --show-current 2>/dev/null"), '\n', '', 'g')
   if s:branch != ""
-    return "(" . s:branch . ")"
+    return "[" . s:branch . "]"
   else
     return ""
   end
