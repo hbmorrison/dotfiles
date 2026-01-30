@@ -14,7 +14,7 @@ then
   # Check whether the remote URL of the vim directory is correct.
 
   VIM_DIR_ORIGIN_URL=$(git -C $VIM_DIR remote -v 2>/dev/null | awk '/(push)/ {print $2}')
-  if [ $VIM_DIR_ORIGIN_URL = $DOTVIM_ORIGIN_URL ]
+  if [ "${VIM_DIR_ORIGIN_URL}" = $DOTVIM_ORIGIN_URL ]
   then
 
     # Check that the current branch is correct.
