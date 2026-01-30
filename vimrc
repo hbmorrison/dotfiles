@@ -27,6 +27,7 @@ set shortmess=aI
 
 " set leader key
 let mapleader=","
+set timeoutlen=300
 
 " enable line numbers
 set number
