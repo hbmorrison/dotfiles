@@ -25,7 +25,7 @@ set viminfo='20,<500,/50,:50,h
 " shorten warning messages and hide startup banner
 set shortmess=aI
 
-" set leader key
+" set leader key and timeout
 let mapleader=","
 set timeoutlen=300
 
@@ -328,12 +328,20 @@ nmap <leader>hs <nop>
 nmap <leader>hu <nop>
 
 " tabular
-nmap <leader>t= :Tab /=<cr>
-nmap <leader>t> :Tab /=><cr>
-nmap <leader>t, :Tab /,\zs/l0r1<cr>
-vmap <leader>t= :Tab /=<cr>
-vmap <leader>t> :Tab /=><cr>
-vmap <leader>t, :Tab /,\zs/l0r1<cr>
+
+" align on whitespace, tap space twice to only align first two columns
+nmap <silent> <leader>t<space><space> :Tab /\(^\S\+\s\+\)\zs\(\S\+\)/<cr>
+nmap <silent> <leader>t<space> :Tab /\S\+\zs\s/l0<cr>
+vmap <silent> <leader>t<space><space> :Tab /\(^\S\+\s\+\)\zs\(\S\+\)/<cr>
+vmap <silent> <leader>t<space> :Tab /\S\+\zs\s/l0<cr>
+
+" align on various characters, can be used together, particularly = then ,
+nmap <silent> <leader>t= :Tab /=<cr>
+nmap <silent> <leader>t> :Tab /=><cr>
+nmap <silent> <leader>t, :Tab /,\zs/l0r1<cr>
+vmap <silent> <leader>t= :Tab /=<cr>
+vmap <silent> <leader>t> :Tab /=><cr>
+vmap <silent> <leader>t, :Tab /,\zs/l0r1<cr>
 
 " ctrlp
 let g:ctrlp_working_path_mode = 'ra'
