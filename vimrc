@@ -347,17 +347,9 @@ vmap <silent> <leader>t, :Tab /,\zs/l0r1<cr>
 let g:ctrlp_working_path_mode = 'ra'
 let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
 let g:ctrlp_match_window = 'bottom,order:btt'
-
-" use internal vim replacements if ctrlp is not available
-if &rtp =~ '/ctrlp.vim'
-  nnoremap f :CtrlP<cr>
-  nnoremap F :CtrlPMRU<cr>
-  nnoremap <tab> :CtrlPBuffer<cr>
-else
-  nnoremap f :Explore<cr>
-  nnoremap F :browse old<cr>
-  nnoremap <tab> :buffer<space><tab><tab><tab>
-endif
+nnoremap f :CtrlP<cr>
+nnoremap F :CtrlPMRU<cr>
+nnoremap <tab> :CtrlPBuffer<cr>
 
 " highlight the current line in ctrlp
 function! CtrlPSetCursorLine()
