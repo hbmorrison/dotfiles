@@ -232,9 +232,9 @@ alias release="git flow release"
 alias hotfix="git flow hotfix"
 alias support="git flow support"
 
-alias fch="git flow feature checkout"
+alias fb="git branch -a | grep feature-"
+alias fc="git flow feature checkout"
 alias ff="git flow feature finish -S"
-alias fl="git branch -a | grep feature-"
 alias fp="git flow feature publish"
 alias fs="git flow feature start"
 alias ft="git flow feature track"
@@ -338,7 +338,7 @@ then
       return
     }
 
-    __git_complete fch __git_flow_feature_checkout
+    __git_complete fc __git_flow_feature_checkout
     __git_complete ff __git_flow_feature_finish
     __git_complete fp __git_flow_feature_publish
     __git_complete ft __git_flow_feature_track
