@@ -63,6 +63,7 @@ set mouse=nv
 
 " enter visual block mode without needing ctrl-v, which terminals capture
 nnoremap <leader>v <c-v>
+vnoremap <leader>v <c-v>
 
 " set tab completion menu
 set wildmenu
