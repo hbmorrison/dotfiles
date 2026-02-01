@@ -2,18 +2,6 @@
 syntax on
 filetype plugin indent on
 
-" autoformat comments by default
-set textwidth=80
-set formatoptions=croqj/
-set nojoinspaces
-
-" make sure the formatoptions are applied to new buffers properly
-autocmd BufRead,BufNewFile * setlocal formatoptions=croqj/
-
-" enable search highlighting and clear with return
-set hlsearch
-nnoremap <silent> <cr> :let @/ = ""<cr><cr>
-
 " set encoding and colour range for modern terminals
 set encoding=utf8
 set t_Co=256
@@ -34,15 +22,27 @@ set number
 set cursorline
 set cursorlineopt=number
 
-" disable bell
-set visualbell
-set t_vb=
-
 " convert tabs to two spaces
 set softtabstop=2
 set shiftwidth=2
 set smarttab
 set expandtab
+
+" disable bell
+set visualbell
+set t_vb=
+
+" autoformat comments by default
+set textwidth=80
+set formatoptions=cqj
+set nojoinspaces
+
+" make sure the formatoptions are applied to new buffers properly
+autocmd BufRead,BufNewFile * setlocal formatoptions=cqj
+
+" enable search highlighting and clear with return
+set hlsearch
+nnoremap <silent> <cr> :let @/ = ""<cr><cr>
 
 " use shift-tab to insert a literal tab character
 inoremap <s-tab> <c-q><tab>
@@ -58,15 +58,11 @@ set list
 autocmd InsertEnter * setlocal listchars=tab:▸·
 autocmd InsertLeave * setlocal listchars=tab:▸·,trail:×
 
-" enable mouse
+" partially enable mouse
 set mouse=nv
 
-" toggle the expanded paste mode for mouse selections
-nnoremap <silent> <leader>v :call TogglePastemode()<cr>
-
-" use space to fold, unfold and set a visual fold
-nnoremap <silent> <space> @=(foldlevel('.')?'za':"\<space>")<cr>
-vnoremap <space> zf
+" enter visual block mode without needing ctrl-v, which terminals capture
+nnoremap <leader>v <c-v>
 
 " set tab completion menu
 set wildmenu
@@ -198,24 +194,20 @@ endtry
 " toggle the background from dark to light
 nnoremap <silent> <leader>b :let &bg=(&bg=='light'?'dark':'light')<cr>
 
-" parse results from ripgrep and a basic list of files for the quickfix list
-set errorformat=%f:%l:%c:%m,%f
-
 " use :make to load modified files according to git into the quickfix list
 set makeprg=git\ ls-files\ -m
-nnoremap <silent> <leader>m :make<cr><cr><cr>
+set errorformat^=%f
+nnoremap <silent> <leader>g :make<cr><cr><cr>
 
 " internal grep into the quickfix list using ripgrep
 set grepprg=rg\ --vimgrep\ --smart-case\ $*
 set grepformat^=%f:%l:%c:%m
-
-" search current selection with ripgrep as above
-vnoremap <silent> <leader>g y:grep! "<c-r>"" %<cr><cr>
+vnoremap <silent> <leader>f y:grep! "<c-r>"" %<cr><cr>
 
 " automatically close the quickfix window when a file is selected with Enter
 :autocmd FileType qf nnoremap <buffer> <cr> <cr>:cclose<cr>
 
-" enable navigation with control key for splits
+" use the control key to navigate between splits
 nnoremap <c-h> <c-w><c-h>
 nnoremap <c-j> <c-w><c-j>
 nnoremap <c-k> <c-w><c-k>
@@ -261,13 +253,14 @@ function! TogglePastemode()
     let b:pastemode_on=0
   else
     set signcolumn=yes
-    set mouse=a
+    set mouse=nv
     set number
     set laststatus=2
     set nopaste
     let b:pastemode_on=1
   endif
 endfunction
+nnoremap <silent> <leader>p :call TogglePastemode()<cr>
 
 " get the current git branch for the statusline
 function! GitBranch()
@@ -322,7 +315,7 @@ catch /:E518:/
 endtry
 set updatetime=100
 nmap <leader>n <plug>(GitGutterNextHunk)
-nmap <leader>p <plug>(GitGutterPrevHunk)
+nmap <leader>N <plug>(GitGutterPrevHunk)
 nmap <leader>a <plug>(GitGutterStageHunk)
 nmap <leader>hs <nop>
 nmap <leader>hu <nop>
@@ -363,18 +356,10 @@ let g:ctrlp_buffer_func = { 'enter': 'CtrlPSetCursorLine', 'exit':  'CtrlPUnsetC
 " osc yank
 let g:oscyank_silent = 0
 let g:oscyank_trim = 0
-nmap <leader>c <plug>OSCYankOperator
-nmap <leader>cc <leader>c_
-vmap <leader>c <plug>OSCYankVisual
+nmap <leader>y <plug>OSCYankOperator
+vmap <leader>y <plug>OSCYankVisual
 
 " FIXES
-
-" fix vim starting with light background in git bash.
-
-let g:proc_version = substitute(system("cat /proc/version | grep 'MSYS' 2>/dev/null"), '\n', '', 'g')
-if g:proc_version != ""
-  set background=dark
-endif
 
 " fix vi starting in replace mode in WSL
 nnoremap <esc>^[ <esc>^[
