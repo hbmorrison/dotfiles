@@ -1,3 +1,14 @@
+# Update dotfiles repo.
+
+echo -n "Pulling latest version of dotfiles repo... "
+if ! git -C $BASE_DIR pull &>/dev/null
+then
+  echo
+  echo "Error: unable to update local dotfiles repo"
+  exit 1
+fi
+echo "Done"
+
 # Create any directories that are needed.
 
 echo -n "Creating directories... "
