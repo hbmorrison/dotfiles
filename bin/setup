@@ -16,11 +16,16 @@ ETC_DIR="${BASE_DIR}/etc"
 SETUP_SCRIPT=$(basename $0)
 LOCAL_BIN="${HOME}/.local/bin"
 
+# Update dotfiles repo.
+
+echo -n "Pulling latest version of dotfiles repo... "
 if ! git -C $BASE_DIR pull &>/dev/null
 then
+  echo
   echo "Error: unable to update local dotfiles repo"
   exit 1
 fi
+echo "Done"
 
 # Check that symlink is set up.
 
