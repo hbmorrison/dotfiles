@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# Locate the base directory of the repository.
+# Source OS release variables.
 
 if [ -f /etc/os-release ]
 then
   source /etc/os-release
 fi
+
+# Locate the base directory of the repository.
 
 THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
@@ -14,6 +16,12 @@ ETC_DIR="${BASE_DIR}/etc"
 SETUP_SCRIPT=$(basename $0)
 LOCAL_BIN="${HOME}/.local/bin"
 
+if git -C $BASE_DIR pull # 2>/dev/null
+then
+  echo "Error: unable to update local dotfiles repo"
+  exit 1
+fi
+exit 0
 # Check that symlink is set up.
 
 if [ ! -d $LOCAL_BIN ]
