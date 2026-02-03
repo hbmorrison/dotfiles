@@ -40,6 +40,9 @@ set nojoinspaces
 " make sure the formatoptions are applied to new buffers properly
 autocmd BufRead,BufNewFile * setlocal formatoptions=cqj
 
+" use patience algorithm and ignore whitespace when diffing
+set diffopt=algorithm:patience,closeoff,context:3,filler,internal,iwhite,horizontal
+
 " enable search highlighting and clear with return
 set hlsearch
 nnoremap <silent> <cr> :let @/ = ""<cr><cr>
@@ -47,8 +50,8 @@ nnoremap <silent> <cr> :let @/ = ""<cr><cr>
 " use shift-tab to insert a literal tab character
 inoremap <s-tab> <c-q><tab>
 
-" turn off vertical split and end of buffer markers
-set fillchars+=vert:\ ,eob:\ 
+" turn off diff empty line, vertical split and end of buffer markers
+set fillchars+=diff:\ ,vert:\ ,eob:\ 
 
 " mark tabs and trailing whitepace
 set listchars=tab:▸·,trail:×
@@ -96,9 +99,15 @@ set statusline+=%{g:space}
 " turn off bold and underlines
 highlight CursorLine term=NONE cterm=NONE
 highlight CursorLineNr term=NONE cterm=NONE
+highlight CursorLineFold term=NONE cterm=NONE
+highlight DiffText term=NONE cterm=NONE
+highlight TabLine term=NONE cterm=NONE
+highlight TabLineSel term=NONE cterm=NONE
+highlight TabLineFill term=NONE cterm=NONE
 highlight FoldColumn term=NONE cterm=NONE
 highlight StatusLine term=NONE cterm=NONE
-highlight StatusLineTerm term=NONE cterm=NONE
+highlight StatusLineNC term=NONE cterm=NONE
+highlight VertSplit term=NONE cterm=NONE
 
 " reverse background for visual mode and search
 highlight Visual ctermbg=111 ctermfg=0
@@ -115,69 +124,94 @@ highlight String ctermfg=37
 highlight vimSynType ctermfg=37
 highlight netrwDir ctermfg=68
 highlight Error ctermfg=196
-highlight MatchParen ctermfg=196
 highlight CursorLineNr ctermfg=111
 
 " set additional highlighting based on light or dark background
 function SetHighlight()
-  " apply highlights for light or dark backgrounds
-  if &background == "light"
-    " set light background where needed
+  if &background == "dark"
+    " set dark background where needed
     highlight Normal ctermbg=0 ctermfg=15
+    highlight FoldColumn ctermbg=0 ctermfg=166
     highlight SignColumn ctermbg=0
-    highlight VertSplit ctermfg=0
     highlight GitGutterDelete ctermbg=0 ctermfg=160
     highlight GitGutterAdd ctermbg=0 ctermfg=70
     highlight GitGutterChange ctermbg=0 ctermfg=178
-    " custom highlights to suit light background
-    highlight Folded ctermfg=166
+    highlight GitGutterAddInvisible ctermbg=0 ctermfg=0
+    highlight GitGutterChangeInvisible ctermbg=0 ctermfg=0
+    highlight GitGutterDeleteInvisible ctermbg=0 ctermfg=0
+    highlight GitGutterChangeDeleteInvisible ctermbg=0 ctermfg=0
+    highlight IncSearch term=NONE cterm=NONE ctermbg=9 ctermfg=9
+    highlight DiffAdd ctermbg=0 ctermfg=70
+    highlight DiffDelete ctermbg=0 ctermfg=160
+    highlight DiffChange ctermbg=0 ctermfg=178
+    highlight DiffText ctermbg=0 ctermfg=178
+    highlight MatchParen ctermbg=0 ctermfg=196
+    " custom highlights to suit dark background
+    highlight Folded ctermbg=0 ctermfg=166
     highlight qfFileName ctermfg=136
     highlight Identifier cterm=NONE ctermfg=32
     highlight Type ctermfg=32
     highlight PreProc ctermfg=166
     highlight Statement ctermfg=136
-    " grey things
     highlight Comment ctermfg=248
-    highlight CursorLine ctermbg=248 ctermfg=15
-    highlight StatusLine ctermbg=248 ctermfg=0
-    highlight StatusLineTerm ctermbg=248 ctermfg=0
-    highlight CtrlPMode1 ctermbg=248 ctermfg=0
-    highlight CtrlPMode2 ctermbg=248 ctermfg=0
-    highlight StatusLineNC ctermbg=248 ctermfg=248
-    highlight StatusLineTermNC ctermbg=248 ctermfg=248
-    highlight netrwPlain ctermfg=248
-    highlight netrwClassify ctermfg=248
-    highlight netrwLink ctermfg=248
-    highlight LineNr ctermfg=248
+    " grey ornaments
+    highlight CursorLineFold ctermbg=0 ctermfg=242
+    highlight StatusLine ctermbg=242 ctermfg=0
+    highlight TabLineSel ctermbg=242 ctermfg=0
+    highlight VertSplit ctermfg=0 ctermbg=0
+    highlight CtrlPMode1 ctermbg=242 ctermfg=0
+    highlight CtrlPMode2 ctermbg=242 ctermfg=0
+    highlight netrwPlain ctermfg=242
+    highlight netrwClassify ctermfg=242
+    highlight netrwLink ctermfg=242
+    " dark grey ornaments
+    highlight CursorLine ctermbg=235 ctermfg=15
+    highlight LineNr ctermfg=237
+    highlight StatusLineNC ctermbg=0 ctermfg=237
+    highlight TabLine ctermbg=0 ctermfg=237
+    highlight TabLineFill ctermbg=0 ctermfg=237
     " set comment here to override syntax highlighting
-    highlight Comment ctermfg=248
+    highlight Comment ctermfg=242
   else
-    " set dark background where needed
+    " set light background where needed
     highlight Normal ctermbg=15 ctermfg=0
+    highlight FoldColumn ctermbg=15 ctermfg=214
     highlight SignColumn ctermbg=15
-    highlight VertSplit ctermfg=15
     highlight GitGutterDelete ctermbg=15 ctermfg=1
     highlight GitGutterAdd ctermbg=15 ctermfg=2
     highlight GitGutterChange ctermbg=15 ctermfg=3
-    " custom highlights to suit dark background
-    highlight Folded ctermfg=214
+    highlight GitGutterAddInvisible ctermbg=15 ctermfg=15
+    highlight GitGutterChangeInvisible ctermbg=15 ctermfg=15
+    highlight GitGutterDeleteInvisible ctermbg=15 ctermfg=15
+    highlight GitGutterChangeDeleteInvisible ctermbg=15 ctermfg=15
+    highlight DiffAdd ctermbg=15 ctermfg=2
+    highlight DiffDelete ctermbg=15 ctermfg=1
+    highlight DiffChange ctermbg=15 ctermfg=3
+    highlight DiffText ctermbg=15 ctermfg=3
+    highlight MatchParen ctermbg=15 ctermfg=196
+    " custom highlights to suit light background
+    highlight Folded ctermbg=15 ctermfg=214
     highlight qfFileName ctermfg=214
     highlight Identifier cterm=NONE ctermfg=39
     highlight Type ctermfg=39
     highlight PreProc ctermfg=202
     highlight Statement ctermfg=214
-    " grey things
-    highlight CursorLine ctermbg=242 ctermfg=0
-    highlight StatusLine ctermbg=242 ctermfg=15
-    highlight StatusLineTerm ctermbg=242 ctermfg=15
-    highlight CtrlPMode1 ctermbg=242 ctermfg=15
-    highlight CtrlPMode2 ctermbg=242 ctermfg=15
-    highlight StatusLineNC ctermbg=242 ctermfg=242
-    highlight StatusLineTermNC ctermbg=242 ctermfg=242
-    highlight netrwPlain ctermfg=242
-    highlight netrwClassify ctermfg=242
-    highlight netrwLink ctermfg=242
-    highlight LineNr ctermfg=242
+    " grey ornaments
+    highlight CursorLineFold ctermbg=15 ctermfg=248
+    highlight StatusLine ctermbg=248 ctermfg=15
+    highlight TabLineSel ctermbg=248 ctermfg=15
+    highlight VertSplit ctermfg=15 ctermbg=15
+    highlight CtrlPMode1 ctermbg=248 ctermfg=15
+    highlight CtrlPMode2 ctermbg=248 ctermfg=15
+    highlight netrwPlain ctermfg=248
+    highlight netrwClassify ctermfg=248
+    highlight netrwLink ctermfg=248
+    " light grey ornaments
+    highlight CursorLine ctermbg=253 ctermfg=0
+    highlight LineNr ctermfg=250
+    highlight StatusLineNC ctermbg=15 ctermfg=250
+    highlight TabLine ctermbg=15 ctermfg=250
+    highlight TabLineFill ctermbg=15 ctermfg=250
     " set comment here to override syntax highlighting
     highlight Comment ctermfg=242
   endif
