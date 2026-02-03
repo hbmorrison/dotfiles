@@ -217,7 +217,7 @@ alias ds="git diff --staged"
 alias fe="git fetch"
 alias gsa="git submodule add"
 alias gsu="git submodule update --recursive"
-alias lo="git log --no-merges --first-parent"
+alias lo="git log --no-merges"
 alias pl="git pull"
 alias pu="git push"
 alias st="git status"
@@ -225,12 +225,6 @@ alias amend="git commit --amend"
 alias fixup="git commit --fixup"
 
 # Git flow aliases.
-
-alias feature="git flow feature"
-alias bugfix="git flow bugfix"
-alias release="git flow release"
-alias hotfix="git flow hotfix"
-alias support="git flow support"
 
 alias fb="git branch -a | grep feature-"
 alias fc="git flow feature checkout"
