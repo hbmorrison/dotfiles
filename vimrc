@@ -97,16 +97,17 @@ set statusline+=c%c
 set statusline+=%{g:space}
 
 " turn off bold and underlines
+highlight LineNr term=NONE cterm=NONE
 highlight CursorLine term=NONE cterm=NONE
 highlight CursorLineNr term=NONE cterm=NONE
 highlight CursorLineFold term=NONE cterm=NONE
+highlight StatusLine term=NONE cterm=NONE
+highlight StatusLineNC term=NONE cterm=NONE
 highlight DiffText term=NONE cterm=NONE
 highlight TabLine term=NONE cterm=NONE
 highlight TabLineSel term=NONE cterm=NONE
 highlight TabLineFill term=NONE cterm=NONE
 highlight FoldColumn term=NONE cterm=NONE
-highlight StatusLine term=NONE cterm=NONE
-highlight StatusLineNC term=NONE cterm=NONE
 highlight VertSplit term=NONE cterm=NONE
 
 " reverse background for visual mode and search
@@ -127,8 +128,8 @@ highlight Error ctermfg=196
 highlight CursorLineNr ctermfg=111
 
 " set additional highlighting based on light or dark background
-function SetHighlight()
-  if &background == "dark"
+function! SetHighlight()
+  if &background == 'dark'
     " set dark background where needed
     highlight Normal ctermbg=0 ctermfg=15
     highlight FoldColumn ctermbg=0 ctermfg=166
@@ -164,14 +165,14 @@ function SetHighlight()
     highlight netrwPlain ctermfg=242
     highlight netrwClassify ctermfg=242
     highlight netrwLink ctermfg=242
-    " dark grey ornaments
-    highlight CursorLine ctermbg=235 ctermfg=15
-    highlight LineNr ctermfg=237
-    highlight StatusLineNC ctermbg=0 ctermfg=237
-    highlight TabLine ctermbg=0 ctermfg=237
-    highlight TabLineFill ctermbg=0 ctermfg=237
     " set comment here to override syntax highlighting
     highlight Comment ctermfg=242
+    " dark grey ornaments
+    highlight CursorLine ctermbg=238 ctermfg=15
+    highlight LineNr ctermbg=0 ctermfg=238
+    highlight StatusLineNC ctermbg=0 ctermfg=238
+    highlight TabLine ctermbg=0 ctermfg=238
+    highlight TabLineFill ctermbg=0 ctermfg=238
   else
     " set light background where needed
     highlight Normal ctermbg=15 ctermfg=0
@@ -206,14 +207,14 @@ function SetHighlight()
     highlight netrwPlain ctermfg=248
     highlight netrwClassify ctermfg=248
     highlight netrwLink ctermfg=248
+    " set comment here to override syntax highlighting
+    highlight Comment ctermfg=248
     " light grey ornaments
     highlight CursorLine ctermbg=253 ctermfg=0
-    highlight LineNr ctermfg=250
+    highlight LineNr ctermbg=15 ctermfg=250
     highlight StatusLineNC ctermbg=15 ctermfg=250
     highlight TabLine ctermbg=15 ctermfg=250
     highlight TabLineFill ctermbg=15 ctermfg=250
-    " set comment here to override syntax highlighting
-    highlight Comment ctermfg=242
   endif
 endfunction
 
