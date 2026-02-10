@@ -5,7 +5,7 @@ PACKAGES="bash-completion curl fail2ban git git-flow jq man-db net-tools \
   python3-systemd sudo vim"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 TAILSCALE_ARGS="--accept-routes --accept-risk=all"
-MY_PUBLIC_KEYS="${BASE_DIR}/etc/my_public_keys"
+PUBLIC_SSH_KEYS="${BASE_DIR}/etc/public_ssh_keys"
 
 NON_ROOT_USER="hannah"
 NON_ROOT_ADMIN_GROUPS="sudo,users"
@@ -170,7 +170,7 @@ do
     echo "${TYPE} ${KEY} ${COMMENT}" >> $NON_ROOT_AUTHORIZED_KEYS
     echo "Done"
   fi
-done < "${MY_PUBLIC_KEYS}"
+done < "${PUBLIC_SSH_KEYS}"
 
 # Configure the non-root user shell.
 
