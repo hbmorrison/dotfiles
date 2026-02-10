@@ -20,7 +20,7 @@ case $(/bin/cat /proc/version 2>/dev/null) in
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
 esac
 
-# Work out the location of the system32 directory on Windows.
+# Location of the system32 directory on Windows.
 
 SYSTEM_DIR="/mnt/c/Windows/System32"
 
@@ -30,12 +30,12 @@ HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=2000
 
-# Append to the history file, don't overwrite it
+# Append to the history file.
 
 shopt -s histappend
 
-# Check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
+# Check the window size after each command and, if necessary, update the values
+# of LINES and COLUMNS.
 
 shopt -s checkwinsize
 
@@ -172,7 +172,7 @@ GIT_PROMPT="$COLOUR_CYAN\$(__git_ps1)$COLOUR_CLEAR"
 # Set up directory prompt.
 
 function __dir_ps1 {
-  local gitroot unixgitroot
+  local gitroot
   if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
   then
     pwd | sed "s#^$(dirname "${gitroot}")/##"
@@ -224,7 +224,7 @@ alias st="git status"
 alias amend="git commit --amend"
 alias fixup="git commit --fixup"
 
-# Git flow aliases.
+# Git flow feature aliases.
 
 alias fb="git branch -a | grep feature-"
 alias fc="git flow feature checkout"

@@ -6,7 +6,10 @@ then
   SHELL_ENVIRONMENT=$ID
 fi
 
+# Deal with special cases.
+
 case $(/bin/cat /proc/version 2>/dev/null) in
+  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos";;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
 esac
 
