@@ -18,6 +18,7 @@ esac
 export EDITOR=vi
 export VISUAL=vi
 export LESS=-FRX
+export LESSHISTFILE=-
 
 # Set the default fzf options.
 
