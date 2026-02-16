@@ -88,45 +88,96 @@ function cd {
   fi
 }
 
+# SSH jumphost management.
+
+function jumphost {
+  if [ "${1}" == "set" ]
+  then
+    case "${2}" in
+      at) export JUMPHOST=apps-jump-at; return ;;
+      kb) export JUMPHOST=apps-jump-kb; return ;;
+      *)
+        echo "Usage: jumphost set [ at | kb ]"
+        return
+    esac
+  fi
+  if [ -z ${JUMPHOST:+z} ]
+  then
+    echo "Error: run jumphost set [ at | kb ] first"
+    return
+  fi
+  command ssh -O check $JUMPHOST-socket > /dev/null 2>&1
+  running=$?
+  case "${1}" in
+    start)
+       if [ $running -gt 0 ]
+       then
+         command ssh -f $JUMPHOST-connect exit
+       else
+         echo "Error: jumphost ${JUMPHOST} already running"
+       fi
+      ;;
+    stop)
+       if [ $running -eq 0 ]
+       then
+         command ssh -O exit $JUMPHOST-socket
+       else
+         echo "Error: jumphost ${JUMPHOST} not running"
+       fi
+      ;;
+    status)
+       if [  $running -eq 0 ]
+       then
+         echo "jumphost ${JUMPHOST} is running"
+         lsof -i :8888 | grep LISTEN
+       else
+         echo "jumphost ${JUMPHOST} is stopped"
+       fi
+       ;;
+    *)
+      echo "Usage: jumphost [ start | stop | status | set ]"
+  esac
+}
+
 # Password Manager Pro integration.
 
-if [ -f $HOME/.pmp_api_authtoken ]
-then
-
-  function pmp {
-    if [ -z "$PMP_API_AUTHTOKEN" ]
-    then
-      export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
-    fi
+function pmp {
+  if [ -r "${HOME}/.{$JUMPHOST}_pmp_api_authtoken" ]
+  then
+    local token=`cat "$HOME/.${JUMPHOST}_pmp_api_authtoken" 2>/dev/null`
     if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
     then
-      $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
+      PMP_API_AUTHTOKEN="${token}" $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
     else
-      $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
+      PMP_API_AUTHTOKEN="${token}" $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
     fi
     if [ "$(jobs -s)" != "" ]
     then
       fg
     fi
-  }
+  else
+    echo "Error: PMP API auth token for $JUMPHOST not found"
+  fi
+}
 
-  function ssh {
+function ssh {
+  if [ -r "${HOME}/.{$JUMPHOST}_pmp_api_authtoken" ]
+  then
+    local token=`cat "$HOME/.${JUMPHOST}_pmp_api_authtoken" 2>/dev/null`
+    local token=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
     if echo "${1}" | grep '\.'
     then
       local userhost=$1
     else
       local userhost="${1}.is.ed.ac.uk"
     fi
-    if [ -z "$PMP_API_AUTHTOKEN" ]
-    then
-      export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
-    fi
-    $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
+    PMP_API_AUTHTOKEN="${token}" $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
     PMP_LASTHOST=$1
     command ssh $userhost
-  }
-
-fi
+  else
+    echo "Error: PMP API auth token for $JUMPHOST not found"
+  fi
+}
 
 # Tell git to use the real ssh command.
 

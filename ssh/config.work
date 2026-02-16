@@ -1,10 +1,27 @@
-Host pmaster
-  User hmorris
-Host puppet-filestore
-  User hmorris
-Host bambooapp-live
-  User bamboo
-Host bambooapp-test
-  User bamboo
+Host gitlab.is.ed.ac.uk
+  ProxyCommand none
+  User git
 Host *.is.ed.ac.uk
+  ProxyCommand ncat --proxy-type socks5 --proxy 127.0.0.1:8888 %h %p
   User isapps
+Host apps-jump-at-connect
+  HostName apps-jump-at.is.ed.ac.uk
+  ProxyCommand none
+  User hmorris
+  IdentityFile ~/.ssh/jump_key
+  ControlPath ~/.ssh/apps-jump-at_socket
+  RemoteCommand none
+  RequestTTY no
+  ControlMaster yes
+  ControlPersist yes
+  GatewayPorts yes
+  ExitOnForwardFailure yes
+  DynamicForward 8888
+Host apps-jump-at-socket
+  HostName apps-jump-at.is.ed.ac.uk
+  ProxyCommand none
+  User hmorris
+  IdentityFile ~/.ssh/jump_key
+  ControlPath ~/.ssh/apps-jump-at_socket
+  RemoteCommand none
+  RequestTTY no
