@@ -124,7 +124,7 @@ function jumphost {
        if command ssh -O check $jumphost-socket &>/dev/null
        then
          echo "jumphost ${jumphost} is connected"
-         lsof -i :1080 -i :3128 | grep LISTEN
+         lsof -i :11080 | grep LISTEN
        else
          echo "jumphost ${jumphost} is not connected"
        fi
