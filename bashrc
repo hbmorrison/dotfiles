@@ -1,4 +1,3 @@
-# If not running interactively, don't do anything.
 
 case $- in
   *i*) ;;
@@ -91,91 +90,86 @@ function cd {
 # SSH jumphost management.
 
 function jumphost {
-  if [ "${1}" == "set" ]
+  if [ -z ${2:+z} ]
   then
-    case "${2}" in
-      at) export JUMPHOST=apps-jump-at; return ;;
-      kb) export JUMPHOST=apps-jump-kb; return ;;
+    echo "Usage: jumphost [ kb | at ] [ start | stop | status ]"
+    return
+  else
+    case "${1}" in
+      at) local jumphost=apps-jump-at;;
+      kb) local jumphost=apps-jump-kb;;
       *)
-        echo "Usage: jumphost set [ at | kb ]"
+        echo "Usage: jumphost [ kb | at ] [ start | stop | status ]"
         return
     esac
   fi
-  if [ -z ${JUMPHOST:+z} ]
-  then
-    echo "Error: run jumphost set [ at | kb ] first"
-    return
-  fi
-  command ssh -O check $JUMPHOST-socket > /dev/null 2>&1
-  running=$?
-  case "${1}" in
+  case "${2}" in
     start)
-       if [ $running -gt 0 ]
+       if command ssh -O check $jumphost-socket &>/dev/null
        then
-         command ssh -f $JUMPHOST-connect exit
+         echo "Error: jumphost ${jumphost} already connected"
        else
-         echo "Error: jumphost ${JUMPHOST} already running"
+         command ssh -f $jumphost-connect exit
        fi
       ;;
     stop)
-       if [ $running -eq 0 ]
+       if command ssh -O check $jumphost-socket &>/dev/null
        then
-         command ssh -O exit $JUMPHOST-socket
+         command ssh -O exit $jumphost-socket
        else
-         echo "Error: jumphost ${JUMPHOST} not running"
+         echo "Error: jumphost ${jumphost} not connected"
        fi
       ;;
     status)
-       if [  $running -eq 0 ]
+       if command ssh -O check $jumphost-socket &>/dev/null
        then
-         echo "jumphost ${JUMPHOST} is running"
-         lsof -i :8888 | grep LISTEN
+         echo "jumphost ${jumphost} is connected"
+         lsof -i :1080 -i :3128 | grep LISTEN
        else
-         echo "jumphost ${JUMPHOST} is stopped"
+         echo "jumphost ${jumphost} is not connected"
        fi
        ;;
     *)
-      echo "Usage: jumphost [ start | stop | status | set ]"
+      echo "Usage: jumphost [ kb | at ] [ start | stop | status ]"
   esac
 }
 
 # Password Manager Pro integration.
 
 function pmp {
-  if [ -r "${HOME}/.{$JUMPHOST}_pmp_api_authtoken" ]
+  if [ -r "${HOME}/.pmp_api_authtoken" ]
   then
-    local token=`cat "$HOME/.${JUMPHOST}_pmp_api_authtoken" 2>/dev/null`
+    local token=`cat "${HOME}/.pmp_api_authtoken" 2>/dev/null`
     if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
     then
-      PMP_API_AUTHTOKEN="${token}" $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
+      PMP_API_AUTHTOKEN="${token}" pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
     else
-      PMP_API_AUTHTOKEN="${token}" $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
+      PMP_API_AUTHTOKEN="${token}" pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
     fi
     if [ "$(jobs -s)" != "" ]
     then
       fg
     fi
   else
-    echo "Error: PMP API auth token for $JUMPHOST not found"
+    echo "Error: PMP API auth token not found"
   fi
 }
 
 function ssh {
-  if [ -r "${HOME}/.{$JUMPHOST}_pmp_api_authtoken" ]
+  if [ -r "${HOME}/.pmp_api_authtoken" ]
   then
-    local token=`cat "$HOME/.${JUMPHOST}_pmp_api_authtoken" 2>/dev/null`
-    local token=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
+    local token=`cat "${HOME}/.pmp_api_authtoken" 2>/dev/null`
     if echo "${1}" | grep '\.'
     then
       local userhost=$1
     else
       local userhost="${1}.is.ed.ac.uk"
     fi
-    PMP_API_AUTHTOKEN="${token}" $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
+    PMP_API_AUTHTOKEN="${token}" pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
     PMP_LASTHOST=$1
     command ssh $userhost
   else
-    echo "Error: PMP API auth token for $JUMPHOST not found"
+    echo "Error: PMP API auth token not found"
   fi
 }
 
