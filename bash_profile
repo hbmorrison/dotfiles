@@ -71,6 +71,13 @@ else
   fi
 fi
 
+# Add the WSL distro to the hostname.
+
+if [ ! -z ${WSL_DISTRO_NAME:+z} ]
+then
+  HOSTNAME="$(/usr/bin/hostname -s)-${WSL_DISTRO_NAME/*-/}"
+fi
+
 # Source the bashrc.
 
 if [ -r "${HOME}/.bashrc" ]

@@ -28,7 +28,7 @@ then
   echo
   read -s
   echo "Restarting..."
-  powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl --shutdown\""
+  powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl -d ${WSL_DISTRO_NAME} --shutdown\""
 else
   echo "Yes"
 fi

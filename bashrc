@@ -415,3 +415,7 @@ alias vm="vim -q <(git ls-files -m)"
 function vg {
   vim -c "let @/='\<$*\>'" -c "set hls" -q <(rg --vimgrep --smart-case "$*")
 }
+
+# Fix WSL.
+
+alias fixwsl="sudo sh -c 'printf \":WSLInterop:M::MZ::/init:PF\n\" | tee /proc/sys/fs/binfmt_misc/register'"
