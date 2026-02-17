@@ -30,7 +30,7 @@ DEFAULT_DISTRO_TARBALL="${DEFAULT_DISTRO_INSTALL_DIR//\\//}/install.tar.gz"
 DISTRO_NAME="${DEFAULT_DISTRO}-${CLONE}"
 
 DISTRO_NAME_CHECK=$(wsl.exe -l | tr -d '[\0\r]' | awk "/^${DISTRO_NAME}/ {print \$1}")
-if [ -z ${DISTRO_NAME_CHECK:+z} ]
+if [ ! -z ${DISTRO_NAME_CHECK:+z} ]
 then
   echo "Error: ${DISTRO_NAME} already exists"
   exit 1
@@ -39,18 +39,19 @@ fi
 # Create the new distro.
 
 echo "Creating ${DISTRO_NAME}:"
-echo wsl.exe --import $DISTRO_NAME "C:/WSL/${DISTRO_NAME}" "${DEFAULT_DISTRO_TARBALL}" --version 2
+wsl.exe --import $DISTRO_NAME "C:/WSL/${DISTRO_NAME}" "${DEFAULT_DISTRO_TARBALL}" --version 2
 
 # Create the current user in the new distro.
 
-echo wsl.exe -d $DISTRO_NAME -u root --cd / -- /usr/sbin/useradd -m -G $DEFAULT_GROUPS -s /bin/bash $USER
+wsl.exe -d $DISTRO_NAME -u root --cd / -- /usr/sbin/useradd -m -G $DEFAULT_GROUPS -s /bin/bash $USER
 
 # Set the password for the user.
 
 echo "Set password for user ${USER} in ${DISTRO_NAME}:"
-echo wsl.exe -d $DISTRO_NAME -u root --cd / -- /usr/bin/passwd $USER
+wsl.exe -d $DISTRO_NAME -u root --cd / -- /usr/bin/passwd $USER
 
 # Set the user as the default user for the distro.
 
-echo "Setting user ${USER} in ${DISTRO_NAME} as the default user:"
+echo -n "Setting user ${USER} in ${DISTRO_NAME} as the default user... "
 wsl.exe -d $DISTRO_NAME -u root --cd / -- /bin/printf "\\\n[user]\\\ndefault=${USER}\\\\n" \>\> /etc/wsl.conf
+echo "Done"
