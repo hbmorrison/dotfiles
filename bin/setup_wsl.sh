@@ -13,26 +13,6 @@ then
   SUDO=""
 fi
 
-# Override wsl.conf to enable systemd.
-
-echo -n "Checking if WSL is configured correctly... "
-if ! diff $BASE_DIR/etc/wsl.conf /etc/wsl.conf >& /dev/null
-then
-  echo "No"
-  $SUDO cp $BASE_DIR/etc/wsl.conf /etc/wsl.conf
-  echo
-  echo " 1. Hit Enter to restart WSL"
-  echo " 2. Accept the UAC for Powershell"
-  echo " 3. Open the Terminal app again"
-  echo " 4. Re-run ${SETUP_SCRIPT} ${SUB_SCRIPT}"
-  echo
-  read -s
-  echo "Restarting..."
-  powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl -d ${WSL_DISTRO_NAME} --shutdown\""
-else
-  echo "Yes"
-fi
-
 # Install packages.
 
 $SUDO apt update -y
