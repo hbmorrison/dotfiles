@@ -5,7 +5,7 @@ PACKAGES="bash-completion curl fail2ban git git-flow jq man-db net-tools \
   python3-systemd sudo vim"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 TAILSCALE_ARGS="--accept-routes --accept-risk=all"
-MY_PUBLIC_KEYS="${BASE_DIR}/etc/my_public_keys"
+PUBLIC_SSH_KEYS="${BASE_DIR}/etc/public_ssh_keys"
 
 NON_ROOT_USER="hannah"
 NON_ROOT_ADMIN_GROUPS="sudo,users"
@@ -152,12 +152,12 @@ done
 
 if [ ! -d $NON_ROOT_SSH_DIR ]
 then
-  su -c "mkdir -m 0700 $NON_ROOT_SSH_DIR" $NON_ROOT_USER
+  su -l -c "mkdir -m 0700 $NON_ROOT_SSH_DIR" $NON_ROOT_USER
 fi
 
 if [ ! -f $NON_ROOT_AUTHORIZED_KEYS ]
 then
-  su -c "touch $NON_ROOT_AUTHORIZED_KEYS" $NON_ROOT_USER
+  su -l -c "touch $NON_ROOT_AUTHORIZED_KEYS" $NON_ROOT_USER
 fi
 
 # Go through each ssh key and add it to authorized_keys if not present.
@@ -170,13 +170,13 @@ do
     echo "${TYPE} ${KEY} ${COMMENT}" >> $NON_ROOT_AUTHORIZED_KEYS
     echo "Done"
   fi
-done < "${MY_PUBLIC_KEYS}"
+done < "${PUBLIC_SSH_KEYS}"
 
 # Configure the non-root user shell.
 
 if [ ! -d $NON_ROOT_LOCAL_DIR ]
 then
-  su -c "mkdir -m 0755 $NON_ROOT_LOCAL_DIR" $NON_ROOT_USER
+  su -l -c "mkdir -m 0755 $NON_ROOT_LOCAL_DIR" $NON_ROOT_USER
 fi
 
 if [ ! -d $NON_ROOT_DOTFILES ]
@@ -184,7 +184,7 @@ then
   cp -r $BASE_DIR $NON_ROOT_DOTFILES
   chown -R $NON_ROOT_USER:$NON_ROOT_USER $NON_ROOT_DOTFILES
 else
-  su -c "git -C $NON_ROOT_DOTFILES pull" $NON_ROOT_USER
+  su -l -c "git -C $NON_ROOT_DOTFILES pull" $NON_ROOT_USER
 fi
 
 if [ ! -x $NON_ROOT_DOTFILES/bin/setup ]
@@ -193,7 +193,7 @@ then
   exit 1
 fi
 
-su -c "$NON_ROOT_DOTFILES/bin/setup shell" $NON_ROOT_USER
+su -l -c "$NON_ROOT_DOTFILES/bin/setup shell" $NON_ROOT_USER
 
 # Set the user's password.
 

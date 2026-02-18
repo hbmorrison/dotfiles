@@ -1,4 +1,3 @@
-# If not running interactively, don't do anything.
 
 case $- in
   *i*) ;;
@@ -20,7 +19,7 @@ case $(/bin/cat /proc/version 2>/dev/null) in
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
 esac
 
-# Work out the location of the system32 directory on Windows.
+# Location of the system32 directory on Windows.
 
 SYSTEM_DIR="/mnt/c/Windows/System32"
 
@@ -30,12 +29,12 @@ HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=2000
 
-# Append to the history file, don't overwrite it
+# Append to the history file.
 
 shopt -s histappend
 
-# Check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
+# Check the window size after each command and, if necessary, update the values
+# of LINES and COLUMNS.
 
 shopt -s checkwinsize
 
@@ -88,45 +87,91 @@ function cd {
   fi
 }
 
+# SSH jumphost management.
+
+function jumphost {
+  if [ -z ${2:+z} ]
+  then
+    echo "Usage: jumphost [ kb | at ] [ start | stop | status ]"
+    return
+  else
+    case "${1}" in
+      at) local jumphost=apps-jump-at;;
+      kb) local jumphost=apps-jump-kb;;
+      *)
+        echo "Usage: jumphost [ kb | at ] [ start | stop | status ]"
+        return
+    esac
+  fi
+  case "${2}" in
+    start)
+       if command ssh -O check $jumphost-socket &>/dev/null
+       then
+         echo "Error: jumphost ${jumphost} already connected"
+       else
+         command ssh -f $jumphost-connect exit
+       fi
+      ;;
+    stop)
+       if command ssh -O check $jumphost-socket &>/dev/null
+       then
+         command ssh -O exit $jumphost-socket
+       else
+         echo "Error: jumphost ${jumphost} not connected"
+       fi
+      ;;
+    status)
+       if command ssh -O check $jumphost-socket &>/dev/null
+       then
+         echo "jumphost ${jumphost} is connected"
+         lsof -i :11080 | grep LISTEN
+       else
+         echo "jumphost ${jumphost} is not connected"
+       fi
+       ;;
+    *)
+      echo "Usage: jumphost [ kb | at ] [ start | stop | status ]"
+  esac
+}
+
 # Password Manager Pro integration.
 
-if [ -f $HOME/.pmp_api_authtoken ]
-then
-
-  function pmp {
-    if [ -z "$PMP_API_AUTHTOKEN" ]
-    then
-      export PMP_API_AUTHTOKEN=`cat $HOME/.pmp_api_authtoken 2>/dev/null`
-    fi
+function pmp {
+  if [ -r "${HOME}/.pmp_api_authtoken" ]
+  then
+    local token=`cat "${HOME}/.pmp_api_authtoken" 2>/dev/null`
     if [ "$1" = "" -a "$PMP_LASTHOST" != "" ]
     then
-      $HOME/bin/pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
+      PMP_API_AUTHTOKEN="${token}" pmp_lookup.rb "$PMP_LASTHOST" | $SYSTEM_DIR/clip.exe
     else
-      $HOME/bin/pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
+      PMP_API_AUTHTOKEN="${token}" pmp_lookup.rb "$1" | $SYSTEM_DIR/clip.exe
     fi
     if [ "$(jobs -s)" != "" ]
     then
       fg
     fi
-  }
+  else
+    echo "Error: PMP API auth token not found"
+  fi
+}
 
-  function ssh {
+function ssh {
+  if [ -r "${HOME}/.pmp_api_authtoken" ]
+  then
+    local token=`cat "${HOME}/.pmp_api_authtoken" 2>/dev/null`
     if echo "${1}" | grep '\.'
     then
       local userhost=$1
     else
       local userhost="${1}.is.ed.ac.uk"
     fi
-    if [ -z "$PMP_API_AUTHTOKEN" ]
-    then
-      export PMP_API_AUTHTOKEN=$(cat $HOME/.pmp_api_authtoken 2>/dev/null)
-    fi
-    $HOME/bin/pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
+    PMP_API_AUTHTOKEN="${token}" pmp_lookup.rb $1 2> /dev/null | $SYSTEM_DIR/clip.exe
     PMP_LASTHOST=$1
     command ssh $userhost
-  }
-
-fi
+  else
+    echo "Error: PMP API auth token not found"
+  fi
+}
 
 # Tell git to use the real ssh command.
 
@@ -172,7 +217,7 @@ GIT_PROMPT="$COLOUR_CYAN\$(__git_ps1)$COLOUR_CLEAR"
 # Set up directory prompt.
 
 function __dir_ps1 {
-  local gitroot unixgitroot
+  local gitroot
   if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
   then
     pwd | sed "s#^$(dirname "${gitroot}")/##"
@@ -217,24 +262,18 @@ alias ds="git diff --staged"
 alias fe="git fetch"
 alias gsa="git submodule add"
 alias gsu="git submodule update --recursive"
-alias lo="git log --no-merges --first-parent"
+alias lo="git log --no-merges"
 alias pl="git pull"
 alias pu="git push"
 alias st="git status"
 alias amend="git commit --amend"
 alias fixup="git commit --fixup"
 
-# Git flow aliases.
+# Git flow feature aliases.
 
-alias feature="git flow feature"
-alias bugfix="git flow bugfix"
-alias release="git flow release"
-alias hotfix="git flow hotfix"
-alias support="git flow support"
-
-alias fch="git flow feature checkout"
+alias fb="git branch -a | grep feature-"
+alias fc="git flow feature checkout"
 alias ff="git flow feature finish -S"
-alias fl="git branch -a | grep feature-"
 alias fp="git flow feature publish"
 alias fs="git flow feature start"
 alias ft="git flow feature track"
@@ -338,7 +377,7 @@ then
       return
     }
 
-    __git_complete fch __git_flow_feature_checkout
+    __git_complete fc __git_flow_feature_checkout
     __git_complete ff __git_flow_feature_finish
     __git_complete fp __git_flow_feature_publish
     __git_complete ft __git_flow_feature_track
@@ -376,3 +415,7 @@ alias vm="vim -q <(git ls-files -m)"
 function vg {
   vim -c "let @/='\<$*\>'" -c "set hls" -q <(rg --vimgrep --smart-case "$*")
 }
+
+# Fix WSL.
+
+alias fixwsl="sudo sh -c 'printf \":WSLInterop:M::MZ::/init:PF\n\" | tee /proc/sys/fs/binfmt_misc/register'"

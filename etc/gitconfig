@@ -2,6 +2,7 @@
 [diff]
 	submodule = log
 	algorithm = patience
+	tool = vimdiff
 [fetch]
 	prune = true
 [pull]
@@ -34,13 +35,11 @@
 	pretty = format: %C(auto,yellow)%h %C(auto,blue)%cn %C(auto,green)%cr%C(auto,reset)%C(auto,red)%d%C(auto,reset) %s
 [log]
 	abbrevCommit = true
-[difftool "idiff"]
-	cmd = diff --unified=3 --color=always --ignore-case $LOCAL $REMOTE | less --raw-control-chars
-[difftool]
-	prompt = 0
+[difftool "vimdiff"]
+	cmd = vim -d \"$LOCAL\" \"$REMOTE\"
+	prompt = true
+	trustExitCode = true
 # Useful aliases.
 [alias]
 	user = config --get-regexp '^user\\.'
 	chmod = update-index --chmod=+x
-	wdiff = diff --word-diff=color
-	idiff = difftool --tool idiff
