@@ -1,1 +1,11 @@
+# Configure tab completion.
+
 set bell-style none
+set completion-query-items 150
+set completion-ignore-case On
+set mark-symlinked-directories On
+
+# Use page up and page down to search history.
+
+"\e[5~": history-search-backward
+"\e[6~": history-search-forward

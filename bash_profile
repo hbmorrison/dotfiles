@@ -6,7 +6,10 @@ then
   SHELL_ENVIRONMENT=$ID
 fi
 
+# Deal with special cases.
+
 case $(/bin/cat /proc/version 2>/dev/null) in
+  *Chromium\ OS*)            SHELL_ENVIRONMENT="chromeos";;
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
 esac
 
@@ -15,6 +18,7 @@ esac
 export EDITOR=vi
 export VISUAL=vi
 export LESS=-FRX
+export LESSHISTFILE=-
 
 # Set the default fzf options.
 
@@ -65,6 +69,13 @@ else
     chmod 600 $AGENT_ENV
     source $AGENT_ENV > /dev/null
   fi
+fi
+
+# Add the WSL distro to the hostname.
+
+if [ ! -z ${WSL_DISTRO_NAME:+z} ]
+then
+  HOSTNAME="$(/usr/bin/hostname -s)-${WSL_DISTRO_NAME/*-/}"
 fi
 
 # Source the bashrc.

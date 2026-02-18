@@ -1,3 +1,18 @@
+# Configuration.
+
+WINDOWS_SYSTEM_DIR="/mnt/c/WINDOWS/system32/"
+WINDOWS_BINARIES="wsl.exe"
+
+# Update dotfiles repo.
+
+echo -n "Pulling latest version of dotfiles repo... "
+if ! git -C $BASE_DIR pull &>/dev/null
+then
+  echo "Failed"
+else
+  echo "Done"
+fi
+
 # Create any directories that are needed.
 
 echo -n "Creating directories... "
@@ -72,6 +87,17 @@ do
 
 done
 echo "Done"
+
+# Create symlinks to Windows binaries.
+
+for BINARY in $WINDOWS_BINARIES
+do
+  SYMLINK=$(basename -s .exe $BINARY)
+  if [ -f "${WINDOWS_SYSTEM_DIR}/${BINARY}" -a ! -L "${LOCAL_BIN}/${SYMLINK}" ]
+  then
+    ln -s "${WINDOWS_SYSTEM_DIR}/${BINARY}" "${LOCAL_BIN}/${SYMLINK}"
+  fi
+done
 
 # Configure Vim.
 

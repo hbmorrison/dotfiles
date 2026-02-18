@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# Locate the base directory of the repository.
+# Source OS release variables.
 
 if [ -f /etc/os-release ]
 then
   source /etc/os-release
 fi
+
+# Locate the base directory of the repository.
 
 THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
@@ -21,10 +23,11 @@ then
   mkdir -p $LOCAL_BIN
 fi
 
-if [ ! -L $LOCAL_BIN/setup ]
+if [ -L $LOCAL_BIN/setup ]
 then
-  ln -s $BIN_DIR/setup $LOCAL_BIN/setup
+  rm -f $LOCAL_BIN/setup
 fi
+ln -s $BIN_DIR/setup $LOCAL_BIN/setup
 
 # Work out whether to run commands using sudo.
 

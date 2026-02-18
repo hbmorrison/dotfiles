@@ -6,33 +6,33 @@ DOTVIM_ORIGIN_URL="${DOTFILES_ORIGIN_DIR}/dotvim.git"
 DOTVIM_BRANCH=$(git -C $BASE_DIR branch --show-current)
 VIM_DIR="${HOME}/.vim"
 
-# Check whether the Vim config directory already exists.
+# Check whether the vim directory already exists.
 
 if [ -d $VIM_DIR ]
 then
 
-  # Check whether the remote URL of the Vim config directory is correct.
+  # Check whether the remote URL of the vim directory is correct.
 
   VIM_DIR_ORIGIN_URL=$(git -C $VIM_DIR remote -v 2>/dev/null | awk '/(push)/ {print $2}')
-
-  if [ $VIM_DIR_ORIGIN_URL = $DOTVIM_ORIGIN_URL ]
+  if [ "${VIM_DIR_ORIGIN_URL}" = $DOTVIM_ORIGIN_URL ]
   then
 
-    # If the remote URL is correct, check that the branch is correct.
+    # Check that the current branch is correct.
 
-    VIM_DIR_BRANCH=$(git -C $VIM_DIR branch --show-current)
-
+    VIM_DIR_BRANCH=$(git -C $VIM_DIR branch --show-current 2>/dev/null)
     if [ $VIM_DIR_BRANCH != $DOTVIM_BRANCH ]
     then
 
-      # If the branch is not correct, checkout the correct branch and, if that
-      # does not succeed, checkout the main branch instead.
+      # If the branch is not correct, checkout the correct branch.
 
-      echo -n "Updating Vim config branch to ${DOTVIM_BRANCH}... "
+      echo -n "Updating vim directory branch to ${DOTVIM_BRANCH}... "
       if ! git -C $VIM_DIR checkout $DOTVIM_BRANCH &>/dev/null
       then
         echo "Failed"
-        echo -n "Updating Vim config branch to main... "
+
+        # If the checkout fails, checkout the main branch as a fallback.
+
+        echo -n "Updating vim directory branch to main... "
         if git -C $VIM_DIR checkout main &>/dev/null
         then
           echo "Done"
@@ -43,60 +43,57 @@ then
       else
         echo "Done"
       fi
-
     fi
-
-    # Then pull and update the submodules.
-
-    echo -n "Pulling the latest version of the Vim config... "
-
-    if git -C $VIM_DIR pull &>/dev/null
-    then
-      echo "Done"
-    else
-      echo
-      echo "Error: run git -C $VIM_DIR pull"
-    fi
-
-    echo -n "Updating Vim config submodules... "
-
-    if git -C $VIM_DIR submodule update --remote --merge &>/dev/null
-    then
-      echo "Done"
-    else
-      echo
-      echo "Error: run git -C $VIM_DIR submodule update --remote --merge"
-    fi
-
   else
-
     echo "Error: git origin in ${VIM_DIR} does not match ${DOTVIM_ORIGIN_URL}"
     exit 1
-
   fi
 
 else
 
-  # If the Vim config directory does not exist, then clone it.
+  # If the vim directory does not exist, clone it.
 
-  echo -n "Cloning $DOTVIM_BRANCH of the Vim config... "
+  echo -n "Cloning the $DOTVIM_BRANCH branch of the vim directory... "
   if git clone -b $DOTVIM_BRANCH $DOTVIM_ORIGIN_URL $VIM_DIR &>/dev/null
   then
     echo "Done"
   else
     echo "Failed"
-    echo -n "Cloning default branch of the Vim config... "
+
+    # If the clone fails, clone from the main branch as a fallback.
+
+    echo -n "Cloning the default branch of the vim directory... "
     if git clone $DOTVIM_ORIGIN_URL $VIM_DIR &>/dev/null
     then
       echo "Done"
     else
       echo
       echo "Error: run git clone $DOTVIM_ORIGIN_URL $VIM_DIR"
+      exit 1
     fi
   fi
 
 fi
-exit 1
+
+# Pull and update the submodules.
+
+echo -n "Pulling the latest version of the vim directory... "
+if git -C $VIM_DIR pull &>/dev/null
+then
+  echo "Done"
+else
+  echo
+  echo "Error: run git -C $VIM_DIR pull"
+fi
+
+echo -n "Updating submodules... "
+if git -C $VIM_DIR submodule update --init --recursive &>/dev/null
+then
+  echo "Done"
+else
+  echo
+  echo "Error: run git -C $VIM_DIR submodule update --init --recursive"
+fi
 
 # Copy the vimrc file.
 

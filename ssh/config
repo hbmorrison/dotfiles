@@ -1,6 +1,5 @@
 AddressFamily inet
 GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
-Include config.homelab
+Include config.home
 Include config.work
-Include config.github
