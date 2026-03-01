@@ -8,9 +8,9 @@ DEFAULT_EMAIL="139557138+hbmorrison@users.noreply.github.com"
 CURRENT_NAME=$(git config --global user.name)
 if [ "${NAME}" != "${CURRENT_NAME}" ]
 then
-  echo -n "Setting git user.name to ${NAME}... "
-  git config --global user.name "${NAME}" &>/dev/null
-  echo "Done"
+  notice "Setting git user.name to ${NAME}"
+  git config --global user.name "${NAME}" &>/dev/null \
+   && pass || fail
 fi
 
 # Check if an email address has been provided as an argument.
@@ -20,9 +20,9 @@ then
 
   # If it has, overwrite any existing email address.
 
-  echo -n "Setting git user.email to ${1}... "
-  git config --global user.email "${1}" &>/dev/null
-  echo "Done"
+  notice "Setting git user.email to ${1}"
+  git config --global user.email "${1}" &>/dev/null \
+   && pass || fail
 
 else
 
@@ -31,9 +31,9 @@ else
   CURRENT_EMAIL=$(git config --global user.email 2>/dev/null)
   if [ -z ${CURRENT_EMAIL:+z} ]
   then
-    echo -n "Setting git user.email to ${DEFAULT_EMAIL}... "
-    git config --global user.email "${DEFAULT_EMAIL}" &>/dev/null
-    echo "Done"
+    notice "Setting git user.email to ${DEFAULT_EMAIL}"
+    git config --global user.email "${DEFAULT_EMAIL}" &>/dev/null \
+     && pass || fail
   fi
 
 fi

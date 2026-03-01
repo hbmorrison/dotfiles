@@ -1,44 +1,20 @@
 # Configuration.
 
-if [ "x${SMTP_USERNAME}" = "x" ]
-then
-  echo "Error: SMTP_USERNAME not set"
-  exit 1
-fi
+PACKAGES="libsasl2-modules postfix"
 
-if [ "x${SMTP_SERVER}" = "x" ]
-then
-  echo "Error: SMTP_SERVER not set"
-  exit 1
-fi
+# Confirm that all required variables are set.
 
-if [ "x${SENDER_ADDR}" = "x" ]
-then
-  echo "Error: SENDER_ADDR not set"
-  exit 1
-fi
+[ -z ${SMTP_USERNAME:+z} ] && fail "SMTP_USERNAME not set"
+[ -z ${SMTP_SERVER:+z} ]   && fail "SMTP_SERVER not set"
+[ -z ${SENDER_ADDR:+z} ]   && fail "SENDER_ADDR not set"
+[ -z ${RCPT_ADDR:+z} ]     && fail "RCPT_ADDR not set"
 
-if [ "x${RCPT_ADDR}" = "x" ]
-then
-  echo "Error: RCPT_ADDR not set"
-  exit 1
-fi
-
-SENDER_DOMAIN=`echo $SENDER_ADDR | cut -d@ -f2`
+SENDER_DOMAIN=$(echo $SENDER_ADDR | cut -d@ -f2)
 
 # Update package lists.
 
-echo -n "Updating package lists... "
-
-if $SUDO apt update -y &>/dev/null
-then
-  echo "Done"
-else
-  echo
-  echo "Error: run $SUDO apt update -y"
-  exit 1
-fi
-
+notice "updating package lists"
+$SUDO apt update -y &>/dev/null && pass || fail "unable to update package lists"
 
 # Do not prompt for postfix configuration.
 
@@ -46,24 +22,25 @@ export DEBIAN_FRONTEND=noninteractive
 
 # Install postfix and dependencies.
 
-$SUDO apt install -y postfix libsasl2-modules
+notice "installing required packages"
+$SUDO apt install -y $PACKAGES && pass || fail "unable to install packages"
 
 # Get the SMTP password.
 
 while true
 do
-  read -s -p "${SETUP_SCRIPT} ${SUB_SCRIPT}: enter SMTP password: " SMTP_PASSWORD
+  read -s -p "setup ${SCRIPT}: enter SMTP password: " SMTP_PASSWORD
   echo
-  read -s -p "${SETUP_SCRIPT} ${SUB_SCRIPT}: retype SMTP password: " RETYPE
+  read -s -p "setup ${SCRIPT}: retype SMTP password: " RETYPE
   echo
   if [ "${SMTP_PASSWORD}" != "${RETYPE}" ]
   then
-    echo "${SETUP_SCRIPT} ${SUB_SCRIPT}: sorry, passwords do not match."
+    echo "setup ${SCRIPT}: sorry, passwords do not match."
     continue
   fi
   if [ "${SMTP_PASSWORD}" = "" ]
   then
-    echo "${SETUP_SCRIPT} ${SUB_SCRIPT}: sorry, password must not be empty."
+    echo "setup ${SCRIPT}: sorry, password must not be empty."
     continue
   fi
   break
@@ -71,7 +48,8 @@ done
 
 # Create Postfix main.cf.
 
-cat  > /etc/postfix/main.cf <<MAIN_CF
+notice "creating postfix configuration"
+cat  >/etc/postfix/main.cf <<MAIN_CF
 relayhost = [${SMTP_SERVER}]:587
 
 alias_maps = regexp:{
@@ -82,26 +60,37 @@ alias_database = \$alias_maps
 myorigin = $SENDER_DOMAIN" >> /etc/postfix/main.cf
 mydestination = $SENDER_DOMAIN, \$myhostname, localhost.\$mydomain, localhost
 MAIN_CF
-
 cat $ETC_DIR/main.cf >> /etc/postfix.main.cf
+notice_ok
 
 # Create SASL password file and canonical sender file.
 
+notice "adding SASL password"
 echo "${SMTP_SERVER}	${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
+notice_ok
+notice "setting email sender address"
 echo "/.+/	${SENDER_ADDR}" > /etc/postfix/sender_canonical
+notice_ok
 
 # Secure the files and reload them.
 
-chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sender_canonical
-chown root:root /etc/postfix/sasl_passwd /etc/postfix/sender_canonical
+notice "securing postfix files"
+chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sender_canonical \
+ && chown root:root /etc/postfix/sasl_passwd /etc/postfix/sender_canonical \
+ && pass || fail
 
-postmap /etc/postfix/sasl_passwd
-postmap /etc/postfix/sender_canonical
+notice "incorporating postfix files"
+postmap /etc/postfix/sasl_passwd \
+ && postmap /etc/postfix/sender_canonical \
+ && pass || fail
 
 # Restart Postfix.
 
-systemctl restart postfix.service
+notice "restarting postfix"
+systemctl restart postfix.service && pass || fail
 
 # Send a test message.
 
-echo "Test message" | mail -s "Test message from ${HOSTNAME}" $RCPT_ADDR
+notice "sending test email to $RCPT_ADDR"
+echo "Test message" | mail -s "Test message from ${HOSTNAME}" $RCPT_ADDR \
+ && pass || fail

@@ -1,14 +1,16 @@
-# Configuration.
-
-# Work out the name of the environment file.
+# Get the name of the pipx environment file to run.
 
 INSTALL_ENV=$1
 shift
 
-ENV_FILE="${ETC_DIR}/pipx_${INSTALL_ENV}.env"
+# Check that the environment file exists.
 
+ENV_FILE="${ETC_DIR}/pipx_${INSTALL_ENV}.env"
 if [ ! -f $ENV_FILE ]
 then
+
+  # Print a usage message listing all available pipx environments.
+
   AVAILABLE_ENVS="("
   for FILE in $ETC_DIR/pipx_*.env
   do
@@ -16,58 +18,28 @@ then
     AVAILABLE_ENVS+="${NAME}|"
   done
   ARGS=$(echo $AVAILABLE_ENVS | sed 's/|$/)/')
-  echo "Usage: ${SETUP_SCRIPT} ${SUB_SCRIPT} ${ARGS}"
+  usage "${SCRIPT} ${ARGS}"
   exit 1
 fi
 
 # Source the environment file.
 
-source ${ENV_FILE}
+source ${ENV_FILE} $*
 
 # Check that the required variables are set.
 
-if [ -z "${PACKAGES}" ]
-then
-  echo "Error: no PACKAGES set"
-  exit 1
-fi
-
-# Work out whether to run commands using sudo.
-
-SUDO=sudo
-
-if [ `id -u` -eq 0 ]
-then
-  SUDO=""
-fi
+[ -z "${PACKAGES}" ] && fail "no PACKAGES set"
 
 # Install dependencies.
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-
-  echo -n "Updating package lists... "
-
-  if $SUDO apt update -y &>/dev/null
-  then
-    echo "Done"
-  else
-    echo
-    echo "Error: run $SUDO apt update -y"
-    exit 1
-  fi
-
-  echo -n "Installing dependencies... "
-
-  if $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null
-  then
-    echo "Done"
-  else
-    echo
-    echo "Error: run $SUDO apt install --no-install-recommends -y $DEPENDENCIES"
-    exit 1
-  fi
-
+  notice "Updating package lists"
+  $SUDO apt update -y &>/dev/null \
+   && pass || fail "Error: run $SUDO apt update -y"
+  notice "Installing dependencies"
+  $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null \
+   && pass || fail "Error: run $SUDO apt install --no-install-recommends -y $DEPENDENCIES"
 fi
 
 # Install.
@@ -76,24 +48,12 @@ for PACKAGE in $PACKAGES
 do
   if pipx list --short | grep "^${PACKAGE} " &>/dev/null
   then
-    echo -n "Upgrading ${PACKAGE}... "
-    if pipx upgrade $PACKAGE &>/dev/null
-    then
-      echo "Done"
-    else
-      echo
-      echo "Error: run pipx upgrade $PACKAGE"
-      exit 1
-    fi
+    notice "Upgrading ${PACKAGE}"
+    pipx upgrade $PACKAGE &>/dev/null \
+    && pass || fail "Error: run pipx upgrade $PACKAGE"
   else
-    echo -n "Installing ${PACKAGE}... "
-    if pipx install $PACKAGE &>/dev/null
-    then
-      echo "Done"
-    else
-      echo
-      echo "Error: run pipx install $PACKAGE"
-      exit 1
-    fi
+    notice "Installing ${PACKAGE}"
+    pipx install $PACKAGE &>/dev/null \
+     && pass || fail "Error: run pipx install $PACKAGE"
   fi
 done
