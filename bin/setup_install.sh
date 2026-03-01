@@ -1,16 +1,18 @@
 # Configuration.
 
-# Setup the user shell by default.
+# Get the name of the install environment file to use.
 
 INSTALL_ENV=$1
 shift
 
-# Work out the name of the environment file.
+# Check that the environment file exists.
 
 ENV_FILE="${ETC_DIR}/install_${INSTALL_ENV}.env"
-
 if [ ! -f $ENV_FILE ]
 then
+
+  # Print a usage message listing all available install environments.
+
   AVAILABLE_ENVS="("
   for FILE in $ETC_DIR/install_*.env
   do
@@ -18,7 +20,7 @@ then
     AVAILABLE_ENVS+="${NAME}|"
   done
   ARGS=$(echo $AVAILABLE_ENVS | sed 's/|$/)/')
-  echo "Usage: ${SETUP_SCRIPT} ${SUB_SCRIPT} ${ARGS}"
+  echo "Usage: setup ${SCRIPT} ${ARGS}"
   exit 1
 fi
 
@@ -72,20 +74,11 @@ APT_ARCH=$(dpkg --print-architecture)
 APT_SOURCE_CONTENT="deb [arch=${APT_ARCH} signed-by=${KEYRING}] ${APT_SOURCE_URL}"
 TMP_SOURCE=$(mktemp)
 
-# Work out whether to run commands using sudo.
-
-SUDO=sudo
-
-if [ `id -u` -eq 0 ]
-then
-  SUDO=""
-fi
-
 # Install dependencies.
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-  echo -n "Updating package lists... "
+  notice "Updating package lists"
   if $SUDO apt update -y &>/dev/null
   then
     echo "Done"
@@ -94,7 +87,7 @@ then
     echo "Error: run $SUDO apt update -y"
     exit 1
   fi
-  echo -n "Installing dependencies... "
+  notice "Installing dependencies"
   if $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null
   then
     echo "Done"
@@ -109,7 +102,7 @@ fi
 
 if [ ! -f $KEYRING ]
 then
-  echo -n "Installing keyring... "
+  notice "Installing keyring"
   curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${KEYRING}" &>/dev/null
   echo "Done"
 fi
@@ -117,13 +110,12 @@ fi
 # Install the source list.
 
 echo "${APT_SOURCE_CONTENT}" > $TMP_SOURCE
-
 if ! diff $TMP_SOURCE $APT_SOURCE &>/dev/null
 then
-  echo -n "Installing source list... "
+  notice "Installing source list"
   cat $TMP_SOURCE | $SUDO tee $APT_SOURCE &>/dev/null
   echo "Done"
-  echo -n "Updating package lists... "
+  notice "Updating package lists"
   if $SUDO apt update -y &>/dev/null
   then
     echo "Done"
@@ -138,7 +130,7 @@ fi
 
 if [ ! -f $BINARY ]
 then
-  echo -n "Installing packages... "
+  notice "Installing packages"
   if $SUDO apt install --no-install-recommends -y $PACKAGES &>/dev/null
   then
     if [ -f $BINARY ]
@@ -166,9 +158,9 @@ if [ ! -z ${SERVICE:+z} ]
 then
   if ! systemctl status $SERVICE &>/dev/null
   then
-    echo -n "Starting ${SERVICE} and enabling at boot... "
-    $SUDO systemctl enable --now $SERVICE &>/dev/null
-    echo "Done"
+    notice "Starting ${SERVICE} and enabling at boot"
+    $SUDO systemctl enable --now $SERVICE &>/dev/null \
+     && pass || fail
   fi
 fi
 
@@ -176,13 +168,13 @@ fi
 
 if [ ! -z ${ADDITIONAL_GROUP:+z} ]
 then
-  if [ ! -z ${SUDO:+z} ]
+  if [ $(id -u) -gt 0 ]
   then
     if ! groups "${USER:-$USERNAME}" | grep " ${ADDITIONAL_GROUP}" &>/dev/null
     then
-      echo -n "Adding user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group... "
-      $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" &>/dev/null
-      echo "Done"
+      notice "Adding user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
+      $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" &>/dev/null \
+       && pass || fail
     fi
   fi
 fi

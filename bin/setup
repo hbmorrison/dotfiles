@@ -7,13 +7,50 @@ then
   source /etc/os-release
 fi
 
+# Pretty feedback.
+
+GOTO_COLUMN="\\033[72G"
+RED='\033[00;31m'
+GREEN='\033[00;32m'
+CLEAR='\033[00m'
+
+notice () {
+  echo -n "${1^}... "
+}
+notice_yes () {
+  echo -e "${GOTO_COLUMN}${GREEN}Yes${CLEAR}"
+}
+notice_no () {
+  echo -e "${GOTO_COLUMN}${RED}No${CLEAR}"
+}
+notice_ok () {
+  echo -e "${GOTO_COLUMN}ok"
+}
+pass () {
+  echo -e "${GOTO_COLUMN}${GREEN}Done${CLEAR}"
+}
+fail () {
+  echo -e "${GOTO_COLUMN}${RED}FAILED${CLEAR}"
+  if [ ! -z ${1:+z} ]
+  then
+    echo -e "${RED}Error:${CLEAR} ${1}"
+    exit 1
+  fi
+}
+usage () {
+  if [ ! -z ${1:+z} ]
+  then
+    echo -e "${RED}Usage:${CLEAR} setup" "$@"
+    exit 1
+  fi
+}
+
 # Locate the base directory of the repository.
 
 THIS_SCRIPT=$(readlink -f $0)
 BIN_DIR=$(dirname $THIS_SCRIPT)
 BASE_DIR=$(dirname $BIN_DIR)
 ETC_DIR="${BASE_DIR}/etc"
-SETUP_SCRIPT=$(basename $0)
 LOCAL_BIN="${HOME}/.local/bin"
 
 # Check that symlink is set up.
@@ -32,28 +69,28 @@ ln -s $BIN_DIR/setup $LOCAL_BIN/setup
 # Work out whether to run commands using sudo.
 
 SUDO=sudo
-
-if [ `id -u` -eq 0 ]
+if [ $(id -u) -eq 0 ]
 then
   SUDO=""
 fi
 
-# Setup the user shell by default.
+# Get the name of the setup script from the command line.
 
-SUB_SCRIPT=""
-
+SCRIPT=""
 if [ ! -z ${1:+z} ]
 then
-  SUB_SCRIPT=$1
+  SCRIPT=$1
   shift
 fi
 
-# Work out the name of the setup script.
+# Work out the path to the setup script.
 
-SUB_SCRIPT_FILE="${BIN_DIR}/setup_${SUB_SCRIPT}.sh"
-
-if [ ! -f $SUB_SCRIPT_FILE ]
+SCRIPT_FILE="${BIN_DIR}/setup_${SCRIPT}.sh"
+if [ ! -f $SCRIPT_FILE ]
 then
+
+  # Print a usage message listing all available setup scripts.
+
   AVAILABLE_SCRIPTS="("
   for FILE in $BIN_DIR/setup_*.sh
   do
@@ -61,10 +98,9 @@ then
     AVAILABLE_SCRIPTS+="${NAME}|"
   done
   ARGS=$(echo $AVAILABLE_SCRIPTS | sed 's/|$/)/')
-  echo "Usage: ${SETUP_SCRIPT} ${ARGS}"
-  exit 1
+  usage "${ARGS}"
 fi
 
 # Run the setup script.
 
-source ${SUB_SCRIPT_FILE} $*
+source ${SCRIPT_FILE} $*
