@@ -1,5 +1,21 @@
 AddressFamily inet
 GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
-Include config.home
-Include config.work
+
+Host router nas-01 nas-02 pbs-local pbs-remote
+  User hannah
+Host docker-apps docker-fabric docker-media docker-remote docker-test docker-wifi
+  User hannah
+Host *.home
+  User hannah
+Host *.gerbil-koi.ts.net
+  User hannah
+Host *.frogstar.party
+  User hannah
+
+Host gitlab.is.ed.ac.uk
+  User git
+  ProxyCommand none
+Host *.is.ed.ac.uk
+  User isapps
+  ProxyCommand ncat --proxy-type socks5 --proxy 127.0.0.1:11080 %h %p

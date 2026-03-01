@@ -13,6 +13,13 @@ case $(/bin/cat /proc/version 2>/dev/null) in
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
 esac
 
+# Set HOME if this is root.
+
+if [ `id -u` -ne 0 ]
+then
+  export HOME=/root
+fi
+
 # Set the default editor.
 
 export EDITOR=vi
@@ -47,36 +54,27 @@ pathadd "${HOME}/.local/bin"
 
 # Connect to an ssh-agent.
 
-if [ "${SHELL_ENVIRONMENT}" == "wsl" ]
-then
-  export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock
-  ss -lnx | grep -q $SSH_AUTH_SOCK
-  if [ $? -ne 0 ]
-  then
-    rm -f $SSH_AUTH_SOCK
-    (setsid nohup socat UNIX-LISTEN:$SSH_AUTH_SOCK,fork SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000 >/dev/null 2>&1 & disown)
-  fi
-else
-  AGENT_ENV=$HOME/.ssh/agent-env
-  if [ -f "$AGENT_ENV" ]
-  then
-    source $AGENT_ENV > /dev/null
-  fi
-  AGENT_RUN_STATE=$(ssh-add -l >& /dev/null; echo $?)
-  if [ -z "$SSH_AUTH_SOCK" -o $AGENT_RUN_STATE -gt 1 ]
-  then
-    ssh-agent > $AGENT_ENV
-    chmod 600 $AGENT_ENV
-    source $AGENT_ENV > /dev/null
-  fi
-fi
-
-# Add the WSL distro to the hostname.
-
-if [ ! -z ${WSL_DISTRO_NAME:+z} ]
-then
-  HOSTNAME="$(/usr/bin/hostname -s)-${WSL_DISTRO_NAME/*-/}"
-fi
+case $SHELL_ENVIRONMENT in
+  wsl)
+    export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock
+    if ! ss -lnx | grep -q $SSH_AUTH_SOCK
+    then
+      rm -f $SSH_AUTH_SOCK
+      LOCAL_SOCKET="UNIX-LISTEN:${SSH_AUTH_SOCK},fork"
+      WINDOWS_SOCKET="SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000"
+      (setsid nohup socat $LOCAL_SOCKET $WINDOWS_SOCKET >&/dev/null & disown)
+    fi
+    ;;
+  *)
+    AGENT_ENV="${HOME}/.ssh/agent-env"
+    source $AGENT_ENV 2>/dev/null
+    if ! ss -lnx | grep -q $SSH_AUTH_SOCK
+    then
+      ssh-agent >$AGENT_ENV
+      chmod 600 $AGENT_ENV
+    fi
+    source $AGENT_ENV 2>/dev/null
+esac
 
 # Source the bashrc.
 

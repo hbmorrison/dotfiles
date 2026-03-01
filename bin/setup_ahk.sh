@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Configuration.
 
 PROGRAM_DATA_DIR="/mnt/c/ProgramData"
@@ -7,21 +9,52 @@ STARTUP_DIR="${APPDATA_DIR}/${STARTUP_SUB_DIR}"
 BACKSLASHED_STARTUP_DIR=$(sed 's/\//\\/g' <<< ${STARTUP_DIR/\/mnt\/c/C:})
 AUTO_HOTKEY="${PROGRAM_DATA_DIR}/chocolatey/bin/AutoHotKey.exe"
 
-# Copy AutoHotKey scripts.
+# Make sure that chocolatey is installed.
 
-echo "Stopping all AutoHotkey scripts..."
+source $BIN_DIR/setup_choco.sh
+
+# Install autohotkey.
+
+notice "Checking if AutoHotKey is installed"
+INSTALLED=$($CHOCO info -l -r autohotkey)
+if [ -z ${INSTALLED:+z} ]
+then
+  notice_no
+  notice "installing AutoHotKey with PowerShell (accept UAC prompt)"
+  sleep 2
+  powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco install -y autohotkey\""
+  notice_ok
+else
+  notice_yes
+  notice "checking for updates with PowerShell (accept UAC prompt)"
+  sleep 2
+  powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco upgrade autohotkey -y\""
+  notice_ok
+fi
+
+# Kill any running AHK processes.
+
+notice "stopping all AutoHotkey scripts"
 taskkill.exe /im autohotkey.exe &>/dev/null
+notice_ok
+
+# Copy the AutoHotKey scripts.
 
 for SCRIPT_PATH in $(ls -1 ${ETC_DIR}/*.ahk)
 do
   AUTO_HOTKEY_SCRIPT=$(basename $SCRIPT_PATH .ahk)
   if [ ! -r "${STARTUP_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk" ]
   then
-    echo "Installing ${AUTO_HOTKEY_SCRIPT} AutoHotKey script..."
+    notice "installing ${AUTO_HOTKEY_SCRIPT} AutoHotKey script"
   else
-    echo "Updating ${AUTO_HOTKEY_SCRIPT} AutoHotKey script..."
+    notice "updating ${AUTO_HOTKEY_SCRIPT} AutoHotKey script"
   fi
   cp -f "${ETC_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk" "${STARTUP_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk"
-  echo "Starting ${AUTO_HOTKEY_SCRIPT} AutoHotKey script..."
+  notice_ok
+
+  # Start AHK running each script after is is copied.
+
+  notice "starting ${AUTO_HOTKEY_SCRIPT} AutoHotKey script"
   "${AUTO_HOTKEY}" "${BACKSLASHED_STARTUP_DIR}\\${AUTO_HOTKEY_SCRIPT}.ahk" &>/dev/null & disown
+  notice_ok
 done

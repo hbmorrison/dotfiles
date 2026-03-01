@@ -1,21 +1,10 @@
-# Configuration.
-
-WINDOWS_SYSTEM_DIR="/mnt/c/WINDOWS/system32/"
-WINDOWS_BINARIES="wsl.exe"
-
 # Update dotfiles repo.
 
-echo -n "Pulling latest version of dotfiles repo... "
-if ! git -C $BASE_DIR pull &>/dev/null
-then
-  echo "Failed"
-else
-  echo "Done"
-fi
+notice "pulling latest version of dotfiles repo"
+git -C $BASE_DIR pull &>/dev/null && pass || fail
 
 # Create any directories that are needed.
 
-echo -n "Creating directories... "
 for DIR in $(cd $BASE_DIR; find . -type d -not -path "."  | sed  's#^./##')
 do
 
@@ -41,25 +30,22 @@ do
     *)
       if [ ! -d "${HOME}/.${DIR}" ]
       then
-        mkdir "${HOME}/.${DIR}"
+        notice "creating ${HOME}/.${DIR}"
+        mkdir "${HOME}/.${DIR}" && pass || fail
       fi
       ;;
 
   esac
 
 done
-echo "Done"
 
 # Make sure the SSH directory is secure.
 
-echo -n "Securing SSH directory... "
-chmod go-rwx $HOME/.ssh
-echo "Done"
-
+notice "securing SSH directory"
+chmod go-rwx $HOME/.ssh && pass || fail
 
 # Copy the dotfiles.
 
-echo -n "Copying dotfiles... "
 for ITEM in $(cd $BASE_DIR; find . -type f  | sed  's#^./##')
 do
 
@@ -81,24 +67,15 @@ do
 
     # Copy everything else.
 
-    *) cp $BASE_DIR/$ITEM "$HOME/.${ITEM}" ;;
+    *)
+      notice "updating ~/.${ITEM}"
+      cp $BASE_DIR/$ITEM "$HOME/.${ITEM}" && pass || fail
 
   esac
 
 done
-echo "Done"
 
-# Create symlinks to Windows binaries.
+# Configure Vim and Git.
 
-for BINARY in $WINDOWS_BINARIES
-do
-  SYMLINK=$(basename -s .exe $BINARY)
-  if [ -f "${WINDOWS_SYSTEM_DIR}/${BINARY}" -a ! -L "${LOCAL_BIN}/${SYMLINK}" ]
-  then
-    ln -s "${WINDOWS_SYSTEM_DIR}/${BINARY}" "${LOCAL_BIN}/${SYMLINK}"
-  fi
-done
-
-# Configure Vim.
-
-$BIN_DIR/setup vim
+source $BIN_DIR/setup_vim.sh
+source $BIN_DIR/setup_gitconfig.sh
