@@ -15,7 +15,7 @@ esac
 
 # Set HOME if this is root.
 
-if [ `id -u` -ne 0 ]
+if [ `id -u` -eq 0 ]
 then
   export HOME=/root
 fi
@@ -67,13 +67,13 @@ case $SHELL_ENVIRONMENT in
     ;;
   *)
     AGENT_ENV="${HOME}/.ssh/agent-env"
-    source $AGENT_ENV 2>/dev/null
+    source $AGENT_ENV &>/dev/null
     if ! ss -lnx | grep -q $SSH_AUTH_SOCK
     then
       ssh-agent >$AGENT_ENV
       chmod 600 $AGENT_ENV
     fi
-    source $AGENT_ENV 2>/dev/null
+    source $AGENT_ENV &>/dev/null
 esac
 
 # Source the bashrc.
