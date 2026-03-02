@@ -76,6 +76,11 @@ case $SHELL_ENVIRONMENT in
     source $AGENT_ENV &>/dev/null
 esac
 
+# Start gpg-agent.
+
+export GPG_TTY=$(/bin/tty)
+export GPG_AGENT_INFO="${HOME}/.gnupg/agent-env"
+
 # Source the bashrc.
 
 if [ -r "${HOME}/.bashrc" ]

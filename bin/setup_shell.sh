@@ -1,3 +1,7 @@
+# Configuration.
+
+SECURE_DIRECTORIES=".config .gnupg .ssh"
+
 # Update dotfiles repo.
 
 notice "pulling latest version of dotfiles repo"
@@ -39,10 +43,13 @@ do
 
 done
 
-# Make sure the SSH directory is secure.
+# Make sure sensitive directories are secure.
 
-notice "securing SSH directory"
-chmod go-rwx $HOME/.ssh && pass || fail
+for DIR in $SECURE_DIRECTORIES
+do
+  notice "securing ~/${DIR} directory"
+  chmod go-rwx "${HOME}/${DIR}" && pass || fail
+done
 
 # Copy the dotfiles.
 
@@ -74,6 +81,10 @@ do
   esac
 
 done
+
+# Add the correct username to the qmk.ini file.
+
+sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini"
 
 # Configure Vim and Git.
 

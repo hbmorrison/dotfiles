@@ -15,7 +15,7 @@ GREEN='\033[00;32m'
 CLEAR='\033[00m'
 
 notice () {
-  echo -n "${1^}... "
+  echo -n "${1^} ... "
 }
 notice_yes () {
   echo -e "${GOTO_COLUMN}${GREEN}Yes${CLEAR}"
