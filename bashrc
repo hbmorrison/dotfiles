@@ -66,18 +66,14 @@ fi
 function cd {
   if [ $# -eq 0 ]
   then
-    local gitroot
-    if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
-    then
-      if [ "${gitroot}" != "${PWD}" ]
-      then
-        builtin cd "${gitroot}"
-      else
-        builtin cd
-      fi
-    else
-      builtin cd
-    fi
+    local parent=$(dirname "${PWD}")
+    local gitroot="${HOME}"
+    for dir in ${parent//\// }
+    do
+      local path+="/${dir}"
+      [ -r "${path}/.git" ] && gitroot="${path}"
+    done
+    builtin cd "${gitroot}"
   else
     builtin cd "$@"
   fi
