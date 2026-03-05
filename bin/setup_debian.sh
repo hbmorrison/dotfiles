@@ -1,6 +1,6 @@
 # Configuration.
 
-SHELL_PACKAGES="bash-completion curl fzf git-flow hiera-eyaml jq man-db \
+SHELL_PACKAGES="bash-completion curl fzf git-flow gpg hiera-eyaml jq man-db \
  ripgrep shellcheck vim wget xclip zip"
 NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat \
  whois"

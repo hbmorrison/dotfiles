@@ -63,24 +63,33 @@ fi
 
 # Change directory to git root first then home directory.
 
+function gitroot {
+  local gr=""
+  for dir in ${1//\// }
+  do
+    local path+="/${dir}"
+    [ -r "${path}/.git" ] && gr="${path}"
+  done
+  echo "${gr}"
+}
+
+function lastgitroot {
+  for dir in ${1//\// }
+  do
+    local path+="/${dir}"
+    [ -r "${path}/.git" ] && echo "${path}" && break
+  done
+}
+
 function cd {
   if [ $# -eq 0 ]
   then
-    local gitroot
-    if gitroot=$(git rev-parse --show-toplevel 2>/dev/null)
-    then
-      if [ "${gitroot}" != "${PWD}" ]
-      then
-        builtin cd "${gitroot}"
-      else
-        builtin cd
-      fi
-    else
-      builtin cd
-    fi
+    local parent=$(dirname "${PWD}")
+    builtin cd $(gitroot "${parent}") >/dev/null
   else
-    builtin cd "$@"
+    builtin cd "$@" >/dev/null
   fi
+  CDPATH="~:~/projects:$(lastgitroot "${PWD}")"
 }
 
 # Basic shell aliases.
