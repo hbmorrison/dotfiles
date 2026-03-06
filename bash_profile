@@ -52,6 +52,10 @@ pathadd "/opt/puppetlabs/sbin"
 pathadd "${HOME}/bin"
 pathadd "${HOME}/.local/bin"
 
+# Set the default CD path.
+
+export CDPATH="~/projects:~"
+
 # Connect to an ssh-agent.
 
 case $SHELL_ENVIRONMENT in
