@@ -89,7 +89,7 @@ function cd {
   else
     builtin cd "$@" >/dev/null
   fi
-  CDPATH="$(lastgitroot "${PWD}"):~/projects:~"
+  CDPATH="$(lastgitroot "${PWD}")"
 }
 
 # Basic shell aliases.
