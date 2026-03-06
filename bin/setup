@@ -24,7 +24,7 @@ notice_no () {
   echo -e "${GOTO_COLUMN}${RED}No${CLEAR}"
 }
 notice_ok () {
-  echo -e "${GOTO_COLUMN}ok"
+  echo -e "${GOTO_COLUMN}Ok"
 }
 pass () {
   echo -e "${GOTO_COLUMN}${GREEN}Done${CLEAR}"
