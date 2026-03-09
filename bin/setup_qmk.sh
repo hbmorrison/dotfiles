@@ -1,39 +1,61 @@
-# Configuration.
+# Repo configuration.
 
-QMK_UPSTREAM_URL="https://github.com/qmk/qmk_firmware.git"
-QMK_URL="git@github.com:hbmorrison/qmk_firmware.git"
-QMK_BRANCH="develop"
-QMK_HOME="${HOME}/.local/qmk_firmware"
-USERSPACE_URL="git@github.com:hbmorrison/qmk_userspace.git"
-USERSPACE_BRANCH="develop"
-USERSPACE_HOME="${HOME}/projects/qmk_userspace"
+QMK_REPO="hbmorrison/qmk_firmware"
+USERSPACE_REPO="hbmorrison/qmk_userspace"
+UPSTREAM_REPO="qmk/qmk_firmware"
+BRANCH="develop"
+
+# Git configuration.
+
+SSH_BASE="git@github.com:"
+HTTP_BASE="https://github.com/"
+QMK_URL="${SSH_BASE}${QMK_REPO}.git"
+USERSPACE_URL="${SSH_BASE}${USERSPACE_REPO}.git"
+UPSTREAM_URL="${HTTP_BASE}${UPSTREAM_REPO}.git"
+
+# Directory configuration.
+
+LOCAL_DIR="${HOME}/.local"
+LOCAL_BIN_DIR="${LOCAL_DIR}/bin"
+PROJECT_DIR="${HOME}/projects"
+QMK_HOME="${LOCAL_DIR}/qmk_firmware"
+USERSPACE_HOME="${PROJECT_DIR}/projects/qmk_userspace"
+QMK_DIR=$(dirname $QMK_HOME)
+USERSPACE_DIR=$(dirname $USERSPACE_HOME)
+
+# Create the required directories.
+
+[ -d $LOCAL_DIR ]     || mkdir -p $LOCAL_DIR
+[ -d $PROJECT_DIR ]   || mkdir -p $PROJECT_DIR
+[ -d $QMK_DIR ]       || mkdir -p $QMK_DIR
+[ -d $USERSPACE_DIR ] || mkdir -p $USERSPACE_DIR
 
 # Install QMK.
 
-source $BIN_DIR/setup_pipx.sh qmk
+[ -x "${LOCAL_BIN_DIR}/qmk" ] || source $BIN_DIR/setup_pipx.sh qmk
 
 # Checkout the QMK firmware repo manually.
 
-QMK_DIR=$(dirname $QMK_HOME)
-if [ ! -d $QMK_DIR ]
-then
-  mkdir -p $QMK_DIR
-fi
 if [ ! -d $QMK_HOME ]
 then
+
   notice "cloning QMK firmware"
   /bin/git clone -b $QMK_BRANCH $QMK_URL $QMK_HOME \
    &>/dev/null && pass || fail
-  notice "initialising QMK firmware submodules"
-  /bin/git -C $QMK_HOME submodule update --init --remote \
-   &>/dev/null && pass || fail
+
   notice "setting official QMK firmware repo as upstream"
   /bin/git -C $QMK_HOME remote add upstream $QMK_UPSTREAM_URL \
    &>/dev/null && pass || fail
+
+  notice "initialising QMK firmware submodules"
+  /bin/git -C $QMK_HOME submodule update --init --remote \
+   &>/dev/null && pass || fail
 else
+
   notice "synchronising QMK firmware submodules"
   /bin/git -C $QMK_HOME submodule sync \
    &>/dev/null && pass || fail
+
   notice "updating QMK firmware submodules from remotes"
   /bin/git -C $QMK_HOME submodule update --remote \
    &>/dev/null && pass || fail
@@ -41,11 +63,6 @@ fi
 
 # Checkout the userspace repo manually.
 
-USERSPACE_DIR=$(dirname $USERSPACE_HOME)
-if [ ! -d $USERSPACE_DIR ]
-then
-  mkdir -p $USERSPACE_DIR
-fi
 if [ ! -d $USERSPACE_HOME ]
 then
   notice "cloning userspace"
@@ -63,12 +80,9 @@ else
    &>/dev/null && pass || fail
 fi
 
-# Update the QMK firmware submodules.
-
-exit
 # Setup QMK.
 
-if [ ! -d $QMK_HOME ]
+if ! "${LOCAL_BIN_DIR}/qmk" doctor -n &>/dev/null
 then
-  ~/.local/bin/qmk setup -H ${QMK_HOME} --baseurl ${QMK_BASEURL} -b ${QMK_BRANCH} ${QMK_REPO}
+  "${LOCAL_BIN_DIR}/qmk" setup -H ${QMK_HOME} --baseurl ${SSH_BASE} -b ${BRANCH} ${QMK_REPO}
 fi
