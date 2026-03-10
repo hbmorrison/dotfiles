@@ -61,7 +61,7 @@ case $SHELL_ENVIRONMENT in
     notice "permitting ssh root login and forwarding"
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' $SSHD_CONFIG
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' $SSHD_CONFIG
-    notice_ok
+    pass
     ;;
 
   # Disable root password logins and TCP forwarding elsewhere.
@@ -70,7 +70,7 @@ case $SHELL_ENVIRONMENT in
     notice "disallow ssh root login and forwarding"
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' $SSHD_CONFIG
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' $SSHD_CONFIG
-    notice_ok
+    pass
     ;;
 
 esac
@@ -81,24 +81,24 @@ notice "disallowing non-PAM ssh logins"
 sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' $SSHD_CONFIG
 sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' $SSHD_CONFIG
 sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' $SSHD_CONFIG
-notice_ok
+pass
 notice "disallowing ssh X11 forwarding and agent forwarding"
 sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' $SSHD_CONFIG
 sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' $SSHD_CONFIG
-notice_ok
+pass
 notice "limiting authentication retries"
 sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' $SSHD_CONFIG
-notice_ok
+pass
 notice "limiting naming of authorized_keys files"
 sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' $SSHD_CONFIG
-notice_ok
+pass
 
 # Only allow root and the non-root user to connect via ssh.
 
 notice "only allow root and ${NON_ROOT_USER} ssh logins"
 sed -i -e 's/^AllowUsers/#AllowUsers/' $SSHD_CONFIG
 sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" $SSHD_CONFIG
-notice_ok
+pass
 
 # Restart sshd to pick up the changes.
 
@@ -120,7 +120,7 @@ if [ -f /etc/default/tailscaled ]
 then
   notice "backing up Tailscale config"
   cp /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP
-  notice_ok
+  pass
   notice "adding extra flags to Tailscale config"
   sed -i -e '/^FLAGS=/s/""/"--no-logs-no-support"/' /etc/default/tailscaled \
    && pass || fail
@@ -148,14 +148,14 @@ esac
 notice "copying ssh fail2ban jails"
 cp $BASE_DIR/etc/jail.d/default.local /etc/fail2ban/jail.d/
 cp $BASE_DIR/etc/jail.d/sshd.local /etc/fail2ban/jail.d/
-notice_ok
+pass
 
 notice "enabling fail2ban"
 systemctl enable --now fail2ban && pass || fail
 
 # Create the non-root user if needed.
 
-if ! grep ^$NON_ROOT_USER: /etc/passwd >/dev/null 2>&1
+if ! grep ^$NON_ROOT_USER: /etc/passwd &>/dev/null
 then
   notice "adding user ${NON_ROOT_USER}"
   useradd -s /bin/bash -U -G $NON_ROOT_ADMIN_GROUPS -m $NON_ROOT_USER \
@@ -166,7 +166,7 @@ fi
 
 notice "backing up sudoers file"
 cp /etc/sudoers /etc/sudoers.$TIMESTAMP
-notice_ok
+pass
 
 notice "ensuring that all sudo root actions require a password"
 sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers \
@@ -177,14 +177,14 @@ for ITEM in $(ls -1 /etc/sudoers.d/*)
 do
   sed -i -e '/NOPASSWD:/s/NOPASSWD://' $ITEM
 done
-notice_ok
+pass
 
 # Check that the user ssh directory and authorized_keys file exist.
 
 notice "preparing ${NON_ROOT_USER} home directory"
 [ ! -d $NON_ROOT_SSH_DIR ] && su -l -c "mkdir -m 0700 $NON_ROOT_SSH_DIR" $NON_ROOT_USER
 [ ! -f $NON_ROOT_AUTHORIZED_KEYS ] && su -l -c "touch $NON_ROOT_AUTHORIZED_KEYS" $NON_ROOT_USER
-notice_ok
+pass
 
 # Go through each ssh key and add it to authorized_keys if not present.
 

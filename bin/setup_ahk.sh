@@ -23,20 +23,20 @@ then
   notice "installing AutoHotKey with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco install -y autohotkey\""
-  notice_ok
+  pass
 else
   notice_yes
   notice "checking for updates with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco upgrade autohotkey -y\""
-  notice_ok
+  pass
 fi
 
 # Kill any running AHK processes.
 
 notice "stopping all AutoHotkey scripts"
 taskkill.exe /im autohotkey.exe &>/dev/null
-notice_ok
+pass
 
 # Copy the AutoHotKey scripts.
 
@@ -50,11 +50,11 @@ do
     notice "updating ${AUTO_HOTKEY_SCRIPT} AutoHotKey script"
   fi
   cp -f "${ETC_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk" "${STARTUP_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk"
-  notice_ok
+  pass
 
   # Start AHK running each script after is is copied.
 
   notice "starting ${AUTO_HOTKEY_SCRIPT} AutoHotKey script"
   "${AUTO_HOTKEY}" "${BACKSLASHED_STARTUP_DIR}\\${AUTO_HOTKEY_SCRIPT}.ahk" &>/dev/null & disown
-  notice_ok
+  pass
 done

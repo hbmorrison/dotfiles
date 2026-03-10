@@ -8,8 +8,13 @@ GPG_PACKAGES="gpg pinentry-tty scdaemon"
 
 # Update and install required packages.
 
-$SUDO apt update -y && $SUDO apt upgrade -y
-$SUDO apt install -y --no-install-recommends $SHELL_PACKAGES $NETWORK_PACKAGES $GPG_PACKAGES
+notice "updating packages lists"
+$SUDO apt update -y &>/dev/null && pass || fail "could not update package lists"
+notice "upgrading existing packages"
+$SUDO apt upgrade -y &>/dev/null && pass || fail "could not upgrade existing packages"
+notice "upgrading required packages"
+$SUDO apt install -y --no-install-recommends $SHELL_PACKAGES $NETWORK_PACKAGES $GPG_PACKAGES \
+ &>/dev/null && pass || fail "could not install required packages"
 
 # Set up the dotfiles.
 

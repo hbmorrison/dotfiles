@@ -78,33 +78,21 @@ TMP_SOURCE=$(mktemp)
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-  notice "Updating package lists"
-  if $SUDO apt update -y &>/dev/null
-  then
-    echo "Done"
-  else
-    echo
-    echo "Error: run $SUDO apt update -y"
-    exit 1
-  fi
-  notice "Installing dependencies"
-  if $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null
-  then
-    echo "Done"
-  else
-    echo
-    echo "Error: run $SUDO apt install --no-install-recommends -y $DEPENDENCIES"
-    exit 1
-  fi
+  notice "updating package lists"
+  $SUDO apt update -y \
+   &>/dev/null && pass || fail "could not update package lists"
+  notice "installing dependencies"
+  $SUDO apt install --no-install-recommends -y $DEPENDENCIES \
+   &>/dev/null && pass || fail "could not install dependencies"
 fi
 
 # Install the keyring.
 
 if [ ! -f $KEYRING ]
 then
-  notice "Installing keyring"
-  curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${KEYRING}" &>/dev/null
-  echo "Done"
+  notice "installing GPG keyring"
+  curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${KEYRING}" \
+   &>/dev/null && pass || fail "could not install GPG keyring"
 fi
 
 # Install the source list.
@@ -112,40 +100,22 @@ fi
 echo "${APT_SOURCE_CONTENT}" > $TMP_SOURCE
 if ! diff $TMP_SOURCE $APT_SOURCE &>/dev/null
 then
-  notice "Installing source list"
-  cat $TMP_SOURCE | $SUDO tee $APT_SOURCE &>/dev/null
-  echo "Done"
-  notice "Updating package lists"
-  if $SUDO apt update -y &>/dev/null
-  then
-    echo "Done"
-  else
-    echo
-    echo "Error: run $SUDO apt update -y"
-    exit 1
-  fi
+  notice "installing source list"
+  cat $TMP_SOURCE | $SUDO tee $APT_SOURCE \
+   &>/dev/null && pass || fail
+  notice "updating package lists"
+  $SUDO apt update -y &>/dev/null \
+   && pass || fail "could not update package lists"
 fi
 
 # Install the packages.
 
 if [ ! -f $BINARY ]
 then
-  notice "Installing packages"
-  if $SUDO apt install --no-install-recommends -y $PACKAGES &>/dev/null
-  then
-    if [ -f $BINARY ]
-    then
-      echo "Done"
-    else
-      echo
-      echo "Error: package binary $BINARY not found after install"
-      exit 1
-    fi
-  else
-    echo
-    echo "Error: run $SUDO apt install --no-install-recommends -y $PACKAGES"
-    exit 1
-  fi
+  notice "installing packages"
+  $SUDO apt install --no-install-recommends -y $PACKAGES \
+   &>/dev/null || fail "could not install packages"
+  [ -f $BINARY ] && pass || fail "$BINARY not found after install"
 fi
 
 # Tidy up.
@@ -158,9 +128,9 @@ if [ ! -z ${SERVICE:+z} ]
 then
   if ! systemctl status $SERVICE &>/dev/null
   then
-    notice "Starting ${SERVICE} and enabling at boot"
-    $SUDO systemctl enable --now $SERVICE &>/dev/null \
-     && pass || fail
+    notice "starting ${SERVICE} and enabling at boot"
+    $SUDO systemctl enable --now $SERVICE \
+     &>/dev/null && pass || fail
   fi
 fi
 
@@ -172,9 +142,9 @@ then
   then
     if ! groups "${USER:-$USERNAME}" | grep " ${ADDITIONAL_GROUP}" &>/dev/null
     then
-      notice "Adding user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
-      $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" &>/dev/null \
-       && pass || fail
+      notice "adding user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
+      $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" \
+       &>/dev/null && pass || fail
     fi
   fi
 fi

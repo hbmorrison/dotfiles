@@ -61,16 +61,16 @@ myorigin = $SENDER_DOMAIN" >> /etc/postfix/main.cf
 mydestination = $SENDER_DOMAIN, \$myhostname, localhost.\$mydomain, localhost
 MAIN_CF
 cat $ETC_DIR/main.cf >> /etc/postfix.main.cf
-notice_ok
+pass
 
 # Create SASL password file and canonical sender file.
 
 notice "adding SASL password"
 echo "${SMTP_SERVER}	${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
-notice_ok
+pass
 notice "setting email sender address"
 echo "/.+/	${SENDER_ADDR}" > /etc/postfix/sender_canonical
-notice_ok
+pass
 
 # Secure the files and reload them.
 

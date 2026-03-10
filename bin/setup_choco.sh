@@ -6,7 +6,7 @@ CHOCO="/mnt/c/ProgramData/chocolatey/bin/choco.exe"
 
 if [ ! -r $CHOCO ]
 then
-  notice "Installing Chocolatey with PowerShell (accept UAC prompt)"
+  notice "installing Chocolatey with PowerShell"
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"-NoExit Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))\""
-  echo "Done"
+  pass
 fi

@@ -34,8 +34,11 @@ then
   if [ $VIM_DIR_BRANCH != $DOTFILES_BRANCH ]
   then
     notice "updating vim directory branch to ${DOTFILES_BRANCH}"
-    if ! git -C $VIM_DIR checkout $DOTFILES_BRANCH &>/dev/null && pass || fail
+    if git -C $VIM_DIR checkout $DOTFILES_BRANCH &>/dev/null
     then
+      pass
+    else
+      fail
 
       # Checkout the main branch as a fallback.
 
@@ -50,8 +53,11 @@ else
   # Clone the vim directory.
 
   notice "cloning the $DOTFILES_BRANCH branch of the vim directory"
-  if ! git clone -b $DOTFILES_BRANCH $DOTVIM_ORIGIN_URL $VIM_DIR &>/dev/null && pass || fail
+  if git clone -b $DOTFILES_BRANCH $DOTVIM_ORIGIN_URL $VIM_DIR &>/dev/null
   then
+    pass
+  else
+    fail
 
     # If the clone fails, clone from the main branch as a fallback.
 

@@ -9,7 +9,7 @@ $SUDO sed -i.orig -e "/domain-name/s/^\\(#\\|\\)\\(supersede\\|prepend\\) domain
  && pass || fail
 
 
-if ! diff /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.orig >& /dev/null
+if ! diff /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.orig &> /dev/null
 then
   notice "Restarting networking"
   $SUDO systemctl restart networking \

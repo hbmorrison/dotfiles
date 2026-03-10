@@ -12,19 +12,18 @@ source $BIN_DIR/setup_choco.sh
 
 notice "Checking if wincrypt-sshagent is installed"
 INSTALLED=$($CHOCO info -l -r wincrypt-sshagent)
-if [ -z ${INSTALLED:+z} ]
+if [ -z ${INSTALLED} ] && notice_no
 then
-  echo "No"
-  notice "Installing wincrypt-sshagent with PowerShell (accept UAC prompt)"
+  notice "installing wincrypt-sshagent with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco install -y wincrypt-sshagent\""
-  echo "Done"
+  pass
 else
-  echo "Yes"
-  notice "Checking for updates with PowerShell (accept UAC prompt)"
+  notice_yes
+  notice "checking for updates with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco upgrade wincrypt-sshagent -y\""
-  echo "Done"
+  pass
 fi
 
 # Set environment variables for Windows OpenSSH to use wincrypt-sshagent.
@@ -32,19 +31,18 @@ fi
 notice "setting environment variables for OpenSSH (takes a minute)"
 powershell.exe -Command "[System.Environment]::SetEnvironmentVariable('SSH_AUTH_SOCK','\\\\.\\pipe\\openssh-ssh-agent','User')"
 powershell.exe -Command "[System.Environment]::SetEnvironmentVariable('GIT_SSH_COMMAND','C:/Windows/System32/OpenSSH/ssh.exe','User')"
-notice_ok
+pass
 
 # Install wincrypt-sshagent startup shortcut.
 
 notice "checking if wincrypt-sshagent startup shortcut is installed"
-if [ -f "${STARTUP_DIR}/WinCryptSSHAgent.lnk" ]
+if [ ! -f "${STARTUP_DIR}/WinCryptSSHAgent.lnk" ] && notice_no
 then
-  notice_yes
-else
-  notice_no
   notice "installing wincrypt-sshagent startup shortcut"
   cp -f "${BASE_DIR}/etc/wincrypt-sshagent.ps1" $WINDOWS_HOME_DIR
   powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; ${BACKSLASHED_HOME_DIR}\\wincrypt-sshagent.ps1"
   rm -f "${WINDOWS_HOME_DIR}/wincrypt-sshagent.ps1"
-  notice_ok
+  pass
+else
+  notice_yes
 fi
