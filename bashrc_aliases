@@ -150,7 +150,7 @@ alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.l
 
 # QMK aliases.
 
-alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
+alias qc2040="qmk compile -e CONVERT_TO=rp2040_ce"
 
 # Open vim with results from fuzzy find in buffers.
 
