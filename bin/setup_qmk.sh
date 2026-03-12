@@ -28,10 +28,10 @@ USERSPACE_URL="${SSH_BASE}${USERSPACE_REPO}.git"
 
 LOCAL_DIR="${HOME}/.local"
 LOCAL_BIN_DIR="${LOCAL_DIR}/bin"
-PROJECT_DIR="${HOME}/projects"
 QMK_HOME="${LOCAL_DIR}/share/qmk_firmware"
-USERSPACE_HOME="${PROJECT_DIR}/projects/qmk_userspace"
 QMK_DIR=$(dirname $QMK_HOME)
+PROJECT_DIR="${HOME}/projects"
+USERSPACE_HOME="${PROJECT_DIR}/qmk_userspace"
 USERSPACE_DIR=$(dirname $USERSPACE_HOME)
 
 # Create the required directories.
