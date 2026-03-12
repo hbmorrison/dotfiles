@@ -74,6 +74,13 @@ APT_ARCH=$(dpkg --print-architecture)
 APT_SOURCE_CONTENT="deb [arch=${APT_ARCH} signed-by=${KEYRING}] ${APT_SOURCE_URL}"
 TMP_SOURCE=$(mktemp)
 
+# Make sure sudo has valid credentials before starting.
+
+if [ ! -z ${SUDO} ]
+then
+  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+fi
+
 # Install dependencies.
 
 if [ ! -z ${DEPENDENCIES:+z} ]

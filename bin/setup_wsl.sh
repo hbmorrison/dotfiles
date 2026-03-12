@@ -55,7 +55,7 @@ do
   [ -L "${SYMLINK_PATH}" ] && rm -f "${SYMLINK_PATH}" &>/dev/null
   ln -s "${DIR}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
 done
-exit
+
 # Fix the WSL2 / Debian clock issue.
 
 $SUDO hwclock -s

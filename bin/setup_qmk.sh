@@ -41,6 +41,13 @@ USERSPACE_DIR=$(dirname $USERSPACE_HOME)
 [ -d $QMK_DIR ]       || mkdir -p $QMK_DIR
 [ -d $USERSPACE_DIR ] || mkdir -p $USERSPACE_DIR
 
+# Make sure sudo has valid credentials before starting.
+
+if [ ! -z ${SUDO} ]
+then
+  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+fi
+
 # Install QMK.
 
 [ -f $QMK_INSTALLER ] || fail "Could not find QMK installer script"
@@ -58,18 +65,15 @@ then
   # initialise the submodules.
 
   notice "cloning QMK firmware repo"
-  echo /bin/git clone -b $QMK_BRANCH $QMK_URL $QMK_HOME
   /bin/git clone -b $QMK_BRANCH $QMK_URL $QMK_HOME \
    &>/dev/null && pass || fail
 
   notice "setting official QMK firmware repo as upstream"
-  echo /bin/git -C $QMK_HOME remote add upstream $QMK_UPSTREAM_URL
   /bin/git -C $QMK_HOME remote add upstream $QMK_UPSTREAM_URL \
    &>/dev/null && pass || fail
 
   notice "initialising QMK firmware repo submodules"
-  echo /bin/git -C $QMK_HOME submodule update --init --remote
-  /bin/git -C $QMK_HOME submodule update --init --remote \
+  /bin/git -C $QMK_HOME submodule update --init --recursive --remote \
    &>/dev/null && pass || fail
 else
 
@@ -81,7 +85,7 @@ else
    &>/dev/null && pass || fail
 
   notice "updating QMK firmware repo submodules from remotes"
-  /bin/git -C $QMK_HOME submodule update --remote \
+  /bin/git -C $QMK_HOME submodule update --recursive --remote \
    &>/dev/null && pass || fail
 fi
 

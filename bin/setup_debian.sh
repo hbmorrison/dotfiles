@@ -6,6 +6,13 @@ NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat \
  whois"
 GPG_PACKAGES="gpg pinentry-tty scdaemon"
 
+# Make sure sudo has valid credentials before starting.
+
+if [ ! -z ${SUDO} ]
+then
+  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+fi
+
 # Update and install required packages.
 
 notice "updating packages lists"

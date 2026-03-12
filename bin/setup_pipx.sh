@@ -30,6 +30,13 @@ source ${ENV_FILE} $*
 
 [ -z "${PACKAGES}" ] && fail "no PACKAGES set"
 
+# Make sure sudo has valid credentials before starting.
+
+if [ ! -z ${SUDO} ]
+then
+  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+fi
+
 # Install dependencies.
 
 if [ ! -z ${DEPENDENCIES:+z} ]

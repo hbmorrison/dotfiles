@@ -11,6 +11,13 @@ PACKAGES="libsasl2-modules postfix"
 
 SENDER_DOMAIN=$(echo $SENDER_ADDR | cut -d@ -f2)
 
+# Make sure sudo has valid credentials before starting.
+
+if [ ! -z ${SUDO} ]
+then
+  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+fi
+
 # Update package lists.
 
 notice "updating package lists"
