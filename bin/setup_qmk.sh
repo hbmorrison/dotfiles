@@ -1,24 +1,35 @@
+# Fail if any command in a pipe fails.
+
+set -o pipefail
+
 # Repo configuration.
 
 QMK_REPO="hbmorrison/qmk_firmware"
+QMK_UPSTREAM_REPO="qmk/qmk_firmware"
+QMK_BRANCH="develop"
 USERSPACE_REPO="hbmorrison/qmk_userspace"
-UPSTREAM_REPO="qmk/qmk_firmware"
-BRANCH="develop"
+USERSPACE_BRANCH="develop"
+
+# Installer configuration.
+
+QMK_INSTALLER="${ETC_DIR}/qmk_installer_20260312.sh"
+QMK_INSTALLER_ARGS="--skip-udev-rules"
+QMK_LOG=$(mktemp -q --suffix=.log)
 
 # Git configuration.
 
 SSH_BASE="git@github.com:"
-HTTP_BASE="https://github.com/"
+HTTPS_BASE="https://github.com/"
 QMK_URL="${SSH_BASE}${QMK_REPO}.git"
+QMK_UPSTREAM_URL="${HTTPS_BASE}${QMK_UPSTREAM_REPO}.git"
 USERSPACE_URL="${SSH_BASE}${USERSPACE_REPO}.git"
-UPSTREAM_URL="${HTTP_BASE}${UPSTREAM_REPO}.git"
 
 # Directory configuration.
 
 LOCAL_DIR="${HOME}/.local"
 LOCAL_BIN_DIR="${LOCAL_DIR}/bin"
 PROJECT_DIR="${HOME}/projects"
-QMK_HOME="${LOCAL_DIR}/qmk_firmware"
+QMK_HOME="${LOCAL_DIR}/share/qmk_firmware"
 USERSPACE_HOME="${PROJECT_DIR}/projects/qmk_userspace"
 QMK_DIR=$(dirname $QMK_HOME)
 USERSPACE_DIR=$(dirname $USERSPACE_HOME)
@@ -32,31 +43,44 @@ USERSPACE_DIR=$(dirname $USERSPACE_HOME)
 
 # Install QMK.
 
-[ -x "${LOCAL_BIN_DIR}/qmk" ] || source $BIN_DIR/setup_pipx.sh qmk
+[ -f $QMK_INSTALLER ] || fail "Could not find QMK installer script"
+
+notice "installing QMK"
+/bin/sh $QMK_INSTALLER $QMK_INSTALLER_ARGS 2>/dev/null | tee -a $QMK_LOG \
+ &>/dev/null && pass || fail "could not install QMK"
 
 # Checkout the QMK firmware repo manually.
 
 if [ ! -d $QMK_HOME ]
 then
 
-  notice "cloning QMK firmware"
+  # Clone the QMK firmware repo if it does not exist locally. Set upstream and
+  # initialise the submodules.
+
+  notice "cloning QMK firmware repo"
+  echo /bin/git clone -b $QMK_BRANCH $QMK_URL $QMK_HOME
   /bin/git clone -b $QMK_BRANCH $QMK_URL $QMK_HOME \
    &>/dev/null && pass || fail
 
   notice "setting official QMK firmware repo as upstream"
+  echo /bin/git -C $QMK_HOME remote add upstream $QMK_UPSTREAM_URL
   /bin/git -C $QMK_HOME remote add upstream $QMK_UPSTREAM_URL \
    &>/dev/null && pass || fail
 
-  notice "initialising QMK firmware submodules"
+  notice "initialising QMK firmware repo submodules"
+  echo /bin/git -C $QMK_HOME submodule update --init --remote
   /bin/git -C $QMK_HOME submodule update --init --remote \
    &>/dev/null && pass || fail
 else
 
-  notice "synchronising QMK firmware submodules"
+  # If the local QMK firmware repo is present, sync the submodules with origin
+  # and update them.
+
+  notice "synchronising QMK firmware repo submodules"
   /bin/git -C $QMK_HOME submodule sync \
    &>/dev/null && pass || fail
 
-  notice "updating QMK firmware submodules from remotes"
+  notice "updating QMK firmware repo submodules from remotes"
   /bin/git -C $QMK_HOME submodule update --remote \
    &>/dev/null && pass || fail
 fi
@@ -65,24 +89,37 @@ fi
 
 if [ ! -d $USERSPACE_HOME ]
 then
-  notice "cloning userspace"
+
+  # Clone the userspace repo if it does not exist locally then initialise the
+  # submodules.
+
+  notice "cloning QMK userspace repo"
   /bin/git clone -b $USERSPACE_BRANCH $USERSPACE_URL $USERSPACE_HOME \
    &>/dev/null && pass || fail
-  notice "initialising userspace submodules"
+
+  notice "initialising QMK userspace repo submodules"
   /bin/git -C $USERSPACE_HOME submodule update --init --remote \
    &>/dev/null && pass || fail
 else
-  notice "synchronising userspace submodules"
+
+  # If the local userspace repo is present, sync the submodules with origin and
+  # update them.
+
+  notice "synchronising QMK userspace repo submodules"
   /bin/git -C $USERSPACE_HOME submodule sync \
    &>/dev/null && pass || fail
-  notice "updating userspace submodules from remotes"
+
+  notice "updating QMK userspace repo submodules from remotes"
   /bin/git -C $USERSPACE_HOME submodule update --remote \
    &>/dev/null && pass || fail
 fi
 
 # Setup QMK.
 
-if ! "${LOCAL_BIN_DIR}/qmk" doctor -n &>/dev/null
-then
-  "${LOCAL_BIN_DIR}/qmk" setup -H ${QMK_HOME} --baseurl ${SSH_BASE} -b ${BRANCH} ${QMK_REPO}
-fi
+notice "setting up QMK"
+/bin/expect -f "${ETC_DIR}/qmk_setup.exp" ${QMK_HOME} ${SSH_BASE} ${QMK_BRANCH} ${QMK_REPO} \
+ | tee -a $QMK_LOG &>/dev/null && pass || fail "could not run qmk setup"
+
+# Mention the QMK output log.
+
+echo "Log of QMK install and setup available in ${QMK_LOG}"

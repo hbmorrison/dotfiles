@@ -1,0 +1,13 @@
+set home [lindex $argv 0]
+set base [lindex $argv 1]
+set branch [lindex $argv 2]
+set repo [lindex $argv 3]
+
+set timeout -1
+
+spawn qmk setup --yes -H $home --baseurl $base -b $branch $repo
+
+expect "Please enter your choice: \\\[3\\\] "
+send -- "3\r"
+
+expect eof
