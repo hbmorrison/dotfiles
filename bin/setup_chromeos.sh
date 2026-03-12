@@ -11,9 +11,15 @@ $SUDO sed -i.orig -e "/domain-name/s/^\\(#\\|\\)\\(supersede\\|prepend\\) domain
 
 if ! diff /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.orig &> /dev/null
 then
+  if [ ! -z ${SUDO} ]
+  then
+    if ! sudo -n /bin/true 2>/dev/null
+    then
+      sudo -v || fail "could not authenticate with sudo"
+    fi
+  fi
   notice "Restarting networking"
-  $SUDO systemctl restart networking \
-   && pass || fail
+  $SUDO systemctl restart networking &>/dev/null && pass || fail
 fi
 
 # Run the debian setup script.

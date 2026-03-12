@@ -45,7 +45,10 @@ USERSPACE_DIR=$(dirname $USERSPACE_HOME)
 
 if [ ! -z ${SUDO} ]
 then
-  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+  if ! sudo -n /bin/true 2>/dev/null
+  then
+    sudo -v || fail "could not authenticate with sudo"
+  fi
 fi
 
 # Install QMK.

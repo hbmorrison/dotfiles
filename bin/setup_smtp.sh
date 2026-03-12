@@ -15,7 +15,10 @@ SENDER_DOMAIN=$(echo $SENDER_ADDR | cut -d@ -f2)
 
 if [ ! -z ${SUDO} ]
 then
-  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+  if ! sudo -n /bin/true 2>/dev/null
+  then
+    sudo -v || fail "could not authenticate with sudo"
+  fi
 fi
 
 # Update package lists.

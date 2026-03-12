@@ -10,7 +10,10 @@ GPG_PACKAGES="gpg pinentry-tty scdaemon"
 
 if [ ! -z ${SUDO} ]
 then
-  sudo -v &>/dev/null || fail "could not authenticate with sudo"
+  if ! sudo -n /bin/true 2>/dev/null
+  then
+    sudo -v || fail "could not authenticate with sudo"
+  fi
 fi
 
 # Update and install required packages.
