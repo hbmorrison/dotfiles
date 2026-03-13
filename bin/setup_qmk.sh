@@ -76,7 +76,7 @@ then
    &>/dev/null && pass || fail
 
   notice "initialising QMK firmware repo submodules"
-  /bin/git -C $QMK_HOME submodule update --init --recursive --remote \
+  /bin/git -C $QMK_HOME submodule update --init --recursive \
    &>/dev/null && pass || fail
 else
 
