@@ -1,4 +1,4 @@
-
+TYPO
 case $- in
   *i*) ;;
     *) return;;
