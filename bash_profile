@@ -52,28 +52,30 @@ pathadd "/opt/puppetlabs/sbin"
 pathadd "${HOME}/bin"
 pathadd "${HOME}/.local/bin"
 
-# Connect to an ssh-agent.
+# Location of the ssh agent environment.
+
+AGENT_ENV="${HOME}/.ssh/agent.env"
+source $AGENT_ENV &>/dev/null
+
+# Start the ssh agent if needed.
 
 case $SHELL_ENVIRONMENT in
   wsl)
-    export SSH_AUTH_SOCK=/tmp/wincrypt-hv.sock
-    if ! ss -lnx | grep -q $SSH_AUTH_SOCK
+    if ! systemctl --user is-enabled ssh-agent-relay.service
     then
-      rm -f $SSH_AUTH_SOCK
-      LOCAL_SOCKET="UNIX-LISTEN:${SSH_AUTH_SOCK},fork"
-      WINDOWS_SOCKET="SOCKET-CONNECT:40:0:x0000x33332222x02000000x00000000"
-      (setsid nohup socat $LOCAL_SOCKET $WINDOWS_SOCKET >&/dev/null & disown)
+      systemctl --user daemon-reload \
+       && systemctl --user enable ssh-agent-relay.service \
+       && systemctl --user start ssh-agent-relay.service
+      source $AGENT_ENV &>/dev/null
     fi
     ;;
   *)
-    AGENT_ENV="${HOME}/.ssh/agent-env"
-    source $AGENT_ENV &>/dev/null
     if ! ss -lnx | grep -q $SSH_AUTH_SOCK
     then
       ssh-agent >$AGENT_ENV
       chmod 600 $AGENT_ENV
+      source $AGENT_ENV &>/dev/null
     fi
-    source $AGENT_ENV &>/dev/null
 esac
 
 # Start gpg-agent.
