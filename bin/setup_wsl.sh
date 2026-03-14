@@ -4,7 +4,7 @@
 
 USER_PROFILE="/mnt/c/Users/${USER}"
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "Dropbox" "AppData" )
-SYMLINK_PC_DIRS=( "C:/Workspace" "C:/ProgramData" )
+SYMLINK_PC_DIRS=( "C:/Workspace" )
 ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 
 # Check that we have the correct Windows user profile directory.
