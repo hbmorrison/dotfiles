@@ -97,6 +97,7 @@ then
   installing "debsig policy keyring"
   curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${DEBSIG_KEYRING}" \
    &>/dev/null && pass || fatal
+fi
 
 # Install the source list.
 
