@@ -12,14 +12,14 @@ source $BIN_DIR/setup_choco.sh
 
 notice "Checking if wincrypt-sshagent is installed"
 INSTALLED=$($CHOCO info -l -r wincrypt-sshagent)
-if [ -z ${INSTALLED} ] && notice_no
+if [ -z ${INSTALLED} ] && respond_no
 then
   notice "installing wincrypt-sshagent with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco install -y wincrypt-sshagent\""
   pass
 else
-  notice_yes
+  respond_yes
   notice "checking for updates with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco upgrade wincrypt-sshagent -y\""
@@ -36,7 +36,7 @@ pass
 # Install wincrypt-sshagent startup shortcut.
 
 notice "checking if wincrypt-sshagent startup shortcut is installed"
-if [ ! -f "${STARTUP_DIR}/WinCryptSSHAgent.lnk" ] && notice_no
+if [ ! -f "${STARTUP_DIR}/WinCryptSSHAgent.lnk" ] && respond_no
 then
   notice "installing wincrypt-sshagent startup shortcut"
   cp -f "${BASE_DIR}/etc/wincrypt-sshagent.ps1" $WINDOWS_HOME_DIR
@@ -44,5 +44,5 @@ then
   rm -f "${WINDOWS_HOME_DIR}/wincrypt-sshagent.ps1"
   pass
 else
-  notice_yes
+  respond_yes
 fi

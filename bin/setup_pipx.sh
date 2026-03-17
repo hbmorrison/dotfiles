@@ -24,11 +24,11 @@ fi
 
 # Source the environment file.
 
-source ${ENV_FILE} $*
+source ${ENV_FILE} "$@"
 
 # Check that the required variables are set.
 
-[ -z "${PACKAGES}" ] && fail "no PACKAGES set"
+[ -z "${PACKAGES}" ] && fatal "no PACKAGES set"
 
 # Make sure sudo has valid credentials before starting.
 
@@ -36,7 +36,7 @@ if [ ! -z ${SUDO} ]
 then
   if ! sudo -n /bin/true 2>/dev/null
   then
-    sudo -v || fail "could not authenticate with sudo"
+    sudo -v || fatal "could not authenticate with sudo"
   fi
 fi
 
@@ -44,12 +44,11 @@ fi
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-  notice "Updating package lists"
-  $SUDO apt update -y &>/dev/null \
-   && pass || fail "Error: run $SUDO apt update -y"
-  notice "Installing dependencies"
-  $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null \
-   && pass || fail "Error: run $SUDO apt install --no-install-recommends -y $DEPENDENCIES"
+  updating "package lists"
+  $SUDO apt update -y &>/dev/null && pass || fatal
+  installing "dependencies"
+  $SUDO apt install --no-install-recommends -y $DEPENDENCIES \
+   &>/dev/null && pass || fatal
 fi
 
 # Install.
@@ -58,12 +57,10 @@ for PACKAGE in $PACKAGES
 do
   if pipx list --short | grep "^${PACKAGE} " &>/dev/null
   then
-    notice "Upgrading ${PACKAGE}"
-    pipx upgrade $PACKAGE &>/dev/null \
-    && pass || fail "Error: run pipx upgrade $PACKAGE"
+    upgrading "pipx package ${PACKAGE}"
+    pipx upgrade $PACKAGE &>/dev/null && pass || fatal
   else
-    notice "Installing ${PACKAGE}"
-    pipx install $PACKAGE &>/dev/null \
-     && pass || fail "Error: run pipx install $PACKAGE"
+    installing "pipx package ${PACKAGE}"
+    pipx install $PACKAGE &>/dev/null && pass || fatal
   fi
 done

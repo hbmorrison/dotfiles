@@ -19,13 +19,13 @@ notice "Checking if AutoHotKey is installed"
 INSTALLED=$($CHOCO info -l -r autohotkey)
 if [ -z ${INSTALLED:+z} ]
 then
-  notice_no
+  respond_no
   notice "installing AutoHotKey with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco install -y autohotkey\""
   pass
 else
-  notice_yes
+  respond_yes
   notice "checking for updates with PowerShell (accept UAC prompt)"
   sleep 2
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"choco upgrade autohotkey -y\""

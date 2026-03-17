@@ -17,14 +17,14 @@ then
     # file, replace it with the new gitconfig file, then replace the original
     # user name and email config.
 
-    notice "extracting user section from .gitconfig"
+    extracting "user section from .gitconfig"
     TEMP_USER_SECTION=`mktemp`
     awk -f "${ETC_DIR}/gitconfig.awk" "${HOME}/.gitconfig" > $TEMP_USER_SECTION \
-     && pass || fail
-    notice "copying .gitconfig file"
-    cp -f "${ETC_DIR}/gitconfig" "${HOME}/.gitconfig" && pass || fail
-    notice "replacing user section in .gitconfig"
-    cat $TEMP_USER_SECTION >> "${HOME}/.gitconfig" && pass || fail
+     && pass || fatal
+    copying ".gitconfig file"
+    cp -f "${ETC_DIR}/gitconfig" "${HOME}/.gitconfig" && pass || fatal
+    replacing "user section of .gitconfig"
+    cat $TEMP_USER_SECTION >> "${HOME}/.gitconfig" && pass || fatal
     rm -f $TEMP_USER_SECTION
   else
 
@@ -32,10 +32,10 @@ then
     # email.
 
     cp -f "${ETC_DIR}/gitconfig" "${HOME}/.gitconfig"
-    notice "Setting git user.name to ${NAME}"
+    setting "git user.name"
     git config --global user.name "${NAME}" &>/dev/null \
      && pass || fail
-    notice "Setting git user.email to ${DEFAULT_EMAIL}"
+    setting "git user.email"
     git config --global user.email "${DEFAULT_EMAIL}" &>/dev/null \
      && pass || fail
   fi
@@ -46,14 +46,14 @@ else
   CURRENT_NAME=$(git config --global user.name)
   if [ "${NAME}" != "${CURRENT_NAME}" ]
   then
-    notice "Setting git user.name to ${NAME}"
+    setting "git user.name"
     git config --global user.name "${NAME}" &>/dev/null \
      && pass || fail
   fi
 
   # Set the new user email address.
 
-  notice "Setting git user.email to ${1}"
+  setting "git user.email"
   git config --global user.email "${1}" &>/dev/null \
    && pass || fail
 fi

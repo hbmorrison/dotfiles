@@ -12,19 +12,19 @@ if [ ! -z ${SUDO} ]
 then
   if ! sudo -n /bin/true 2>/dev/null
   then
-    sudo -v || fail "could not authenticate with sudo"
+    sudo -v || fatal "could not authenticate with sudo"
   fi
 fi
 
 # Update and install required packages.
 
-notice "updating packages lists"
-$SUDO apt update -y &>/dev/null && pass || fail "could not update package lists"
-notice "upgrading existing packages"
-$SUDO apt upgrade -y &>/dev/null && pass || fail "could not upgrade existing packages"
+updating "packages lists"
+$SUDO apt update -y &>/dev/null && pass || fatal
+upgrading "existing packages"
+$SUDO apt upgrade -y &>/dev/null && pass || fatal
 notice "upgrading required packages"
 $SUDO apt install -y --no-install-recommends $SHELL_PACKAGES $NETWORK_PACKAGES $GPG_PACKAGES \
- &>/dev/null && pass || fail "could not install required packages"
+ &>/dev/null && pass || fatal
 
 # Set up the dotfiles.
 

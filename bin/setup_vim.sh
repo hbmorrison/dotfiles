@@ -24,16 +24,16 @@ then
 
   # If it does, make sure that the git origin of the vim directory is correct.
 
-  notice "checking that $VIM_DIR git origin is correct"
+  checking "${VIM_DIR} git origin"
   [ "${VIM_DIR_ORIGIN_URL}" = $DOTVIM_ORIGIN_URL ] \
-   && pass || fail "git origin in ${VIM_DIR} does not match ${DOTVIM_ORIGIN_URL}"
+   && respond_yes || respond_no "does not match ${DOTVIM_ORIGIN_URL}"
 
   # Check that the current branch is correct.
 
   VIM_DIR_BRANCH=$(git -C $VIM_DIR branch --show-current 2>/dev/null)
   if [ $VIM_DIR_BRANCH != $DOTFILES_BRANCH ]
   then
-    notice "updating vim directory branch to ${DOTFILES_BRANCH}"
+    updating "vim directory branch to ${DOTFILES_BRANCH}"
     if git -C $VIM_DIR checkout $DOTFILES_BRANCH &>/dev/null
     then
       pass
@@ -43,9 +43,9 @@ then
       # Checkout the main branch as a fallback.
 
       [ $DOTFILES_BRANCH != "main" ] \
-       && notice "updating vim directory branch to main" \
+       && updating "vim directory branch to main" \
        && git -C $VIM_DIR checkout main \
-        &>/dev/null && pass || fail "run git -C $VIM_DIR checkout main manually"
+        &>/dev/null && pass || fatal "run git -C $VIM_DIR checkout main"
     fi
   fi
 else
@@ -61,22 +61,22 @@ else
 
     # If the clone fails, clone from the main branch as a fallback.
 
-    notice "Cloning the default branch of the vim directory"
+    cloning "the default branch of the vim directory"
     git clone $DOTVIM_ORIGIN_URL $VIM_DIR \
-     &>/dev/null && pass || fail "run git clone $DOTVIM_ORIGIN_URL $VIM_DIR"
+     &>/dev/null && pass || fatal "run git clone $DOTVIM_ORIGIN_URL $VIM_DIR"
   fi
 fi
 
 # Pull and update the submodules.
 
-notice "pulling the latest version of the vim directory"
-git -C $VIM_DIR pull &>/dev/null && pass || fail "run git -C $VIM_DIR pull"
+pulling "the latest version of the vim directory"
+git -C $VIM_DIR pull &>/dev/null && pass || fatal "run git -C $VIM_DIR pull"
 
-notice "updating submodules"
+updating "submodules"
 git -C $VIM_DIR submodule update --init --recursive &>/dev/null \
- && pass || fail "run git -C $VIM_DIR submodule update --init --recursive"
+ && pass || fatal "run git -C $VIM_DIR submodule update --init --recursive"
 
 # Copy the vimrc file.
 
-notice "updating vimrc"
+updating "vimrc"
 cp -f $BASE_DIR/vimrc "${HOME}/.vimrc" && pass || fail

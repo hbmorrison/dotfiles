@@ -4,7 +4,7 @@ SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
 
 # Fix search domains.
 
-notice "adding search domains to resolv.conf"
+adding "search domains to resolv.conf"
 $SUDO sed -i.orig -e "/domain-name/s/^\\(#\\|\\)\\(supersede\\|prepend\\) domain-name .*$/prepend domain-name \"${SEARCH_DOMAINS} \";/" /etc/dhcp/dhclient.conf \
  && pass || fail
 
@@ -15,10 +15,10 @@ then
   then
     if ! sudo -n /bin/true 2>/dev/null
     then
-      sudo -v || fail "could not authenticate with sudo"
+      sudo -v || fatal "could not authenticate with sudo"
     fi
   fi
-  notice "Restarting networking"
+  restarting "networking"
   $SUDO systemctl restart networking &>/dev/null && pass || fail
 fi
 

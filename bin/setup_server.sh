@@ -43,33 +43,37 @@ esac
 
 # Install required packages.
 
-notice "updating package lists"
-apt update -y && pass || fail
-notice "installing packages"
-apt install -y $PACKAGES && pass || fail
+updating "package lists"
+apt update -y && pass || fatal
+installing "required packages"
+apt install -y $PACKAGES && pass || fatal
 
 # Make a backup copy of the sshd_config file.
 
-notice "backing up ssh config"
-cp $SSHD_CONFIG "${SSHD_CONFIG}.${TIMESTAMP}" && pass || fail
+copying "backup of ssh config"
+cp $SSHD_CONFIG "${SSHD_CONFIG}.${TIMESTAMP}" && pass || fatal
 
 case $SHELL_ENVIRONMENT in
 
   # Keep root password logins and TCP forwarding enabled on Proxmox VE.
 
   pve)
-    notice "permitting ssh root login and forwarding"
-    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' $SSHD_CONFIG
-    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' $SSHD_CONFIG
+    enabling "ssh root login and forwarding for PVE"
+    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' $SSHD_CONFIG \
+     || fatal "check ${SSHD_CONFIG}"
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' $SSHD_CONFIG \
+     || fatal "check ${SSHD_CONFIG}"
     pass
     ;;
 
   # Disable root password logins and TCP forwarding elsewhere.
 
   debian|ubuntu|pbs)
-    notice "disallow ssh root login and forwarding"
-    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' $SSHD_CONFIG
-    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' $SSHD_CONFIG
+    disable "ssh root login and forwarding"
+    sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin without-password/' $SSHD_CONFIG \
+     || fatal "check ${SSHD_CONFIG}"
+    sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding no/' $SSHD_CONFIG \
+     || fatal "check ${SSHD_CONFIG}"
     pass
     ;;
 
@@ -77,33 +81,40 @@ esac
 
 # Lock down authentication and forwarding.
 
-notice "disallowing non-PAM ssh logins"
-sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' $SSHD_CONFIG
-sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' $SSHD_CONFIG
-sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' $SSHD_CONFIG
+disabling "non-PAM ssh logins"
+sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
+sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
+sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
 pass
-notice "disallowing ssh X11 forwarding and agent forwarding"
-sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' $SSHD_CONFIG
-sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' $SSHD_CONFIG
+disabling "ssh X11 forwarding and agent forwarding"
+sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
+sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
 pass
-notice "limiting authentication retries"
-sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' $SSHD_CONFIG
-pass
-notice "limiting naming of authorized_keys files"
-sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' $SSHD_CONFIG
-pass
+limiting "authentication retries"
+sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' $SSHD_CONFIG \
+ && pass || fatal "check ${SSHD_CONFIG}"
+limiting "naming of authorized_keys files"
+sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' $SSHD_CONFIG \
+ && pass || fatal "check ${SSHD_CONFIG}"
 
 # Only allow root and the non-root user to connect via ssh.
 
-notice "only allow root and ${NON_ROOT_USER} ssh logins"
-sed -i -e 's/^AllowUsers/#AllowUsers/' $SSHD_CONFIG
-sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" $SSHD_CONFIG
+limiting "ssh logins to root and ${NON_ROOT_USER}"
+sed -i -e 's/^AllowUsers/#AllowUsers/' $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
+sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" $SSHD_CONFIG \
+ || fatal "check ${SSHD_CONFIG}"
 pass
 
 # Restart sshd to pick up the changes.
 
-notice "restarting sshd"
-systemctl restart sshd && pass || fail
+restarting "sshd"
+systemctl restart sshd && pass || fatal
 
 # Install and configure tailscale.
 
@@ -118,15 +129,13 @@ fi
 
 if [ -f /etc/default/tailscaled ]
 then
-  notice "backing up Tailscale config"
-  cp /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP
-  pass
-  notice "adding extra flags to Tailscale config"
-  sed -i -e '/^FLAGS=/s/""/"--no-logs-no-support"/' /etc/default/tailscaled \
-   && pass || fail
+  copying "backup of Tailscale config"
+  cp /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP && pass || fatal
+  adding "extra flags to Tailscale config"
+  sed -i -e '/^FLAGS=/s/""/"--no-logs-no-support"/' /etc/default/tailscaled && pass || fatal
   if diff /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP &>/dev/null
   then
-    notice "restarting tailscaled"
+    restarting "tailscaled"
     systemctl restart tailscaled.service && pass || fail
   fi
 fi
@@ -135,53 +144,51 @@ fi
 
 case $SHELL_ENVIRONMENT in
   debian|ubuntu)
-    notice "installing ufw"
-    apt install -y ufw && pass || fail
-    notice "allowing ssh access in ufw"
-    ufw allow 22/tcp comment 'allow ssh' && pass || fail
-    notice "enabling ufw firewall"
-    ufw --force enable && pass || fail
+    installing "ufw"
+    apt install -y ufw && pass || fatal
+    enabling "ssh access in ufw"
+    ufw allow 22/tcp comment 'allow ssh' && pass || fatal
+    enabling "ufw firewall"
+    ufw --force enable && pass || fatal
 esac
 
 # Configure fail2ban for sshd.
 
-notice "copying ssh fail2ban jails"
+copying "ssh fail2ban jails"
 cp $BASE_DIR/etc/jail.d/default.local /etc/fail2ban/jail.d/
 cp $BASE_DIR/etc/jail.d/sshd.local /etc/fail2ban/jail.d/
 pass
 
-notice "enabling fail2ban"
+enabling "fail2ban"
 systemctl enable --now fail2ban && pass || fail
 
 # Create the non-root user if needed.
 
 if ! grep ^$NON_ROOT_USER: /etc/passwd &>/dev/null
 then
-  notice "adding user ${NON_ROOT_USER}"
-  useradd -s /bin/bash -U -G $NON_ROOT_ADMIN_GROUPS -m $NON_ROOT_USER \
-   && pass || fail
+  adding "user ${NON_ROOT_USER}"
+  useradd -s /bin/bash -U -G $NON_ROOT_ADMIN_GROUPS -m $NON_ROOT_USER && pass || fatal
 fi
 
 # Ensure that sudo access requires a password.
 
-notice "backing up sudoers file"
-cp /etc/sudoers /etc/sudoers.$TIMESTAMP
-pass
+copying "backup of sudoers file"
+cp /etc/sudoers /etc/sudoers.$TIMESTAMP && pass || fatal
 
-notice "ensuring that all sudo root actions require a password"
+setting "all sudo root actions to require a password"
 sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers \
- && pass || fail
+ && pass || fatal
 
-notice "removing NOPASSWD from additional sudo rules"
+setting "all additional sudo rules to require a password"
 for ITEM in $(ls -1 /etc/sudoers.d/*)
 do
-  sed -i -e '/NOPASSWD:/s/NOPASSWD://' $ITEM
+  sed -i -e '/NOPASSWD:/s/NOPASSWD://' $ITEM || fatal $ITEM
 done
 pass
 
 # Check that the user ssh directory and authorized_keys file exist.
 
-notice "preparing ${NON_ROOT_USER} home directory"
+configuring "${NON_ROOT_USER} home directory"
 [ ! -d $NON_ROOT_SSH_DIR ] && su -l -c "mkdir -m 0700 $NON_ROOT_SSH_DIR" $NON_ROOT_USER
 [ ! -f $NON_ROOT_AUTHORIZED_KEYS ] && su -l -c "touch $NON_ROOT_AUTHORIZED_KEYS" $NON_ROOT_USER
 pass
@@ -192,9 +199,8 @@ while read -r TYPE KEY COMMENT
 do
   if ! grep "${KEY}" $NON_ROOT_AUTHORIZED_KEYS &>/dev/null
   then
-    notice "Adding '${COMMENT}' as an authorized key for ${NON_ROOT_USER}"
-    echo "${TYPE} ${KEY} ${COMMENT}" >> $NON_ROOT_AUTHORIZED_KEYS \
-     && pass || fail
+    adding "'${COMMENT}' authorized key for ${NON_ROOT_USER}"
+    echo "${TYPE} ${KEY} ${COMMENT}" >> $NON_ROOT_AUTHORIZED_KEYS && pass || fail
   fi
 done < "${PUBLIC_SSH_KEYS}"
 
@@ -204,19 +210,20 @@ done < "${PUBLIC_SSH_KEYS}"
 
 if [ ! -d $NON_ROOT_DOTFILES ]
 then
-  notice "copying dotfiles repo to ${NON_ROOT_USER}'s home directory"
+  copying "dotfiles repo to ${NON_ROOT_USER}'s home directory"
   cp -r $BASE_DIR $NON_ROOT_DOTFILES && pass || fail
-  notice "fixing ownership"
+  securing "file ownership"
   chown -R $NON_ROOT_USER:$NON_ROOT_USER $NON_ROOT_DOTFILES && pass || fail
 else
-  notice "updating dotfiles repo for ${NON_ROOT_USER}"
+  updating "dotfiles repo for ${NON_ROOT_USER}"
   su -l -c "git -C $NON_ROOT_DOTFILES pull" $NON_ROOT_USER && pass || fail
 fi
 
+configuring "${NON_ROOT_USER}'s shell"
 [ -x $NON_ROOT_DOTFILES/bin/setup ] \
- || fail "dotfiles setup script not found for $NON_ROOT_USER"
+ && su -l -c "$NON_ROOT_DOTFILES/bin/setup shell" $NON_ROOT_USER \
+ && pass || fatal "dotfiles setup script failed"
 
-su -l -c "$NON_ROOT_DOTFILES/bin/setup shell" $NON_ROOT_USER
 
 # Set the user's password.
 
@@ -248,6 +255,5 @@ fi
 
 # Update the non-root user with the correct shell and groups.
 
-notice "add ${NON_ROOT_USER} to admin groups"
-usermod -U -s /bin/bash -aG $NON_ROOT_ADMIN_GROUPS $NON_ROOT_USER \
- && pass || fail
+adding "${NON_ROOT_USER} to admin groups"
+usermod -U -s /bin/bash -aG $NON_ROOT_ADMIN_GROUPS $NON_ROOT_USER && pass || fail

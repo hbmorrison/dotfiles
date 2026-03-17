@@ -1,5 +1,7 @@
 # Configuration.
 
+APT_ARCH=$(dpkg --print-architecture)
+
 # Get the name of the install environment file to use.
 
 INSTALL_ENV=$1
@@ -26,51 +28,21 @@ fi
 
 # Source the environment file.
 
-source ${ENV_FILE} $*
+source ${ENV_FILE} "$@"
 
 # Check that the required variables are set.
 
-if [ -z "${KEYRING_URL}" ]
-then
-  echo "Error: no KEYRING_URL set"
-  exit 1
-fi
-
-if [ -z "${KEYRING_FILE}" ]
-then
-  echo "Error: no KEYRING_FILE set"
-  exit 1
-fi
-
-if [ -z "${APT_SOURCE_URL}" ]
-then
-  echo "Error: no APT_SOURCE_URL set"
-  exit 1
-fi
-
-if [ -z "${APT_SOURCE_FILE}" ]
-then
-  echo "Error: no APT_SOURCE_FILE set"
-  exit 1
-fi
-
-if [ -z "${PACKAGES}" ]
-then
-  echo "Error: no PACKAGES set"
-  exit 1
-fi
-
-if [ -z $BINARY ]
-then
-  echo "Error: no BINARY set"
-  exit 1
-fi
+[ -z "${KEYRING_URL}" ]     && fatal "no KEYRING_URL set"
+[ -z "${KEYRING_FILE}" ]    && fatal "no KEYRING_FILE set"
+[ -z "${APT_SOURCE_URL}" ]  && fatal "no APT_SOURCE_URL set"
+[ -z "${APT_SOURCE_FILE}" ] && fatal "no APT_SOURCE_FILE set"
+[ -z "${PACKAGES}" ]        && fatal "no PACKAGES set"
+[ -z $BINARY ]              && fatal "no BINARY set"
 
 # Work out the locations and content of the keyring and source list.
 
 KEYRING="/etc/apt/keyrings/${KEYRING_FILE}"
 APT_SOURCE="/etc/apt/sources.list.d/${APT_SOURCE_FILE}"
-APT_ARCH=$(dpkg --print-architecture)
 APT_SOURCE_CONTENT="deb [arch=${APT_ARCH} signed-by=${KEYRING}] ${APT_SOURCE_URL}"
 TMP_SOURCE=$(mktemp)
 
@@ -80,7 +52,7 @@ if [ ! -z ${SUDO} ]
 then
   if ! sudo -n /bin/true 2>/dev/null
   then
-    sudo -v || fail "could not authenticate with sudo"
+    sudo -v || fatal "could not authenticate with sudo"
   fi
 fi
 
@@ -88,44 +60,62 @@ fi
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-  notice "updating package lists"
-  $SUDO apt update -y \
-   &>/dev/null && pass || fail "could not update package lists"
-  notice "installing dependencies"
-  $SUDO apt install --no-install-recommends -y $DEPENDENCIES \
-   &>/dev/null && pass || fail "could not install dependencies"
+  installing "package lists"
+  $SUDO apt update -y &>/dev/null && pass || fatal
+  installing "dependencies"
+  $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null && pass || fatal
 fi
 
 # Install the keyring.
 
 if [ ! -f $KEYRING ]
 then
-  notice "installing GPG keyring"
+  installing "GPG keyring"
   curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${KEYRING}" \
-   &>/dev/null && pass || fail "could not install GPG keyring"
+   &>/dev/null && pass || fatal
 fi
+
+# Install the debsig-verify policy.
+
+if [ ! -z ${DEBSIG_POLICY:+z} ]
+then
+  DEBSIG_POLICY_DIR="/etc/debsig/policies/${DEBSIG_POLICY}"
+  DEBSIG_POLICY="${DEBSIG_POLICY_DIR}/${DEBSIG_POLICY_FILE}"
+  DEBSIG_KEYRING_DIR="/usr/share/debsig/keyrings/${DEBSIG_POLICY}"
+  DEBSIG_KEYRING="${DEBSIG_KEYRING_DIR}/debsig.gpg"
+
+  # Create the policy and policy keyring directories.
+
+  [ -d "${DEBSIG_POLICY_DIR}" ] || $SUDO mkdir -p "${DEBSIG_POLICY_DIR}"
+  [ -d "${DEBSIG_KEYRING_DIR}" ] || $SUDO mkdir -p "${DEBSIG_KEYRING_DIR}"
+
+  # Install the policy and policy keyring.
+
+  installing "debsig policy"
+  curl -fsSL ${DEBSIG_POLICY_URL} | $SUDO tee "${DEBSIG_POLICY}" \
+   &>/dev/null && pass || fatal
+  installing "debsig policy keyring"
+  curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${DEBSIG_KEYRING}" \
+   &>/dev/null && pass || fatal
 
 # Install the source list.
 
 echo "${APT_SOURCE_CONTENT}" > $TMP_SOURCE
 if ! diff $TMP_SOURCE $APT_SOURCE &>/dev/null
 then
-  notice "installing source list"
-  cat $TMP_SOURCE | $SUDO tee $APT_SOURCE \
-   &>/dev/null && pass || fail
-  notice "updating package lists"
-  $SUDO apt update -y &>/dev/null \
-   && pass || fail "could not update package lists"
+  installing "apt source list"
+  cat $TMP_SOURCE | $SUDO tee $APT_SOURCE &>/dev/null && pass || fatal
+  updating "package lists"
+  $SUDO apt update -y &>/dev/null && pass || fatal
 fi
 
 # Install the packages.
 
 if [ ! -f $BINARY ]
 then
-  notice "installing packages"
-  $SUDO apt install --no-install-recommends -y $PACKAGES \
-   &>/dev/null || fail "could not install packages"
-  [ -f $BINARY ] && pass || fail "$BINARY not found after install"
+  installing "packages"
+  $SUDO apt install --no-install-recommends -y $PACKAGES &>/dev/null || fatal
+  [ -f $BINARY ] && pass || fatal "$BINARY not found after install"
 fi
 
 # Tidy up.
@@ -138,9 +128,8 @@ if [ ! -z ${SERVICE:+z} ]
 then
   if ! systemctl status $SERVICE &>/dev/null
   then
-    notice "starting ${SERVICE} and enabling at boot"
-    $SUDO systemctl enable --now $SERVICE \
-     &>/dev/null && pass || fail
+    starting "${SERVICE} and enabling at boot"
+    $SUDO systemctl enable --now $SERVICE &>/dev/null && pass || fatal
   fi
 fi
 
@@ -152,9 +141,8 @@ then
   then
     if ! groups "${USER:-$USERNAME}" | grep " ${ADDITIONAL_GROUP}" &>/dev/null
     then
-      notice "adding user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
-      $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" \
-       &>/dev/null && pass || fail
+      adding "user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
+      $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" &>/dev/null && pass || fatal
     fi
   fi
 fi
