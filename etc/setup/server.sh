@@ -5,7 +5,7 @@ PACKAGES="bash-completion curl fail2ban git git-flow jq man-db net-tools \
   python3-systemd sudo vim"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 TAILSCALE_ARGS="--accept-routes --accept-risk=all"
-PUBLIC_SSH_KEYS="${BASE_DIR}/etc/public_ssh_keys"
+PUBLIC_SSH_KEYS="${ETC_DIR}/server/public_ssh_keys"
 
 NON_ROOT_USER="hannah"
 NON_ROOT_ADMIN_GROUPS="sudo,users"
@@ -17,17 +17,16 @@ NON_ROOT_DOTFILES="${NON_ROOT_LOCAL_DIR}/dotfiles"
 
 # Add docker to the list of admin groups if it exists.
 
-if grep ^docker: /etc/group &>/dev/null
-then
-  NON_ROOT_ADMIN_GROUPS="${NON_ROOT_ADMIN_GROUPS},docker"
-fi
+grep -q '^docker:' /etc/group && NON_ROOT_ADMIN_GROUPS+=",docker"
 
 # Check that this script is being run by root.
 
-[ $(id -u) -ne 0 ] && fail "run as root"
+notice "checking whether user is root"
+[ $(id -u) -eq 0 ] && pass || fatal "run as root"
 
 # Work out which OS and terminal is being used.
 
+notice "checking operating system"
 case $ID in
   ubuntu)
     SHELL_ENVIRONMENT="ubuntu"
@@ -38,19 +37,20 @@ case $ID in
     dpkg -s proxmox-backup-server &>/dev/null && SHELL_ENVIRONMENT="pbs"
     ;;
   *)
-    fail "setup ${SCRIPT} does not support OS $ID"
+    fatal "setup ${SCRIPT} does not support OS $ID"
 esac
+pass
 
 # Install required packages.
 
-updating "package lists"
+notice "updating package lists"
 apt update -y && pass || fatal
-installing "required packages"
+notice "installing required packages"
 apt install -y $PACKAGES && pass || fatal
 
 # Make a backup copy of the sshd_config file.
 
-copying "backup of ssh config"
+notice "copying backup of ssh config"
 cp $SSHD_CONFIG "${SSHD_CONFIG}.${TIMESTAMP}" && pass || fatal
 
 case $SHELL_ENVIRONMENT in
@@ -58,7 +58,7 @@ case $SHELL_ENVIRONMENT in
   # Keep root password logins and TCP forwarding enabled on Proxmox VE.
 
   pve)
-    enabling "ssh root login and forwarding for PVE"
+    notice "enabling ssh root login and forwarding for PVE"
     sed -i -e '/^\(#\|\)PermitRootLogin/s/^.*$/PermitRootLogin yes/' $SSHD_CONFIG \
      || fatal "check ${SSHD_CONFIG}"
     sed -i -e '/^\(#\|\)AllowTcpForwarding/s/^.*$/AllowTcpForwarding yes/' $SSHD_CONFIG \
@@ -81,7 +81,7 @@ esac
 
 # Lock down authentication and forwarding.
 
-disabling "non-PAM ssh logins"
+notice "disabling non-PAM ssh logins"
 sed -i -e '/^\(#\|\)PasswordAuthentication/s/^.*$/PasswordAuthentication no/' $SSHD_CONFIG \
  || fatal "check ${SSHD_CONFIG}"
 sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentication no/' $SSHD_CONFIG \
@@ -89,22 +89,22 @@ sed -i -e '/^\(#\|\)KbdInteractiveAuthentication/s/^.*$/KbdInteractiveAuthentica
 sed -i -e '/^\(#\|\)ChallengeResponseAuthentication/s/^.*$/ChallengeResponseAuthentication no/' $SSHD_CONFIG \
  || fatal "check ${SSHD_CONFIG}"
 pass
-disabling "ssh X11 forwarding and agent forwarding"
+notice "disabling ssh X11 forwarding and agent forwarding"
 sed -i -e '/^\(#\|\)X11Forwarding/s/^.*$/X11Forwarding no/' $SSHD_CONFIG \
  || fatal "check ${SSHD_CONFIG}"
 sed -i -e '/^\(#\|\)AllowAgentForwarding/s/^.*$/AllowAgentForwarding no/' $SSHD_CONFIG \
  || fatal "check ${SSHD_CONFIG}"
 pass
-limiting "authentication retries"
+notice "limiting authentication retries"
 sed -i -e '/^\(#\|\)MaxAuthTries/s/^.*$/MaxAuthTries 2/' $SSHD_CONFIG \
  && pass || fatal "check ${SSHD_CONFIG}"
-limiting "naming of authorized_keys files"
+notice "limiting naming of authorized_keys files"
 sed -i -e '/^\(#\|\)AuthorizedKeysFile/s/^.*$/AuthorizedKeysFile .ssh\/authorized_keys/' $SSHD_CONFIG \
  && pass || fatal "check ${SSHD_CONFIG}"
 
 # Only allow root and the non-root user to connect via ssh.
 
-limiting "ssh logins to root and ${NON_ROOT_USER}"
+notice "limiting ssh logins to root and ${NON_ROOT_USER}"
 sed -i -e 's/^AllowUsers/#AllowUsers/' $SSHD_CONFIG \
  || fatal "check ${SSHD_CONFIG}"
 sed -i -e "\$a AllowUsers root ${NON_ROOT_USER}" $SSHD_CONFIG \
@@ -113,7 +113,7 @@ pass
 
 # Restart sshd to pick up the changes.
 
-restarting "sshd"
+notice "restarting sshd"
 systemctl restart sshd && pass || fatal
 
 # Install and configure tailscale.
@@ -129,13 +129,13 @@ fi
 
 if [ -f /etc/default/tailscaled ]
 then
-  copying "backup of Tailscale config"
+  notice "copying backup of Tailscale config"
   cp /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP && pass || fatal
-  adding "extra flags to Tailscale config"
+  notice "adding extra flags to Tailscale config"
   sed -i -e '/^FLAGS=/s/""/"--no-logs-no-support"/' /etc/default/tailscaled && pass || fatal
   if diff /etc/default/tailscaled /etc/default/tailscaled.$TIMESTAMP &>/dev/null
   then
-    restarting "tailscaled"
+    notice "restarting tailscaled"
     systemctl restart tailscaled.service && pass || fail
   fi
 fi
@@ -144,42 +144,42 @@ fi
 
 case $SHELL_ENVIRONMENT in
   debian|ubuntu)
-    installing "ufw"
+    notice "installing ufw"
     apt install -y ufw && pass || fatal
-    enabling "ssh access in ufw"
+    notice "enabling ssh access in ufw"
     ufw allow 22/tcp comment 'allow ssh' && pass || fatal
-    enabling "ufw firewall"
+    notice "enabling ufw firewall"
     ufw --force enable && pass || fatal
 esac
 
 # Configure fail2ban for sshd.
 
-copying "ssh fail2ban jails"
+notice "copying ssh fail2ban jails"
 cp $ETC_DIR/etc/fail2ban/default.local /etc/fail2ban/jail.d/
 cp $ETC_DIR/etc/fail2ban/sshd.local /etc/fail2ban/jail.d/
 pass
 
-enabling "fail2ban"
+notice "enabling fail2ban"
 systemctl enable --now fail2ban && pass || fail
 
 # Create the non-root user if needed.
 
-if ! grep ^$NON_ROOT_USER: /etc/passwd &>/dev/null
+notice "checking if non-root user exists"
+if ! grep -q "^$NON_ROOT_USER:" /etc/passwd || pass
 then
-  adding "user ${NON_ROOT_USER}"
+  fail
+  notice "adding user ${NON_ROOT_USER}"
   useradd -s /bin/bash -U -G $NON_ROOT_ADMIN_GROUPS -m $NON_ROOT_USER && pass || fatal
 fi
 
 # Ensure that sudo access requires a password.
 
-copying "backup of sudoers file"
+notice "taking backup of sudoers file"
 cp /etc/sudoers /etc/sudoers.$TIMESTAMP && pass || fatal
 
-setting "all sudo root actions to require a password"
+notice "securing sudo root actions"
 sed -i -e '/^\(#\|\)\s*\%sudo\s\s*ALL.*ALL$/s/^.*$/\%sudo ALL=(ALL:ALL) ALL/' /etc/sudoers \
- && pass || fatal
-
-setting "all additional sudo rules to require a password"
+ || fatal
 for ITEM in $(ls -1 /etc/sudoers.d/*)
 do
   sed -i -e '/NOPASSWD:/s/NOPASSWD://' $ITEM || fatal $ITEM
@@ -188,18 +188,22 @@ pass
 
 # Check that the user ssh directory and authorized_keys file exist.
 
-configuring "${NON_ROOT_USER} home directory"
-[ ! -d $NON_ROOT_SSH_DIR ] && su -l -c "mkdir -m 0700 $NON_ROOT_SSH_DIR" $NON_ROOT_USER
-[ ! -f $NON_ROOT_AUTHORIZED_KEYS ] && su -l -c "touch $NON_ROOT_AUTHORIZED_KEYS" $NON_ROOT_USER
+notice "configuring ${NON_ROOT_USER} ssh directory"
+if [ ! -d "${NON_ROOT_SSH_DIR}" ]
+then
+  su -l -c "mkdir -m 0700 ${NON_ROOT_SSH_DIR}" "${NON_ROOT_USER}" || fatal
+  [ -f $NON_ROOT_AUTHORIZED_KEYS ] \
+   || su -l -c "touch ${NON_ROOT_AUTHORIZED_KEYS}" "${NON_ROOT_USER}" || fatal
+fi
 pass
 
 # Go through each ssh key and add it to authorized_keys if not present.
 
 while read -r TYPE KEY COMMENT
 do
-  if ! grep "${KEY}" $NON_ROOT_AUTHORIZED_KEYS &>/dev/null
+  if ! grep -q "${KEY}" $NON_ROOT_AUTHORIZED_KEYS
   then
-    adding "'${COMMENT}' authorized key for ${NON_ROOT_USER}"
+    notice "adding '${COMMENT}' authorized key for ${NON_ROOT_USER}"
     echo "${TYPE} ${KEY} ${COMMENT}" >> $NON_ROOT_AUTHORIZED_KEYS && pass || fail
   fi
 done < "${PUBLIC_SSH_KEYS}"
@@ -210,16 +214,16 @@ done < "${PUBLIC_SSH_KEYS}"
 
 if [ ! -d $NON_ROOT_DOTFILES ]
 then
-  copying "dotfiles repo to ${NON_ROOT_USER}'s home directory"
+  notice "copying dotfiles repo to ${NON_ROOT_USER}'s home directory"
   cp -r $BASE_DIR $NON_ROOT_DOTFILES && pass || fail
-  securing "file ownership"
+  notice "securing file ownership"
   chown -R $NON_ROOT_USER:$NON_ROOT_USER $NON_ROOT_DOTFILES && pass || fail
 else
-  updating "dotfiles repo for ${NON_ROOT_USER}"
+  notice "updating dotfiles repo for ${NON_ROOT_USER}"
   su -l -c "git -C $NON_ROOT_DOTFILES pull" $NON_ROOT_USER && pass || fail
 fi
 
-configuring "${NON_ROOT_USER}'s shell"
+notice "configuring ${NON_ROOT_USER}'s shell"
 [ -x $NON_ROOT_DOTFILES/bin/setup ] \
  && su -l -c "$NON_ROOT_DOTFILES/bin/setup shell" $NON_ROOT_USER \
  && pass || fatal "dotfiles setup script failed"
@@ -255,5 +259,5 @@ fi
 
 # Update the non-root user with the correct shell and groups.
 
-adding "${NON_ROOT_USER} to admin groups"
+notice "adding ${NON_ROOT_USER} to admin groups"
 usermod -U -s /bin/bash -aG $NON_ROOT_ADMIN_GROUPS $NON_ROOT_USER && pass || fail

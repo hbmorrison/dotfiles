@@ -12,9 +12,9 @@ setup_needs_sudo
 
 # Update and install required packages.
 
-updating "packages lists"
+notice "updating packages lists"
 $SUDO apt update -y &>/dev/null && pass || fatal
-upgrading "existing packages"
+notice "upgrading existing packages"
 $SUDO apt upgrade -y &>/dev/null && pass || fatal
 notice "upgrading required packages"
 $SUDO apt install -y --no-install-recommends $SHELL_PACKAGES $NETWORK_PACKAGES $GPG_PACKAGES \

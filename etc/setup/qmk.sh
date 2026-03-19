@@ -47,7 +47,7 @@ setup_needs_sudo
 
 [ -f $QMK_INSTALLER ] || fatal "could not find QMK installer script"
 
-installing "QMK"
+notice "installing QMK"
 /bin/sh $QMK_INSTALLER $QMK_INSTALLER_ARGS 2>/dev/null | tee -a $QMK_LOG \
  &>/dev/null && pass || fatal
 
@@ -55,17 +55,17 @@ installing "QMK"
 
 if [ ! -d $QMK_HOME ]
 then
-  cloning "QMK firmware repo"
+  notice "cloning QMK firmware repo"
   /bin/git clone -b $QMK_BRANCH $QMK_URL $QMK_HOME \
    &>/dev/null && pass || fatal
-  setting "official QMK firmware repo as upstream"
+  notice "setting official QMK firmware repo as upstream"
   /bin/git -C $QMK_HOME remote add upstream $QMK_UPSTREAM_URL \
    &>/dev/null && pass || fail
-  updating "QMK firmware repo submodules"
+  notice "updating QMK firmware repo submodules"
   /bin/git -C $QMK_HOME submodule update --init --recursive \
    &>/dev/null && pass || fail
 else
-  updating "QMK firmware repo submodules from remotes"
+  notice "updating QMK firmware repo submodules from remotes"
   /bin/git -C $QMK_HOME submodule update --recursive --remote \
    &>/dev/null && pass || fail
 fi
@@ -74,21 +74,21 @@ fi
 
 if [ ! -d $USERSPACE_HOME ]
 then
-  cloning "QMK userspace repo"
+  notice "cloning QMK userspace repo"
   /bin/git clone -b $USERSPACE_BRANCH $USERSPACE_URL $USERSPACE_HOME \
    &>/dev/null && pass || fail
-  updating "QMK userspace repo submodules"
+  notice "updating QMK userspace repo submodules"
   /bin/git -C $USERSPACE_HOME submodule update --init --remote \
    &>/dev/null && pass || fail
 else
-  updating "QMK userspace repo submodules from remotes"
+  notice "updating QMK userspace repo submodules from remotes"
   /bin/git -C $USERSPACE_HOME submodule update --remote \
    &>/dev/null && pass || fail
 fi
 
 # Setup QMK.
 
-configuring "QMK"
+notice "configuring QMK"
 /bin/expect -f "${ETC_DIR}/qmk/qmk_setup.exp" ${QMK_HOME} ${SSH_BASE} ${QMK_BRANCH} ${QMK_REPO} \
  | tee -a $QMK_LOG &>/dev/null && pass || fail
 

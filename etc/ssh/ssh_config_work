@@ -1,7 +1,6 @@
 Host github.com
   User git
   ProxyCommand none
-  IdentityFile ~/.ssh/1password_work_vault_github.com.pub
 Host gitlab.is.ed.ac.uk
   User git
   ProxyCommand none

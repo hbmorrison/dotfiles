@@ -4,23 +4,33 @@
 
 set -o pipefail
 
-# Look up default username for a given host.
+# Work out the hostname and username for a given title.
 
-lookup_user () {
-  local host="${1}"
-  [ -z ${host:+z} ] && fatal "host not specified in default_user() function"
-  case "${host}" in
+get_host_from_title () {
+  [ -z ${1:+z} ] && fatal "no title given"
+  local title="${1}"
+  [ -z ${title/*@*} ] && echo "${title/@*}" && return
+  case "${title}" in
     *github*) ;&
-    *gitlab*) echo "git" ;;
-    *)        echo "${SETUP_USER}"
+    *gitlab*) echo "git" && return ;;
+    *)
+      [ -z ${SETUP_USER:+z} ] && fatal "SETUP_USER not defined"
   esac
+  echo "${SETUP_USER}"
 }
 
-# Get the name of the profile being set up.
+get_user_from_title () {
+  [ -z ${1:+z} ] &&  fatal "no title given"
+  local title="${1}"
+  local host="${title/*@}"
+  [ -z ${host/*\.*} ] && echo "${host}" && return
+  [ -z ${SETUP_DOMAIN:+z} ] && fatal "SETUP_DOMAIN not defined"
+  echo "${host}.${SETUP_DOMAIN}"
+}
 
-setting "profile"
-PROFILE="${1:-${SETUP_PROFILE}}"
-[ ! -z ${PROFILE:+z} ] && pass || fatal "no profile specified and no SETUP_PROFILE defined"
+# Get the name of the profile to use.
+
+PROFILE=$(get_profile "${1}")
 
 # SSH configuration.
 
@@ -40,23 +50,23 @@ OP_GET_OPTS="--vault ${OP_VAULT}"
 
 # Only proceed if 1Password CLI is available.
 
-checking "whether 1Password CLI is available"
-op --version &>/dev/null && respond_yes || fatal
+notice "checking whether 1Password CLI is available"
+op --version &>/dev/null && pass || fatal
 
 # Copy the standard SSH config from this repo to start with.
 
-copying "standard ssh config"
+notice "copying standard ssh config"
 cp -f "${BASE_DIR}/ssh/config" "${HOME}/.ssh/config" &>/dev/null && pass || fail
 
 # 1Password configuration in WSL.
 
-copying "${PROFILE} 1Password agent config"
+notice "copying ${PROFILE} 1Password agent config"
 [ -f "${OP_CONFIG}" ] || fatal "${OP_CONFIG/$BASE_DIR\/} missing"
 cp -f "${OP_CONFIG}" "${OP_AGENT_CONFIG_DIR}/agent.toml" &>/dev/null && pass || fail
 
 # Get a list of SSH Key item IDs from 1Password CLI.
 
-getting "list of SSH keys from 1Password CLI"
+notice "getting list of SSH keys from 1Password CLI"
 mapfile -t SSH_KEY_IDS < <(
   op item list $OP_LIST_OPTS --format json 2>/dev/null \
    | jq -r '.[] .id' 2>/dev/null
@@ -72,7 +82,7 @@ then
 
     # Get the title and public key of this item.
 
-    getting "item details"
+    notice "getting item details"
     JSON=$(
      op item get $OP_GET_OPTS "${ID}" --format json 2>/dev/null \
      | jq ". | {uh: .title, key: .fields[] | select(.id==\"public_key\") .value}" 2>/dev/null
@@ -98,33 +108,18 @@ then
       FQDN="${HOST}.${SETUP_DOMAIN}"
       SHORT="${HOST}"
     fi
-    PUBKEY="${USER_SSH_DIR}/${FQDN}.pub"
 
     # Create an entry for the identity in the SSH config.
 
-    adding "${SHORT} to SSH config"
-    echo "Host ${SHORT} ${FQDN}"                          >> "${USER_SSH_DIR}/config" \
-     && echo "  User ${USERNAME}"                         >> "${USER_SSH_DIR}/config" \
-     && echo "  IdentityFile ${USER_SSH_DIR}/${FQDN}.pub" >> "${USER_SSH_DIR}/config" \
-     && pass || fail
-
-    # Add the host key to known_hosts.
-
-    adding "${FQDN} server keys to known_hosts"
-    ssh-keyscan "${FQDN}" >> "${USER_SSH_DIR}/known_hosts" \
-     2>/dev/null && pass || fail
-
-    # Finally, extract the public key and create the public key file.
-
-    creating "SSH public key file for ${FQDN}"
-    echo $JSON | jq -r '.key' 2>/dev/null | tee "${PUBKEY}" &>/dev/null \
-     && chmod 0600 "${PUBKEY}" &>/dev/null \
+    notice "adding ${SHORT} to SSH config"
+    echo "Host ${SHORT} ${FQDN}"         >> "${USER_SSH_DIR}/config" \
+     && echo "  User ${USERNAME}"        >> "${USER_SSH_DIR}/config" \
      && pass || fail
   done
 fi
 
 # Add SSH configuration for the profile to the end.
 
-adding "${PROFILE} profile ssh config"
+notice "adding ${PROFILE} profile ssh config"
 [ -f "${SSH_CONFIG}" ] || fatal "${SSH_CONFIG/$BASE_DIR\/} missing"
 cat "${SSH_CONFIG}" >> "${USER_SSH_DIR}/config" 2>/dev/null && pass || fail

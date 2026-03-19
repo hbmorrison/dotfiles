@@ -4,12 +4,12 @@ SECURE_DIRECTORIES=".config .gnupg .ssh"
 
 # Update dotfiles repo.
 
-#pulling latest version of dotfiles repo
+#notice "pulling latest version of dotfiles repo"
 #git -C $BASE_DIR pull &>/dev/null && pass || fail
 
 # Create any directories that are needed.
 
-creating directories
+notice "creating directories"
 for DIR in $(cd $BASE_DIR; find . -type d -not -path "."  | sed  's#^./##')
 do
   case $DIR in
@@ -24,7 +24,8 @@ do
     # Create other directories under the home directory.
 
     *)
-      [ -d "${HOME}/.${DIR}" ] || mkdir "${HOME}/.${DIR}" &>/dev/null || fail "${HOME}/.${DIR}"
+      [ -d "${HOME}/.${DIR}" ] || mkdir "${HOME}/.${DIR}" &>/dev/null \
+       || fatal "could not create directory ${HOME}/.${DIR}"
       ;;
   esac
 done
@@ -32,16 +33,17 @@ pass
 
 # Make sure sensitive directories are secure.
 
-securing sensitive directories
+notice "securing sensitive directories"
 for DIR in $SECURE_DIRECTORIES
 do
-  chmod go-rwx "${HOME}/${DIR}" &>/dev/null || fail "${HOME}/${DIR}"
+  chmod go-rwx "${HOME}/${DIR}" &>/dev/null \
+   || fatal "could not secure ${HOME}/${DIR}"
 done
 pass
 
 # Copy the dotfiles.
 
-copying files
+notice "copying files"
 for ITEM in $(cd $BASE_DIR; find . -type f  | sed  's#^./##')
 do
   case $ITEM in
@@ -56,7 +58,8 @@ do
     # Copy everything else.
 
     *)
-      cp $BASE_DIR/$ITEM "$HOME/.${ITEM}" &>/dev/null || fail "${HOME}/.${ITEM}"
+      cp $BASE_DIR/$ITEM "$HOME/.${ITEM}" &>/dev/null \
+       || fatal "could not copy ${HOME}/.${ITEM}"
   esac
 done
 pass

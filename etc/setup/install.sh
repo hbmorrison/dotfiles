@@ -9,22 +9,19 @@ APT_ARCH=$(dpkg --print-architecture)
 INSTALL_ENV=$1
 shift
 
-# Check that the environment file exists.
+# Print a usage message listing all available installs if the install
+# environment file does not exist.
 
 ENV_FILE="${ETC_DIR}/install/${INSTALL_ENV}.env"
 if [ ! -f $ENV_FILE ]
 then
-
-  # Print a usage message listing all available install environments.
-
   AVAILABLE_ENVS="("
   for FILE in $ETC_DIR/install/*.env
   do
     NAME=$(basename -s .env $FILE | sed 's/^install_//')
     AVAILABLE_ENVS+="${NAME}|"
   done
-  echo "Usage: setup ${SCRIPT} ${AVAILABLE_ENVS/%|/)}"
-  exit 1
+  usage "${AVAILABLE_ENVS/%|/)}"
 fi
 
 # Source the environment file.
@@ -55,9 +52,9 @@ setup_needs_sudo
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-  updating "package lists"
+  notice "updating package lists"
   $SUDO apt update -y &>/dev/null && pass || fatal
-  installing "dependencies"
+  notice "installing dependencies"
   $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null && pass || fatal
 fi
 
@@ -65,7 +62,7 @@ fi
 
 if [ ! -f $KEYRING ]
 then
-  installing "GPG keyring"
+  notice "installing GPG keyring"
   curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${KEYRING}" \
    &>/dev/null && pass || fatal
 fi
@@ -86,11 +83,11 @@ then
 
   # Install the policy and policy keyring.
 
-  installing "debsig policy"
+  notice "installing debsig policy"
   [ -f "${DEBSIG_POLICY}" ] \
    || curl -fsSL ${DEBSIG_POLICY_URL} | $SUDO tee "${DEBSIG_POLICY}" \
    &>/dev/null && pass || fatal
-  installing "debsig policy keyring"
+  notice "installing debsig policy keyring"
   [ -f "${DEBSIG_KEYRING}" ] \
    || curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${DEBSIG_KEYRING}" \
    &>/dev/null && pass || fatal
@@ -101,9 +98,9 @@ fi
 echo "${APT_SOURCE_CONTENT}" > $TMP_SOURCE
 if ! diff $TMP_SOURCE $APT_SOURCE &>/dev/null
 then
-  installing "apt source list"
+  notice "installing apt source list"
   cat $TMP_SOURCE | $SUDO tee $APT_SOURCE &>/dev/null && pass || fatal
-  updating "package lists"
+  notice "updating package lists"
   $SUDO apt update -y &>/dev/null && pass || fatal
 fi
 
@@ -111,10 +108,7 @@ fi
 
 if [ ! -f $BINARY ]
 then
-  installing "packages"
-  echo $SUDO apt install --no-install-recommends -y $PACKAGES
-  $SUDO apt install --no-install-recommends -y $PACKAGES
-  exit
+  notice "installing packages"
   $SUDO apt install --no-install-recommends -y $PACKAGES &>/dev/null || fatal
   [ -f $BINARY ] && pass || fatal "$BINARY not found after install"
 fi
@@ -129,7 +123,7 @@ if [ ! -z ${SERVICE:+z} ]
 then
   if ! systemctl status $SERVICE &>/dev/null
   then
-    starting "${SERVICE} and enabling at boot"
+    notice "starting ${SERVICE} and enabling at boot"
     $SUDO systemctl enable --now $SERVICE &>/dev/null && pass || fatal
   fi
 fi
@@ -142,7 +136,7 @@ then
   then
     if ! groups "${USER:-$USERNAME}" | grep " ${ADDITIONAL_GROUP}" &>/dev/null
     then
-      adding "user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
+      notice "adding user ${USER:-$USERNAME} to ${ADDITIONAL_GROUP} group"
       $SUDO usermod -aG $ADDITIONAL_GROUP "${USER:-$USERNAME}" &>/dev/null && pass || fatal
     fi
   fi

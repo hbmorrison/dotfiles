@@ -14,12 +14,11 @@ ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 
 for PACKAGE in "${WINGET_PACKAGES[@]}"
 do
-  checking "whether ${PACKAGE,,} is installed"
-  if winget.exe list --query "${PACKAGE}" &>/dev/null || respond_no
+  notice "checking whether ${PACKAGE,,} is installed"
+  if ! winget.exe list --query "${PACKAGE}" &>/dev/null || pass
   then
-    respond_yes
-  else
-    installing "${PACKAGE,,}"
+    fail
+    notice "installing ${PACKAGE,,}"
     winget.exe install ${WINGET_INSTALL_ARGS} --id "${PACKAGE}" \
      &>/dev/null && pass || fail
   fi
@@ -33,7 +32,7 @@ do
   do
     EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
-    creating "symlink to ${EXE_NAME} in local bin directory"
+    notice "creating symlink to ${EXE_NAME} in local bin directory"
     [ -L "${SYMLINK_PATH}" ] && rm -f "${SYMLINK_PATH}" \
      &>/dev/null || fatal "could not remove existing symlink ${SYMLINK_PATH}"
     ln -s "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
@@ -42,38 +41,37 @@ done
 
 # Check that the Windows user profile directory is correct.
 
-checking "whether user profile directory exists"
-[ -d "${USER_PROFILE}" ] && respond_yes || fatal "could not find ${USER_PROFILE}"
+notice "checking whether user profile directory exists"
+[ -d "${USER_PROFILE}" ] && pass || fatal "could not find ${USER_PROFILE}"
 
 # Add the user profile directories and PC directories together.
 
 declare -a SOURCE_DIRS
 for DIR in "${SYMLINK_PC_DIRS[@]}"
 do
-  checking "whether ${DIR} exists"
-  [ -d "${DIR/#C:/\/mnt\/c}" ] && SOURCE_DIRS+=( "${DIR/#C:/\/mnt\/c}" ) \
-   && respond_yes || respond_no
+  notice "checking whether ${DIR} exists"
+  [ -d "${DIR/#C:/\/mnt\/c}" ] && SOURCE_DIRS+=( "${DIR/#C:/\/mnt\/c}" ) && pass || fail
 done
 for DIR in "${SYMLINK_PROFILE_DIRS[@]}"
 do
-  checking "whether ${USER_PROFILE/#\/mnt\/c/C:}/${DIR} exists"
-  [ -d "${USER_PROFILE}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE}/${DIR}" ) \
-   && respond_yes || respond_no
+  notice "checking whether ${USER_PROFILE/#\/mnt\/c/C:}/${DIR} exists"
+  [ -d "${USER_PROFILE}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE}/${DIR}" ) && pass || fail
 done
 
 # Add OneDrive and any Onedrive directories.
 
-checking "whether OneDrive is available"
+notice "checking whether OneDrive is available"
 ONEDRIVE_DIR=$(/bin/ls -1d "${USER_PROFILE}/OneDrive"* 2>/dev/null | tail -1)
-if [ -d "${ONEDRIVE_DIR}" ] && respond_yes || respond_no
+if [ -d "${ONEDRIVE_DIR}" ] || fail
 then
+  pass
   SOURCE_DIRS+=( "${ONEDRIVE_DIR}" )
   for DIR in "${ONEDRIVE_DIRS[@]}"
   do
     ONEDRIVE_DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
-    checking "whether OneDrive $DIR directory exists"
+    notice "checking whether OneDrive $DIR directory exists"
     [ -d "${ONEDRIVE_DIR}/${DIR}" ] && SOURCE_DIRS+=( "${ONEDRIVE_DIR}/${DIR}" ) \
-     && respond_yes || respond_no
+     && pass || fail
   done
 fi
 
@@ -84,7 +82,7 @@ do
   DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
   SYMLINK_NAME="${DIR_NAME/_-_*}"
   SYMLINK_PATH="${HOME}/${SYMLINK_NAME,,}"
-  creating "symlink ${SYMLINK_NAME,,} in home directory"
+  notice "creating symlink ${SYMLINK_NAME,,} in home directory"
   [ -L "${SYMLINK_PATH}" ] && rm -f "${SYMLINK_PATH}" &>/dev/null
   ln -s "${DIR}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
 done
@@ -97,13 +95,13 @@ setup_needs_sudo
 
 if [ ! -x /usr/sbin/hwclock ]
 then
-  installing "hwclock"
+  notice "installing hwclock"
   $SUDO apt update -y &>/dev/null \
    && $SUDO apt install -y --no-install-recommends util-linux-extra &>/dev/null \
    && pass || fail
 fi
 
-setting "system clock from the hardware clock"
+notice "setting system clock from the hardware clock"
 $SUDO hwclock -s &>/dev/null && pass || fail
 
 # Run the debian setup script.

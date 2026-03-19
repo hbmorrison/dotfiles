@@ -8,7 +8,7 @@ setup_needs_sudo
 
 # Fix search domains.
 
-adding "search domains to resolv.conf"
+notice "adding search domains to resolv.conf"
 $SUDO sed -i.orig -e "/domain-name/s/^\\(#\\|\\)\\(supersede\\|prepend\\) domain-name .*$/prepend domain-name \"${SEARCH_DOMAINS} \";/" /etc/dhcp/dhclient.conf \
  && pass || fail
 
@@ -21,7 +21,7 @@ then
       sudo -v || fatal "could not authenticate with sudo"
     fi
   fi
-  restarting "networking"
+  notice "restarting networking"
   $SUDO systemctl restart networking &>/dev/null && pass || fail
 fi
 
