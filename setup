@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Defaults for configuring SSH and 1Password.
-
-DEFAULT_PROFILE="homelab"
-DEFAULT_USER="hmorris"
-DEFAULT_DOMAIN="is.ed.ac.uk"
-
 # Windows directories in WSL.
 
 USER_PROFILE="/mnt/c/Users/${USER}"
