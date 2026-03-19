@@ -121,7 +121,7 @@ systemctl restart sshd && pass || fatal
 systemctl status tailscaled.service &>/dev/null
 if [ $? -eq 4 ]
 then
-  source $BIN_DIR/setup_install.sh tailscale
+  setup install tailscale
   tailscale set $TAILSCALE_ARGS
 fi
 
@@ -155,8 +155,8 @@ esac
 # Configure fail2ban for sshd.
 
 copying "ssh fail2ban jails"
-cp $BASE_DIR/etc/jail.d/default.local /etc/fail2ban/jail.d/
-cp $BASE_DIR/etc/jail.d/sshd.local /etc/fail2ban/jail.d/
+cp $ETC_DIR/etc/fail2ban/default.local /etc/fail2ban/jail.d/
+cp $ETC_DIR/etc/fail2ban/sshd.local /etc/fail2ban/jail.d/
 pass
 
 enabling "fail2ban"

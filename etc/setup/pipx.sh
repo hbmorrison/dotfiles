@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Get the name of the pipx environment file to run.
 
 INSTALL_ENV=$1
@@ -5,20 +7,19 @@ shift
 
 # Check that the environment file exists.
 
-ENV_FILE="${ETC_DIR}/pipx_${INSTALL_ENV}.env"
+ENV_FILE="${ETC_DIR}/pipx/${INSTALL_ENV}.env"
 if [ ! -f $ENV_FILE ]
 then
 
   # Print a usage message listing all available pipx environments.
 
   AVAILABLE_ENVS="("
-  for FILE in $ETC_DIR/pipx_*.env
+  for FILE in $ETC_DIR/pipx/*.env
   do
     NAME=$(basename -s .env $FILE | sed 's/^pipx_//')
     AVAILABLE_ENVS+="${NAME}|"
   done
-  ARGS=$(echo $AVAILABLE_ENVS | sed 's/|$/)/')
-  usage "${SCRIPT} ${ARGS}"
+  usage "${SCRIPT} ${AVAILABLE_ENVS/%|/)}"
   exit 1
 fi
 
@@ -32,13 +33,7 @@ source ${ENV_FILE} "$@"
 
 # Make sure sudo has valid credentials before starting.
 
-if [ ! -z ${SUDO} ]
-then
-  if ! sudo -n /bin/true 2>/dev/null
-  then
-    sudo -v || fatal "could not authenticate with sudo"
-  fi
-fi
+setup_needs_sudo
 
 # Install dependencies.
 

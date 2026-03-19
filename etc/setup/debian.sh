@@ -8,13 +8,7 @@ GPG_PACKAGES="gpg pinentry-tty scdaemon"
 
 # Make sure sudo has valid credentials before starting.
 
-if [ ! -z ${SUDO} ]
-then
-  if ! sudo -n /bin/true 2>/dev/null
-  then
-    sudo -v || fatal "could not authenticate with sudo"
-  fi
-fi
+setup_needs_sudo
 
 # Update and install required packages.
 
@@ -28,4 +22,4 @@ $SUDO apt install -y --no-install-recommends $SHELL_PACKAGES $NETWORK_PACKAGES $
 
 # Set up the dotfiles.
 
-source $BIN_DIR/setup_shell.sh
+setup shell "$@"

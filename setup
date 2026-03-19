@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Defaults for configuring SSH and 1Password.
+
+DEFAULT_PROFILE="homelab"
+DEFAULT_USER="hmorris"
+DEFAULT_DOMAIN="is.ed.ac.uk"
+
+# Windows directories in WSL.
+
+USER_PROFILE="/mnt/c/Users/${USER}"
+APPDATA_LOCAL="${USER_PROFILE}/AppData/Local"
+
+# Source OS release variables.
+
+if [ -f /etc/os-release ]
+then
+  source /etc/os-release
+  OS=$ID
+fi
+
+# Deal with special cases.
+
+case $(/bin/cat /proc/version 2>/dev/null) in
+  *Chromium\ OS*)            OS="chromeos";;
+  *microsoft-standard-WSL2*) OS="wsl";;
+esac
+
+# Locate the base directory of the repository.
+
+THIS_SCRIPT=$(readlink -f $0)
+BASE_DIR=$(dirname $THIS_SCRIPT)
+ETC_DIR="${BASE_DIR}/etc"
+SCRIPT_DIR="${BASE_DIR}/etc/setup"
+LOCAL_DIR="${HOME}/.local"
+LOCAL_BIN="${LOCAL_DIR}/bin"
+
+# Pretty feedback notices.
+
+source "${ETC_DIR}/notice.env"
+
+# Check that symlink is set up.
+
+if [ ! -d $LOCAL_BIN ]
+then
+  mkdir -p $LOCAL_BIN
+fi
+
+if [ -L $LOCAL_BIN/setup ]
+then
+  rm -f $LOCAL_BIN/setup
+fi
+ln -s $BASE_DIR/setup $LOCAL_BIN/setup
+
+# Work out whether to run commands using sudo.
+
+SUDO=sudo
+if [ $(id -u) -eq 0 ]
+then
+  SUDO=""
+  setup_needs_sudo () {
+    checking "that sudo credentials are valid"
+    respond_yes
+  }
+else
+  setup_needs_sudo () {
+    checking "that sudo credentials are valid"
+    if [ ! -z ${SUDO} ]
+    then
+      if sudo -n /bin/true 2>/dev/null
+      then
+        respond_yes
+      else
+        respond_no
+        sudo -v
+        checking "sudo credentials again"
+        sudo -n /bin/true 2>/dev/null && respond_yes || fatal "could not authenticate with sudo"
+      fi
+    fi
+  }
+fi
+
+# Get the name of the setup script from the command line.
+
+SCRIPT=""
+if [ ! -z ${1:+z} ]
+then
+  SCRIPT="${1}"
+  shift
+fi
+
+# Work out the path to the setup script.
+
+SCRIPT_FILE="${SCRIPT_DIR}/${SCRIPT}.sh"
+if [ ! -f $SCRIPT_FILE ]
+then
+
+  # Print a usage message listing all available setup scripts.
+
+  AVAILABLE_SCRIPTS="("
+  for FILE in "${SCRIPT_DIR}/"*
+  do
+    NAME=$(basename -s .sh $FILE)
+    AVAILABLE_SCRIPTS+="${NAME}|"
+  done
+  usage "${AVAILABLE_SCRIPTS/%|/)}"
+fi
+
+# Function to call setup scripts from other setup scripts.
+
+setup () {
+  local script="${1}"
+  shift
+  if [ -f "${SCRIPT_DIR}/${script}.sh" ]
+  then
+    source "${SCRIPT_DIR}/${script}.sh" "$@"
+  fi
+}
+
+# Run the setup script.
+
+setup "${SCRIPT}" "$@"

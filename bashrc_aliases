@@ -211,6 +211,25 @@ fi
 alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --password"
 alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --file"
 
+# Look up OTP in 1Password.
+
+function otp {
+  local item="${1}"; shift
+  local cmd="${1}"; shift
+  if [ -z ${item:+z} ] || [ -z ${cmd:+z} ]
+  then
+    echo "Usage: $FUNCNAME <ITEM> <COMMAND> [ARGUMENT]..."
+    return
+  fi
+  if [ ! -z ${OTP_VAULT:+z} ]
+  then
+    op item get --vault "${OTP_VAULT}" "${item}" --otp | clip.exe
+  else
+    op item get "${item}" --otp | clip.exe
+  fi
+  command $cmd "$@"
+}
+
 # QMK aliases.
 
 alias qc2040="qmk compile -e CONVERT_TO=rp2040_ce"

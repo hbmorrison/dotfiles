@@ -108,6 +108,11 @@ then
   source $HOME/.bashrc_aliases
 fi
 
+if [ -r "${HOME}/.bashrc_local" ]
+then
+  source $HOME/.bashrc_local
+fi
+
 if [ -r "${HOME}/.bashrc_wsltools" ]
 then
   source $HOME/.bashrc_wsltools

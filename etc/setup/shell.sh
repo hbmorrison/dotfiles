@@ -4,8 +4,8 @@ SECURE_DIRECTORIES=".config .gnupg .ssh"
 
 # Update dotfiles repo.
 
-pulling latest version of dotfiles repo
-git -C $BASE_DIR pull &>/dev/null && pass || fail
+#pulling latest version of dotfiles repo
+#git -C $BASE_DIR pull &>/dev/null && pass || fail
 
 # Create any directories that are needed.
 
@@ -14,18 +14,10 @@ for DIR in $(cd $BASE_DIR; find . -type d -not -path "."  | sed  's#^./##')
 do
   case $DIR in
 
-    # Ignore the git and vim directories.
+    # Ignore internal directories.
 
     \.git) ;;
     \.git/*) ;;
-    \.vim) ;;
-    \.vim/*) ;;
-
-    # Ignore scripts and special cases directories.
-
-    bin) ;;
-    bin/*) ;;
-
     etc) ;;
     etc/*) ;;
 
@@ -54,18 +46,11 @@ for ITEM in $(cd $BASE_DIR; find . -type f  | sed  's#^./##')
 do
   case $ITEM in
 
-    # Ignore repo files.
+    # Ignore internal files.
 
+    setup) ;;
     \.git/*) ;;
     \.git*) ;;
-
-    # Ignore the vimrc file.
-
-    vimrc) ;;
-
-    # Ignore scripts and files that are special cases.
-
-    bin/*) ;;
     etc/*) ;;
 
     # Copy everything else.
@@ -82,5 +67,5 @@ sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini" &>/dev/null
 
 # Configure Vim and Git.
 
-source $BIN_DIR/setup_vim.sh
-source $BIN_DIR/setup_gitconfig.sh
+setup vim "$@"
+setup git "$@"

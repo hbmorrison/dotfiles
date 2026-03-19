@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Configuration.
+
+USER_PROFILE="/mnt/c/Users/${USER}"
+SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+LOCAL_SOCKET="UNIX-LISTEN:${SSH_AUTH_SOCK}"
+WINDOWS_SOCKET="EXEC:\"npiperelay -ei -s //./pipe/openssh-ssh-agent\""
+
+# Set up the agent environment.
+
+echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" > "${HOME}/.ssh/agent.env"
+
+# Launch the pipe relay if it is not already running.
+
+(
+  set -eu
+  npiperelay=(socat "${LOCAL_SOCKET},fork" "${WINDOWS_SOCKET},nofork")
+  if ! pgrep --full --exact --uid=${UID} "${npiperelay[*]}" &>/dev/null
+  then
+    rm -f "${SSH_AUTH_SOCK}" &>/dev/null
+    (setsid "${npiperelay[@]}" &) &>/dev/null
+  fi
+)

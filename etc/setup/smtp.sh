@@ -15,13 +15,7 @@ SENDER_DOMAIN=$(echo $SENDER_ADDR | cut -d@ -f2)
 
 # Make sure sudo has valid credentials before starting.
 
-if [ ! -z ${SUDO} ]
-then
-  if ! sudo -n /bin/true 2>/dev/null
-  then
-    sudo -v || fatal "could not authenticate with sudo"
-  fi
-fi
+setup_needs_sudo
 
 # Update package lists.
 
@@ -72,7 +66,7 @@ alias_database = \$alias_maps
 myorigin = $SENDER_DOMAIN" >> /etc/postfix/main.cf
 mydestination = $SENDER_DOMAIN, \$myhostname, localhost.\$mydomain, localhost
 MAIN_CF
-cat $ETC_DIR/main.cf >> /etc/postfix.main.cf
+cat $ETC_DIR/smtp/main.cf >> /etc/postfix.main.cf
 
 # Create SASL password file and canonical sender file.
 

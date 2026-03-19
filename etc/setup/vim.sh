@@ -9,7 +9,7 @@ VIM_DIR="${HOME}/.vim"
 # Do not change the branch if the dotfiles branch is a git flow branch.
 
 case $DOTFILES_BRANCH in
-  feature-*) ;&
+  feature-*) DOTFILES_BRANCH="develop" ;;
   bugfix-*)  ;&
   release-*) ;&
   hotfix-*)  ;&
@@ -45,7 +45,7 @@ then
       [ $DOTFILES_BRANCH != "main" ] \
        && updating "vim directory branch to main" \
        && git -C $VIM_DIR checkout main \
-        &>/dev/null && pass || fatal "run git -C $VIM_DIR checkout main"
+        &>/dev/null && pass || fail "run git -C $VIM_DIR checkout main"
     fi
   fi
 else
@@ -63,7 +63,7 @@ else
 
     cloning "the default branch of the vim directory"
     git clone $DOTVIM_ORIGIN_URL $VIM_DIR \
-     &>/dev/null && pass || fatal "run git clone $DOTVIM_ORIGIN_URL $VIM_DIR"
+     &>/dev/null && pass || fail "run git clone $DOTVIM_ORIGIN_URL $VIM_DIR"
   fi
 fi
 

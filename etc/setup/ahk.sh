@@ -11,7 +11,7 @@ AUTO_HOTKEY="${PROGRAM_DATA_DIR}/chocolatey/bin/AutoHotKey.exe"
 
 # Make sure that chocolatey is installed.
 
-source $BIN_DIR/setup_choco.sh
+setup choco
 
 # Install autohotkey.
 
@@ -40,7 +40,7 @@ pass
 
 # Copy the AutoHotKey scripts.
 
-for SCRIPT_PATH in $(ls -1 ${ETC_DIR}/*.ahk)
+for SCRIPT_PATH in $(ls -1 ${ETC_DIR}/ahk/*.ahk)
 do
   AUTO_HOTKEY_SCRIPT=$(basename $SCRIPT_PATH .ahk)
   if [ ! -r "${STARTUP_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk" ]
@@ -49,7 +49,7 @@ do
   else
     notice "updating ${AUTO_HOTKEY_SCRIPT} AutoHotKey script"
   fi
-  cp -f "${ETC_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk" "${STARTUP_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk"
+  cp -f "${SCRIPT_PATH}" "${STARTUP_DIR}/${AUTO_HOTKEY_SCRIPT}.ahk"
   pass
 
   # Start AHK running each script after is is copied.

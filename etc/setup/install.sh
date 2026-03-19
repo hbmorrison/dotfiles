@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Configuration.
 
 APT_ARCH=$(dpkg --print-architecture)
@@ -9,20 +11,19 @@ shift
 
 # Check that the environment file exists.
 
-ENV_FILE="${ETC_DIR}/install_${INSTALL_ENV}.env"
+ENV_FILE="${ETC_DIR}/install/${INSTALL_ENV}.env"
 if [ ! -f $ENV_FILE ]
 then
 
   # Print a usage message listing all available install environments.
 
   AVAILABLE_ENVS="("
-  for FILE in $ETC_DIR/install_*.env
+  for FILE in $ETC_DIR/install/*.env
   do
     NAME=$(basename -s .env $FILE | sed 's/^install_//')
     AVAILABLE_ENVS+="${NAME}|"
   done
-  ARGS=$(echo $AVAILABLE_ENVS | sed 's/|$/)/')
-  echo "Usage: setup ${SCRIPT} ${ARGS}"
+  echo "Usage: setup ${SCRIPT} ${AVAILABLE_ENVS/%|/)}"
   exit 1
 fi
 
@@ -48,19 +49,13 @@ TMP_SOURCE=$(mktemp)
 
 # Make sure sudo has valid credentials before starting.
 
-if [ ! -z ${SUDO} ]
-then
-  if ! sudo -n /bin/true 2>/dev/null
-  then
-    sudo -v || fatal "could not authenticate with sudo"
-  fi
-fi
+setup_needs_sudo
 
 # Install dependencies.
 
 if [ ! -z ${DEPENDENCIES:+z} ]
 then
-  installing "package lists"
+  updating "package lists"
   $SUDO apt update -y &>/dev/null && pass || fatal
   installing "dependencies"
   $SUDO apt install --no-install-recommends -y $DEPENDENCIES &>/dev/null && pass || fatal
@@ -92,10 +87,12 @@ then
   # Install the policy and policy keyring.
 
   installing "debsig policy"
-  curl -fsSL ${DEBSIG_POLICY_URL} | $SUDO tee "${DEBSIG_POLICY}" \
+  [ -f "${DEBSIG_POLICY}" ] \
+   || curl -fsSL ${DEBSIG_POLICY_URL} | $SUDO tee "${DEBSIG_POLICY}" \
    &>/dev/null && pass || fatal
   installing "debsig policy keyring"
-  curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${DEBSIG_KEYRING}" \
+  [ -f "${DEBSIG_KEYRING}" ] \
+   || curl -fsSL "${KEYRING_URL}" | $SUDO gpg --dearmor -o "${DEBSIG_KEYRING}" \
    &>/dev/null && pass || fatal
 fi
 
@@ -115,6 +112,9 @@ fi
 if [ ! -f $BINARY ]
 then
   installing "packages"
+  echo $SUDO apt install --no-install-recommends -y $PACKAGES
+  $SUDO apt install --no-install-recommends -y $PACKAGES
+  exit
   $SUDO apt install --no-install-recommends -y $PACKAGES &>/dev/null || fatal
   [ -f $BINARY ] && pass || fatal "$BINARY not found after install"
 fi

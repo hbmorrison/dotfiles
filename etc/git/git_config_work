@@ -1,0 +1,11 @@
+[user]
+	name = Hannah Morrison
+	email = hannah.morrison@ed.ac.uk
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDTncmBgMElokc+w0910ZdGGE7cmytZoAcXfO3eKNiUR
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = "/mnt/c/Users/hmorris/AppData/Local/Microsoft/WindowsApps/op-ssh-sign-wsl.exe"
+[commit]
+	gpgsign = true
+

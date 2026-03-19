@@ -12,7 +12,7 @@ USERSPACE_BRANCH="develop"
 
 # Installer configuration.
 
-QMK_INSTALLER="${ETC_DIR}/qmk_installer_20260312.sh"
+QMK_INSTALLER="${ETC_DIR}/qmk/qmk_installer_20260312.sh"
 QMK_INSTALLER_ARGS="--skip-udev-rules"
 QMK_LOG=$(mktemp -q --suffix=.log)
 
@@ -26,8 +26,6 @@ USERSPACE_URL="${SSH_BASE}${USERSPACE_REPO}.git"
 
 # Directory configuration.
 
-LOCAL_DIR="${HOME}/.local"
-LOCAL_BIN_DIR="${LOCAL_DIR}/bin"
 QMK_HOME="${LOCAL_DIR}/share/qmk_firmware"
 QMK_DIR=$(dirname $QMK_HOME)
 PROJECT_DIR="${HOME}/projects"
@@ -43,13 +41,7 @@ USERSPACE_DIR=$(dirname $USERSPACE_HOME)
 
 # Make sure sudo has valid credentials before starting.
 
-if [ ! -z ${SUDO} ]
-then
-  if ! sudo -n /bin/true 2>/dev/null
-  then
-    sudo -v || fatal "could not authenticate with sudo"
-  fi
-fi
+setup_needs_sudo
 
 # Install QMK.
 
@@ -97,7 +89,7 @@ fi
 # Setup QMK.
 
 configuring "QMK"
-/bin/expect -f "${ETC_DIR}/qmk_setup.exp" ${QMK_HOME} ${SSH_BASE} ${QMK_BRANCH} ${QMK_REPO} \
+/bin/expect -f "${ETC_DIR}/qmk/qmk_setup.exp" ${QMK_HOME} ${SSH_BASE} ${QMK_BRANCH} ${QMK_REPO} \
  | tee -a $QMK_LOG &>/dev/null && pass || fail
 
 # Mention the QMK output log.

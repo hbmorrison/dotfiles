@@ -2,12 +2,15 @@
 
 SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
 
+# Verify sudo credentials.
+
+setup_needs_sudo
+
 # Fix search domains.
 
 adding "search domains to resolv.conf"
 $SUDO sed -i.orig -e "/domain-name/s/^\\(#\\|\\)\\(supersede\\|prepend\\) domain-name .*$/prepend domain-name \"${SEARCH_DOMAINS} \";/" /etc/dhcp/dhclient.conf \
  && pass || fail
-
 
 if ! diff /etc/dhcp/dhclient.conf /etc/dhcp/dhclient.conf.orig &> /dev/null
 then
@@ -24,4 +27,4 @@ fi
 
 # Run the debian setup script.
 
-source $BIN_DIR/setup_debian.sh
+setup debian "$@"

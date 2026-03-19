@@ -6,7 +6,7 @@ BACKSLASHED_HOME_DIR="C:\\Users\\${USER:-$USERNAME}"
 
 # Make sure that chocolatey is installed.
 
-source $BIN_DIR/setup_choco.sh
+setup choco
 
 # Install wincrypt-sshagent.
 
