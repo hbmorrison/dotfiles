@@ -4,6 +4,18 @@
 
 set -o pipefail
 
+# Look up default username for a given host.
+
+lookup_user () {
+  local host="${1}"
+  [ -z ${host:+z} ] && fatal "host not specified in default_user() function"
+  case "${host}" in
+    *github*) ;&
+    *gitlab*) echo "git" ;;
+    *)        echo "${SETUP_USER}"
+  esac
+}
+
 # Get the name of the profile being set up.
 
 setting "profile"
@@ -74,7 +86,8 @@ then
       USERNAME="${USERHOST/@*}"
       HOST="${USERHOST/*@}"
     else
-      USERNAME="${DEFAULT_USER}"
+      echo $USERHOST
+      USERNAME=$(lookup_user "${USERHOST}")
       HOST="${USERHOST}"
     fi
     if [ -z ${HOST/*\.*} ]
@@ -82,14 +95,15 @@ then
       FQDN="${HOST}"
       SHORT="${HOST/\.*/}"
     else
-      FQDN="${HOST}.${DEFAULT_DOMAIN}"
+      FQDN="${HOST}.${SETUP_DOMAIN}"
       SHORT="${HOST}"
     fi
+    PUBKEY="${USER_SSH_DIR}/${FQDN}.pub"
 
     # Create an entry for the identity in the SSH config.
 
     adding "${SHORT} to SSH config"
-    echo "Host ${SHORT} ${FQDN}"                      >> "${USER_SSH_DIR}/config" \
+    echo "Host ${SHORT} ${FQDN}"                          >> "${USER_SSH_DIR}/config" \
      && echo "  User ${USERNAME}"                         >> "${USER_SSH_DIR}/config" \
      && echo "  IdentityFile ${USER_SSH_DIR}/${FQDN}.pub" >> "${USER_SSH_DIR}/config" \
      && pass || fail
@@ -103,7 +117,8 @@ then
     # Finally, extract the public key and create the public key file.
 
     creating "SSH public key file for ${FQDN}"
-    echo $JSON | jq -r '.key' 2>/dev/null | tee "${USER_SSH_DIR}/${FQDN}.pub" &>/dev/null \
+    echo $JSON | jq -r '.key' 2>/dev/null | tee "${PUBKEY}" &>/dev/null \
+     && chmod 0600 "${PUBKEY}" &>/dev/null \
      && pass || fail
   done
 fi
