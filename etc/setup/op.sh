@@ -6,20 +6,18 @@ set -o pipefail
 
 # Work out the hostname and username for a given title.
 
-get_host_from_title () {
+get_username_from_title () {
   [ -z ${1:+z} ] && fatal "no title given"
   local title="${1}"
   [ -z ${title/*@*} ] && echo "${title/@*}" && return
   case "${title}" in
     *github*) ;&
     *gitlab*) echo "git" && return ;;
-    *)
-      [ -z ${SETUP_USER:+z} ] && fatal "SETUP_USER not defined"
+    *)        echo "${SETUP_USER:-$USER}" ;;
   esac
-  echo "${SETUP_USER}"
 }
 
-get_user_from_title () {
+get_fqdn_from_title () {
   [ -z ${1:+z} ] &&  fatal "no title given"
   local title="${1}"
   local host="${title/*@}"
@@ -85,29 +83,15 @@ then
     notice "getting item details"
     JSON=$(
      op item get $OP_GET_OPTS "${ID}" --format json 2>/dev/null \
-     | jq ". | {uh: .title, key: .fields[] | select(.id==\"public_key\") .value}" 2>/dev/null
+     | jq ". | {title: .title, key: .fields[] | select(.id==\"public_key\") .value}" 2>/dev/null
     ) && pass || fail || continue
 
     # Extract the title and figure out the username and hostname.
 
-    USERHOST=$(echo "${JSON}" | jq -r '.uh')
-    if [ -z ${USERHOST/*@*} ]
-    then
-      USERNAME="${USERHOST/@*}"
-      HOST="${USERHOST/*@}"
-    else
-      echo $USERHOST
-      USERNAME=$(lookup_user "${USERHOST}")
-      HOST="${USERHOST}"
-    fi
-    if [ -z ${HOST/*\.*} ]
-    then
-      FQDN="${HOST}"
-      SHORT="${HOST/\.*/}"
-    else
-      FQDN="${HOST}.${SETUP_DOMAIN}"
-      SHORT="${HOST}"
-    fi
+    TITLE=$(echo "${JSON}" | jq -r '.title')
+    USERNAME=$(get_username_from_title "${TITLE}")
+    FQDN=$(get_fqdn_from_title "${TITLE}")
+    SHORT=${FQDN/\.*}
 
     # Create an entry for the identity in the SSH config.
 

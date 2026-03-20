@@ -68,6 +68,11 @@ pass
 
 sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini" &>/dev/null
 
+# Reload systemd in case user unit files have changed.
+
+notice "reloading systemd"
+systemctl --user daemon-reload &>/dev/null && pass || fail
+
 # Configure Vim and Git.
 
 setup vim "$@"

@@ -2,23 +2,83 @@
 
 # Configuration.
 
-USER_PROFILE="/mnt/c/Users/${USER}"
+SSH_ENV="$HOME/.ssh/agent.env"
 SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-LOCAL_SOCKET="UNIX-LISTEN:${SSH_AUTH_SOCK}"
-WINDOWS_SOCKET="EXEC:\"npiperelay -ei -s //./pipe/openssh-ssh-agent\""
+WINDOWS_SOCKET="$HOME/.local/bin/npiperelay -ei -s //./pipe/openssh-ssh-agent"
+NPIPERELAY=(socat "UNIX-LISTEN:${SSH_AUTH_SOCK},fork" "EXEC:'${WINDOWS_SOCKET}',nofork")
 
-# Set up the agent environment.
+# Functions for sending info to stderr.
 
-echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" > "${HOME}/.ssh/agent.env"
+notice () {
+  [ $# -gt 0 ] && echo "$(basename $0) ${1}" 1>&2;
+}
 
-# Launch the pipe relay if it is not already running.
+usage () {
+  echo "Usage: $(basename $0) < status | start | stop | restart | pid>" 1>&2 && exit 1;
+}
 
-(
-  set -eu
-  npiperelay=(socat "${LOCAL_SOCKET},fork" "${WINDOWS_SOCKET},nofork")
-  if ! pgrep --full --exact --uid=${UID} "${npiperelay[*]}" &>/dev/null
+error () {
+  [ $# -gt 0 ] && echo "$(basename $0) ${1}" 1>&2
+  [ ${#FUNCNAME[@]} -gt 3 ] && return 1 || exit 1
+}
+
+# Make sure that an argument has been given.
+
+[ $# -eq 0 ] && usage
+
+# Functions for managing socat.
+
+handle_status () {
+  if PID=$(pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}" 2>/dev/null)
   then
-    rm -f "${SSH_AUTH_SOCK}" &>/dev/null
-    (setsid "${npiperelay[@]}" &) &>/dev/null
+    notice "is running with pid ${PID}"
+  else
+    notice "is not running"
+    rm -f "${AGENT_ENV}" &>/dev/null
+    return 1
   fi
-)
+}
+
+handle_start () {
+  if ! pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}" &>/dev/null
+  then
+    (rm -f "${SSH_AUTH_SOCK}" &>/dev/null && (setsid "${NPIPERELAY[@]}" &) &>/dev/null)
+  else
+    error "is already running"
+  fi
+  if PID=$(pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}") 2>/dev/null
+  then
+    echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" > "${SSH_ENV}"
+  else
+    error "did not start"
+  fi
+}
+
+handle_stop () {
+  if pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}" &>/dev/null
+  then
+    rm -f "${AGENT_ENV}" &>/dev/null
+    pkill --full --exact --uid=${UID} "${NPIPERELAY[*]}" &>/dev/null
+  else
+    error "is not running"
+  fi
+}
+
+handle_restart () {
+  handle_stop && handle_start
+}
+
+handle_systemd () {
+  [ $# -eq 1 ] && systemctl --user "${1}" "$(basename $0).service" || return 1
+}
+
+# Decide what to do.
+
+case "${1}" in
+  status)  handle_status              ;;
+  start)   handle_start               ;;
+  stop)    handle_stop                ;;
+  restart) handle_restart             ;;
+  systemd) shift; handle_systemd "$@" ;;
+  *)       usage                      ;;
+esac
