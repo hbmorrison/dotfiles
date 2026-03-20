@@ -15,15 +15,79 @@ alias coa="git commit -a"
 alias dh="git diff HEAD^"
 alias di="git diff"
 alias ds="git diff --staged"
-alias fe="git fetch"
+alias fe="git fetch --all"
 alias gsa="git submodule add"
-alias gsu="git submodule update --recursive"
+alias gsi="git submodule update --init --recursive"
+alias gsr="git submodule update --remote --recursive"
 alias lo="git log --no-merges"
+alias loa="git log --all --graph"
 alias pl="git pull"
 alias pu="git push"
 alias st="git status"
 alias amend="git commit --amend"
 alias fixup="git commit --fixup"
+
+# Recursively update all submodules to the branch listed in .gitmodules.
+
+function gsb () {
+  local gitroot
+  for dir in ${PWD//\// }
+  do
+    local path+="/${dir}"
+    [ -r "${path}/.git" ] && gitroot="${path}" && break
+  done
+  if [ ! -z ${gitroot:-z} ]
+  then
+    (cd $gitroot; git submodule foreach --recursive \
+     'branch="$(git config -f $toplevel/.gitmodules submodule.$name.branch)"; git switch $branch')
+  else
+    echo "Error: no git root found"
+  fi
+}
+
+# Recursively update all submodules to the current branch of the parent git
+# repo, or create a new branch in the submodule if it does not exist. Create the
+# branch on the parent if it does not exist there either.
+
+function gsch () {
+  local gitroot
+  for dir in ${PWD//\// }
+  do
+    local path+="/${dir}"
+    [ -r "${path}/.git" ] && gitroot="${path}" && break
+  done
+  if [ -z ${gitroot:-z} ]
+  then
+    echo "Error: no git root found"
+    return
+  fi
+  if [ $# -gt 0 ]
+  then
+    if ! git check-ref-format --branch "${1}" &>/dev/null
+    then
+      echo "Error: '${1}' is not a legal branch name"
+      return
+    fi
+    local checkrefs="git show-ref refs/heads/${1} || git show-ref refs/remotes/origin/${1}"
+    if ! (builtin cd $gitroot && $checkrefs && git switch $1)
+    then
+      echo "Error: could not change to branch '${1}' in root repository"
+      return
+    fi
+  fi
+  local ref
+  if ref=$(builtin cd $gitroot && git symbolic-ref HEAD 2>/dev/null)
+  then
+    local remote=${ref/\/heads/\/remotes\/origin}
+    local branch=${ref##refs/heads/}
+    local checkrefs="git fetch --all && git show-ref -q ${ref} || git show-ref -q ${remote}"
+    echo $foreach
+    (builtin cd $gitroot && git submodule foreach --recursive \
+     "${checkrefs} && git switch ${branch} || git checkout -b ${branch} || :")
+  else
+    echo "Error: no branch checked out in $gitroot"
+  fi
+}
 
 # Git flow feature aliases.
 
@@ -147,9 +211,29 @@ fi
 alias pencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --password"
 alias fencrypt="eyaml encrypt --quiet --output=block --pkcs7-public-key=$HOME/.local/share/isapps_puppet_public_key.pkcs7.pem --file"
 
+<<<<<<< HEAD
+# Look up OTP in 1Password.
+
+function otp {
+  local item="${1}"; shift
+  local cmd="${1}"; shift
+  if [ -z ${item:+z} ] || [ -z ${cmd:+z} ]
+  then
+    echo "Usage: $FUNCNAME <ITEM> <COMMAND> [ARGUMENT]..."
+    return
+  fi
+  if [ ! -z ${OTP_VAULT:+z} ]
+  then
+    op item get --vault "${OTP_VAULT}" "${item}" --otp | clip.exe
+  else
+    op item get "${item}" --otp | clip.exe
+  fi
+  command $cmd "$@"
+}
+
 # QMK aliases.
 
-alias qcferris="qmk compile -kb ferris/sweep -e CONVERT_TO=rp2040_ce"
+alias qc2040="qmk compile -e CONVERT_TO=rp2040_ce"
 
 # Open vim with results from fuzzy find in buffers.
 

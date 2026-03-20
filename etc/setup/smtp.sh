@@ -1,20 +1,26 @@
+#!/bin/bash
+
 # Configuration.
 
 PACKAGES="libsasl2-modules postfix"
 
 # Confirm that all required variables are set.
 
-[ -z ${SMTP_USERNAME:+z} ] && fail "SMTP_USERNAME not set"
-[ -z ${SMTP_SERVER:+z} ]   && fail "SMTP_SERVER not set"
-[ -z ${SENDER_ADDR:+z} ]   && fail "SENDER_ADDR not set"
-[ -z ${RCPT_ADDR:+z} ]     && fail "RCPT_ADDR not set"
+[ -z ${SMTP_USERNAME:+z} ] && fatal "SMTP_USERNAME not set"
+[ -z ${SMTP_SERVER:+z} ]   && fatal "SMTP_SERVER not set"
+[ -z ${SENDER_ADDR:+z} ]   && fatal "SENDER_ADDR not set"
+[ -z ${RCPT_ADDR:+z} ]     && fatal "RCPT_ADDR not set"
 
 SENDER_DOMAIN=$(echo $SENDER_ADDR | cut -d@ -f2)
+
+# Make sure sudo has valid credentials before starting.
+
+setup_needs_sudo
 
 # Update package lists.
 
 notice "updating package lists"
-$SUDO apt update -y &>/dev/null && pass || fail "unable to update package lists"
+$SUDO apt update -y &>/dev/null && pass || fatal
 
 # Do not prompt for postfix configuration.
 
@@ -23,7 +29,7 @@ export DEBIAN_FRONTEND=noninteractive
 # Install postfix and dependencies.
 
 notice "installing required packages"
-$SUDO apt install -y $PACKAGES && pass || fail "unable to install packages"
+$SUDO apt install -y $PACKAGES && pass || fatal
 
 # Get the SMTP password.
 
@@ -48,8 +54,8 @@ done
 
 # Create Postfix main.cf.
 
-notice "creating postfix configuration"
-cat  >/etc/postfix/main.cf <<MAIN_CF
+notice "creating postfix main.cf"
+$SUDO cat <<MAIN_CF | tee /etc/postfix/main.cf &>/dev/null && pass || fatal
 relayhost = [${SMTP_SERVER}]:587
 
 alias_maps = regexp:{
@@ -60,37 +66,36 @@ alias_database = \$alias_maps
 myorigin = $SENDER_DOMAIN" >> /etc/postfix/main.cf
 mydestination = $SENDER_DOMAIN, \$myhostname, localhost.\$mydomain, localhost
 MAIN_CF
-cat $ETC_DIR/main.cf >> /etc/postfix.main.cf
-notice_ok
+cat $ETC_DIR/smtp/main.cf >> /etc/postfix.main.cf
 
 # Create SASL password file and canonical sender file.
 
 notice "adding SASL password"
 echo "${SMTP_SERVER}	${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
-notice_ok
+pass
 notice "setting email sender address"
 echo "/.+/	${SENDER_ADDR}" > /etc/postfix/sender_canonical
-notice_ok
+pass
 
 # Secure the files and reload them.
 
 notice "securing postfix files"
 chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sender_canonical \
  && chown root:root /etc/postfix/sasl_passwd /etc/postfix/sender_canonical \
- && pass || fail
+ && pass || fatal
 
-notice "incorporating postfix files"
+notice "installing postfix files"
 postmap /etc/postfix/sasl_passwd \
  && postmap /etc/postfix/sender_canonical \
- && pass || fail
+ && pass || fatal
 
 # Restart Postfix.
 
 notice "restarting postfix"
-systemctl restart postfix.service && pass || fail
+systemctl restart postfix.service && pass || fatal
 
 # Send a test message.
 
 notice "sending test email to $RCPT_ADDR"
 echo "Test message" | mail -s "Test message from ${HOSTNAME}" $RCPT_ADDR \
- && pass || fail
+ && pass || fatal

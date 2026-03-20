@@ -353,6 +353,7 @@ set updatetime=100
 nmap <leader>n <plug>(GitGutterNextHunk)
 nmap <leader>N <plug>(GitGutterPrevHunk)
 nmap <leader>a <plug>(GitGutterStageHunk)
+nmap <leader>u <plug>(GitGutterUndoHunk)
 nmap <leader>hs <nop>
 nmap <leader>hu <nop>
 

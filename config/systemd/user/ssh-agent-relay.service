@@ -1,0 +1,16 @@
+[Unit]
+Description=1Password SSH Agent Relay for WSL
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=%h/.local/bin/ssh-agent-relay start
+ExecStop=%h/.local/bin/ssh-agent-relay stop
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
