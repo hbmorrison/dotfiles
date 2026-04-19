@@ -33,6 +33,6 @@ case $OS in
 
     notice "disabling ssh support in gpg-agent"
     sed -i -e "/^\s*enable-ssh-support/s/^/#/" ${HOME}/.gnupg/gpg-agent.conf &>/dev/null \
-     && gpg-connect-agent reloadagent /bye \
+     && gpg-connect-agent reloadagent /bye &>/dev/null \
      && pass || fail
 esac
