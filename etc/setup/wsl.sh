@@ -15,6 +15,35 @@ ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 notice "checking whether user profile directory is accessible"
 [ -d "${USER_PROFILE_DIR}" ] && yes || fatal "could not find ${USER_PROFILE_DIR}"
 
+# Check that WSL is configured correctly.
+
+notice "checking whether WSL is configured correctly"
+if ! diff "${ETC_DIR}/wsl/wsl.conf" /etc/wsl.conf &>/dev/null
+then
+  $SUDO cp -f "${ETC_DIR}/wsl/wsl.conf" /etc/wsl.conf
+  RESTART_WSL=1
+fi
+if ! diff $ETC_DIR/wsl/wslconfig "${USER_PROFILE_DIR}/.wslconfig" &>/dev/null
+then
+  cp -f $ETC_DIR/wsl/wslconfig "${USER_PROFILE_DIR}/.wslconfig"
+  RESTART_WSL=1
+fi
+if [ -z ${RESTART_WSL:+z} ]
+then
+  yes
+else
+  no
+  echo
+  echo " 1. Hit Enter to restart WSL"
+  echo " 2. Accept the UAC prompt for Powershell"
+  echo " 3. Open the Terminal app again"
+  echo " 4. Re-run 'setup ${SCRIPT}'"
+  echo
+  read -s
+  echo "Restarting..."
+  powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl --shutdown\""
+fi
+
 # Install the required packages using winget.
 
 for PACKAGE in "${WINGET_PACKAGES[@]}"
