@@ -66,7 +66,9 @@ pass
 
 # Add the correct username to the qmk.ini file.
 
-sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini" &>/dev/null
+notice "setting username in qmk.ini"
+sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini" \
+ &>/dev/null && pass || fail
 
 # Reload systemd in case user unit files have changed.
 

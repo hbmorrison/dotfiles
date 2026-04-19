@@ -2,7 +2,7 @@
 
 # Location of WSL side files.
 
-SSH_ENV="$HOME/.ssh/agent.env"
+AGENT_ENV="$HOME/.ssh/agent.env"
 SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
 
 # Location of Windows side files.
@@ -59,7 +59,7 @@ handle_start () {
   fi
   if PID=$(pgrep --full --exact --uid=${UID} "${SOCAT[*]}") 2>/dev/null
   then
-    echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" > "${SSH_ENV}"
+    echo -e "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}\nexport SSH_AUTH_SOCK" > "${AGENT_ENV}"
   else
     error "did not start"
   fi

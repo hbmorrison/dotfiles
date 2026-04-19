@@ -20,20 +20,6 @@ then
   export HOME=/root
 fi
 
-# Set the default editor.
-
-export EDITOR=vi
-export VISUAL=vi
-export LESS=-FRX
-export LESSHISTFILE=-
-
-# Set the default fzf options.
-
-export FZF_DEFAULT_OPTS="-0 -1 --multi --keep-right --border=none --info=hidden \
-  --bind start:select-all,ctrl-a:toggle-all \
-  --color=bg+:-1,fg+:-1,prompt:-1,pointer:-1,hl:111,hl+:111 \
-  --prompt='$ ' --pointer='>' --marker='*'"
-
 # Additional paths.
 
 pathprepend () {
@@ -57,12 +43,7 @@ pathprepend "/usr/bin"
 pathprepend "${HOME}/.local/bin"
 pathappend  "/opt/puppetlabs/sbin"
 
-# Location of the ssh agent environment.
-
-AGENT_ENV="${HOME}/.ssh/agent.env"
-source $AGENT_ENV &>/dev/null
-
-# Start the ssh agent if needed.
+# Start SSH agent relay on WSL.
 
 case $SHELL_ENVIRONMENT in
   wsl)
@@ -73,19 +54,34 @@ case $SHELL_ENVIRONMENT in
        && systemctl --user start ssh-agent-relay.service
       source $AGENT_ENV &>/dev/null
     fi
+    source "${HOME}/.ssh/agent.env" &>/dev/null
     ;;
   *)
-    if ! ss -lnx | grep -q $SSH_AUTH_SOCK
+    if systemctl --user is-enabled ssh-agent-relay.service &>/dev/null
     then
-      ssh-agent >$AGENT_ENV
-      chmod 600 $AGENT_ENV
-      source $AGENT_ENV &>/dev/null
+      systemctl --user daemon-reload \
+       && systemctl --user stop ssh-agent-relay.service \
+       && systemctl --user disable ssh-agent-relay.service
     fi
 esac
 
-# Let sub-processes know about the SSH socket.
+# Tell GPG which tty this session is running on.
 
-export SSH_AUTH_SOCK
+export GPG_TTY=$(/bin/tty)
+
+# Set the default editor.
+
+export EDITOR=vi
+export VISUAL=vi
+export LESS=-FRX
+export LESSHISTFILE=-
+
+# Set the default fzf options.
+
+export FZF_DEFAULT_OPTS="-0 -1 --multi --keep-right --border=none --info=hidden \
+  --bind start:select-all,ctrl-a:toggle-all \
+  --color=bg+:-1,fg+:-1,prompt:-1,pointer:-1,hl:111,hl+:111 \
+  --prompt='$ ' --pointer='>' --marker='*'"
 
 # Source the bashrc.
 
