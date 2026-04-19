@@ -36,3 +36,5 @@ fi
 # Run the debian setup script.
 
 setup debian "$@"
+setup udisks "$@"
+setup yubikey "$@"
