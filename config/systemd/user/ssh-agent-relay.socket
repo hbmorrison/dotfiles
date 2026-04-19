@@ -1,5 +1,5 @@
 [Unit]
-Description=SSH agent socket
+Description=Socket for SSH agent relay
 
 [Socket]
 ListenStream=%t/ssh-agent.sock

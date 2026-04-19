@@ -1,6 +1,6 @@
 # Configuration.
 
-DEBIAN_PACKAGES="bash-completion bind9-dnsutils curl expect fzf git-flow gpg \
+DEBIAN_PACKAGES="bash-completion bind9-dnsutils curl expect fzf git-flow \
  hiera-eyaml inetutils-traceroute jq lsof man-db ncat nmap ripgrep shellcheck \
  socat vim wget whois xclip zip"
 

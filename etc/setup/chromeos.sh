@@ -1,6 +1,6 @@
 # Configuration.
 
-CHROMEOS_PACKAGES="gpg-agent pinentry-tty scdaemon"
+CHROMEOS_PACKAGES="gpg-agent pinentry-tty"
 SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
 
 # Make sure sudo has valid credentials before starting.

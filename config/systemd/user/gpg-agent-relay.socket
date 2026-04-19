@@ -1,5 +1,5 @@
 [Unit]
-Description=GnuPG agent socket
+Description=Socket for GPG agent relay
 
 [Socket]
 ListenStream=%t/gnupg/S.gpg-agent

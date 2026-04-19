@@ -1,7 +1,7 @@
 [Unit]
-Description=SSH Agent Relay for WSL
+Description=SSH agent relay for WSL
 After=network.target
-Requires=ssh-agent.socket
+Requires=ssh-agent-relay.socket
 
 [Service]
 Type=forking

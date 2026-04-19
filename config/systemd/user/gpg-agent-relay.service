@@ -1,7 +1,7 @@
 [Unit]
-Description=GPG Agent Relay for WSL
+Description=GPG agent relay for WSL
 After=network.target
-Requires=gpg-agent.socket
+Requires=gpg-agent-relay.socket
 
 [Service]
 Type=forking
