@@ -65,6 +65,17 @@ case $SHELL_ENVIRONMENT in
     fi
 esac
 
+# Start GPG agent for SSH if needed.
+
+if [ -x /usr/bin/gpgconf ]
+then
+  if /usr/bin/gpgconf --list-options gpg-agent | grep -q '^enable-ssh-support:.*:1$'
+  then
+    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+    gpg-connect-agent /bye &>/dev/null
+  fi
+fi
+
 # Set the default editor.
 
 export EDITOR=vi
