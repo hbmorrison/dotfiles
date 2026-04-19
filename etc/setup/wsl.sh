@@ -2,11 +2,11 @@
 
 # Configuration.
 
-WINGET_PACKAGES_DIR="${APPDATA_LOCAL}/Microsoft/WinGet/Packages"
-WINGET_PACKAGES=( "albertony.npiperelay" "AgileBits.1Password.CLI" "Microsoft.Git" )
+WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
+WINGET_PACKAGES=( "AgileBits.1Password.CLI" "albertony.npiperelay" "Insecure.nmap" )
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
-WINGET_EXECUTABLE_DIRS=( "albertony.npiperelay" "AgileBits.1Password.CLI" )
-SYMLINK_EXECUTABLE_DIRS=( "C:/WINDOWS/System32/OpenSSH" "C:/Program Files/Git/cmd" )
+WINGET_EXECUTABLE_DIRS=( "AgileBits.1Password.CLI" "albertony.npiperelay" )
+SYMLINK_EXECUTABLE_DIRS=( "C:/WINDOWS/System32/OpenSSH" )
 SYMLINK_PC_DIRS=( "C:/Workspace" )
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 ONEDRIVE_DIRS=( "Archive" "System Documentation" )
@@ -14,7 +14,7 @@ ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 # Check that the Windows user profile directory is correct.
 
 notice "checking whether user profile directory is accessible"
-[ -d "${USER_PROFILE}" ] && yes || fatal "could not find ${USER_PROFILE}"
+[ -d "${USER_PROFILE_DIR}" ] && yes || fatal "could not find ${USER_PROFILE_DIR}"
 
 # Install the required packages using winget.
 
@@ -36,7 +36,7 @@ done
 
 for PACKAGE in "${WINGET_EXECUTABLE_DIRS[@]}"
 do
-  for EXE in "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe
+  for EXE in $(ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null)
   do
     EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
@@ -53,7 +53,7 @@ done
 
 for DIR in "${SYMLINK_EXECUTABLE_DIRS[@]}"
 do
-  for EXE in "${DIR/#C:/\/mnt\/c}"/*.exe
+  for EXE in $(ls -1 "${DIR/#C:/\/mnt\/c}"/*.exe 2>/dev/null)
   do
     EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
@@ -76,14 +76,15 @@ do
 done
 for DIR in "${SYMLINK_PROFILE_DIRS[@]}"
 do
-  notice "checking whether ${USER_PROFILE/#\/mnt\/c/C:}/${DIR} exists"
-  [ -d "${USER_PROFILE}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE}/${DIR}" ) && yes || no
+  notice "checking whether ${USER_PROFILE_DIR/#\/mnt\/c/C:}/${DIR} exists"
+  [ -d "${USER_PROFILE_DIR}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE_DIR}/${DIR}" ) \
+   && yes || no
 done
 
 # Add OneDrive and any Onedrive directories.
 
 notice "checking whether OneDrive is available"
-ONEDRIVE_DIR=$(/bin/ls -1d "${USER_PROFILE}/OneDrive"* 2>/dev/null | tail -1)
+ONEDRIVE_DIR=$(/bin/ls -1d "${USER_PROFILE_DIR}/OneDrive"* 2>/dev/null | tail -1)
 if [ -d "${ONEDRIVE_DIR}" ] || no
 then
   yes

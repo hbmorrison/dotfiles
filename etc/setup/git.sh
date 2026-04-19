@@ -2,7 +2,6 @@
 
 # Configuration.
 
-ONEPASS_SSH_DIR="${APPDATA_LOCAL}/1Password/config/ssh"
 GIT_CONFIG_DIR="${ETC_DIR}/git"
 GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_${1,,}"
 [ -f "${GIT_CONFIG}" ] || GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_default"

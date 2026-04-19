@@ -87,11 +87,6 @@ esac
 
 export SSH_AUTH_SOCK
 
-# Start gpg-agent.
-
-export GPG_TTY=$(/bin/tty)
-export GPG_AGENT_INFO="${HOME}/.gnupg/agent-env"
-
 # Source the bashrc.
 
 if [ -r "${HOME}/.bashrc" ]

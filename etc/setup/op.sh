@@ -35,7 +35,7 @@ SSH_CONFIG="${SSH_CONFIG_DIR}/ssh_config_${1,,}"
 
 # 1Password configuration.
 
-OP_AGENT_CONFIG_DIR="${APPDATA_LOCAL}/1Password/config/ssh"
+OP_AGENT_CONFIG_DIR="${APPDATA_LOCAL_DIR}/1Password/config/ssh"
 OP_CONFIG_DIR="${ETC_DIR}/op"
 OP_CONFIG="${OP_CONFIG_DIR}/op_config_${1,,}"
 [ -f "${OP_CONFIG}" ] || OP_CONFIG="${OP_CONFIG_DIR}/op_config_default"

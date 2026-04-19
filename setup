@@ -26,8 +26,9 @@ LOCAL_BIN="${LOCAL_DIR}/bin"
 
 # Windows directories in WSL.
 
-USER_PROFILE="/mnt/c/Users/${USER}"
-APPDATA_LOCAL="${USER_PROFILE}/AppData/Local"
+SYSTEM_DIR="/mnt/c/Windows/System32"
+USER_PROFILE_DIR="/mnt/c/Users/${USER}"
+APPDATA_LOCAL_DIR="${USER_PROFILE_DIR}/AppData/Local"
 
 # Pretty feedback.
 

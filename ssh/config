@@ -1,3 +1,4 @@
 AddressFamily inet
 GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
+Include ~/.ssh/1Password/config
