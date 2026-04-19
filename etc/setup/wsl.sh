@@ -160,7 +160,7 @@ cp -f "${ETC_DIR}/wsl/agent.toml" "${OP_CONFIG_DIR}/agent.toml" \
 # Configure Gpg4Win.
 
 [ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}"
-for CONFIG_FILE in gpg-agent.conf
+for CONFIG_FILE in gpg.conf gpg-agent.conf
 do
   notice "copying gpg4win ${CONFIG_FILE}"
   cp -f "${ETC_DIR}/wsl/${CONFIG_FILE}" "${GNUPG_DIR}/${CONFIG_FILE}" \
