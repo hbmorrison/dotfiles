@@ -6,7 +6,7 @@ WINGET_PACKAGES_DIR="${APPDATA_LOCAL}/Microsoft/WinGet/Packages"
 WINGET_PACKAGES=( "albertony.npiperelay" "AgileBits.1Password.CLI" )
 POWERSHELL="powershell.exe -NoProfile -Command"
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
-SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "Dropbox" "AppData" )
+SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 SYMLINK_PC_DIRS=( "C:/Workspace" )
 ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 
