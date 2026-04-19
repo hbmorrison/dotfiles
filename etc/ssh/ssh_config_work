@@ -1,3 +1,6 @@
-Host *.is.ed.ac.uk
+Host gitlab.is.ed.ac.uk
+  User git
+  ProxyCommand none
+Host *
   User isapps
   ProxyCommand ncat --proxy-type socks5 --proxy 127.0.0.1:11080 %h %p

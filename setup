@@ -38,8 +38,10 @@ YELLOW='\033[00;33m'
 CLEAR='\033[00m'
 
 notice () { echo -en "${1^} " 1>&2; }
-pass () { echo -e "${GOTO_COLUMN}${GREEN}Ok${CLEAR}" 1>&2; }
-fail () { echo -e "${GOTO_COLUMN}${YELLOW}Failed${CLEAR}" 1>&2; }
+pass () { echo -e "${GOTO_COLUMN}${GREEN}Done${CLEAR}" 1>&2; }
+fail () { echo -e "${GOTO_COLUMN}${YELLOW}Failed${CLEAR}" 1>&2; return 1; }
+yes () { echo -e "${GOTO_COLUMN}${GREEN}Yes${CLEAR}" 1>&2; }
+no () { echo -e "${GOTO_COLUMN}${YELLOW}No${CLEAR}" 1>&2; return 1; }
 
 fatal () {
   echo -e "${GOTO_COLUMN}${RED}Failed${CLEAR}" 1>&2;
@@ -61,7 +63,7 @@ then
   SUDO=""
   setup_needs_sudo () {
     notice "checking that user is root"
-    respond_yes
+    pass
   }
 else
   setup_needs_sudo () {
@@ -75,7 +77,7 @@ else
         fail
         sudo -v
         notice "checking sudo access again"
-        sudo -n /bin/true 2>/dev/null && respond_yes || fatal "no sudo access"
+        sudo -n /bin/true 2>/dev/null && pass || fatal "no sudo access"
       fi
     fi
   }
@@ -93,14 +95,6 @@ then
   rm -f $LOCAL_BIN/setup
 fi
 ln -s $BASE_DIR/setup $LOCAL_BIN/setup
-
-# Get the name of a profile or return the default profile.
-
-get_profile () {
-  [ ! -z ${1:+z} ] && echo "${1}" && return
-  [ -z ${SETUP_PROFILE:+z} ] && fatal "SETUP_PROFILE not defined"
-  echo "${SETUP_PROFILE}"
-}
 
 # Get the name of the setup script from the command line.
 

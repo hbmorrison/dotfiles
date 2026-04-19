@@ -36,21 +36,26 @@ export FZF_DEFAULT_OPTS="-0 -1 --multi --keep-right --border=none --info=hidden 
 
 # Additional paths.
 
-pathadd () {
-  if [ -n "$1" ]
+pathprepend () {
+  if [ -n "${1}" ]
   then
-    REMOVED=$(/bin/echo ":$PATH:" | /bin/sed "s#:$1:#:#")
-    if [ "$REMOVED" = ":$PATH:" ]
-    then
-      PATH=$PATH:$1
-    fi
+    REMOVED=$(/bin/echo ":${PATH}" | /bin/sed "s#:${1}##")
+    PATH="${1}${REMOVED}"
   fi
 }
 
-pathadd "/usr/sbin"
-pathadd "/opt/puppetlabs/sbin"
-pathadd "${HOME}/bin"
-pathadd "${HOME}/.local/bin"
+pathappend () {
+  if [ -n "$1" ]
+  then
+    REMOVED=$(/bin/echo "${PATH}:" | /bin/sed "s#${1}:##")
+    PATH="${REMOVED}${1}"
+  fi
+}
+
+pathprepend "/usr/sbin"
+pathprepend "/usr/bin"
+pathprepend "${HOME}/.local/bin"
+pathappend  "/opt/puppetlabs/sbin"
 
 # Location of the ssh agent environment.
 

@@ -22,7 +22,7 @@ grep -q '^docker:' /etc/group && NON_ROOT_ADMIN_GROUPS+=",docker"
 # Check that this script is being run by root.
 
 notice "checking whether user is root"
-[ $(id -u) -eq 0 ] && pass || fatal "run as root"
+[ $(id -u) -eq 0 ] && yes || fatal "run as root"
 
 # Work out which OS and terminal is being used.
 
@@ -165,9 +165,9 @@ systemctl enable --now fail2ban && pass || fail
 # Create the non-root user if needed.
 
 notice "checking if non-root user exists"
-if ! grep -q "^$NON_ROOT_USER:" /etc/passwd || pass
+if ! grep -q "^$NON_ROOT_USER:" /etc/passwd || yes
 then
-  fail
+  no
   notice "adding user ${NON_ROOT_USER}"
   useradd -s /bin/bash -U -G $NON_ROOT_ADMIN_GROUPS -m $NON_ROOT_USER && pass || fatal
 fi

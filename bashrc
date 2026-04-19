@@ -96,7 +96,7 @@ function cd {
 alias c=clear
 alias ls="LC_COLLATE=C command ls -F --color=auto"
 
-# Source optional bashrc scripts_
+# Source other bashrc scripts.
 
 if [ -r "${HOME}/.bashrc_prompt" ]
 then
@@ -108,17 +108,17 @@ then
   source $HOME/.bashrc_aliases
 fi
 
-if [ -r "${HOME}/.bashrc_local" ]
+if [ -r "${HOME}/.bashrc_op" ]
 then
-  source $HOME/.bashrc_local
+  source $HOME/.bashrc_op
 fi
 
-if [ -r "${HOME}/.bashrc_onepass" ]
+if [ -r "${HOME}/.bashrc_jumphost" ]
 then
-  source $HOME/.bashrc_onepass
+  source $HOME/.bashrc_jumphost
 fi
 
-if [ -r "${HOME}/.bashrc_wsltools" ]
+if [ -r "${HOME}/.bashrc_pmp" ]
 then
-  source $HOME/.bashrc_wsltools
+  source $HOME/.bashrc_pmp
 fi

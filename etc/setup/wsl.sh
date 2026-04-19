@@ -3,12 +3,18 @@
 # Configuration.
 
 WINGET_PACKAGES_DIR="${APPDATA_LOCAL}/Microsoft/WinGet/Packages"
-WINGET_PACKAGES=( "albertony.npiperelay" "AgileBits.1Password.CLI" )
-POWERSHELL="powershell.exe -NoProfile -Command"
+WINGET_PACKAGES=( "albertony.npiperelay" "AgileBits.1Password.CLI" "Microsoft.Git" )
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
-SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
+WINGET_EXECUTABLE_DIRS=( "albertony.npiperelay" "AgileBits.1Password.CLI" )
+SYMLINK_EXECUTABLE_DIRS=( "C:/WINDOWS/System32/OpenSSH" "C:/Program Files/Git/cmd" )
 SYMLINK_PC_DIRS=( "C:/Workspace" )
+SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 ONEDRIVE_DIRS=( "Archive" "System Documentation" )
+
+# Check that the Windows user profile directory is correct.
+
+notice "checking whether user profile directory is accessible"
+[ -d "${USER_PROFILE}" ] && yes || fatal "could not find ${USER_PROFILE}"
 
 # Install the required packages using winget.
 
@@ -17,18 +23,18 @@ do
   notice "checking whether ${PACKAGE,,} is installed"
   if winget.exe list --query "${PACKAGE}" &>/dev/null
   then
-    pass
+    yes
   else
-    fail
+    no
     notice "installing ${PACKAGE,,}"
     winget.exe install ${WINGET_INSTALL_ARGS} --id "${PACKAGE}" \
      &>/dev/null && pass || fail
   fi
 done
 
-# Create symlinks to the installed executables.
+# Create symlinks to the executables installed by winget.
 
-for PACKAGE in "${WINGET_PACKAGES[@]}"
+for PACKAGE in "${WINGET_EXECUTABLE_DIRS[@]}"
 do
   for EXE in "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe
   do
@@ -43,10 +49,22 @@ do
   done
 done
 
-# Check that the Windows user profile directory is correct.
+# Create symlinks to Windows executables.
 
-notice "checking whether user profile directory exists"
-[ -d "${USER_PROFILE}" ] && pass || fatal "could not find ${USER_PROFILE}"
+for DIR in "${SYMLINK_EXECUTABLE_DIRS[@]}"
+do
+  for EXE in "${DIR/#C:/\/mnt\/c}"/*.exe
+  do
+    EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
+    SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
+    notice "creating symlink to ${EXE_NAME} in local bin directory"
+    if [ -L "${SYMLINK_PATH}" ]
+    then
+      rm -f "${SYMLINK_PATH}" &>/dev/null || fatal "could not remove existing symlink ${SYMLINK_PATH}"
+    fi
+    ln -s "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
+  done
+done
 
 # Add the user profile directories and PC directories together.
 
@@ -54,28 +72,28 @@ declare -a SOURCE_DIRS
 for DIR in "${SYMLINK_PC_DIRS[@]}"
 do
   notice "checking whether ${DIR} exists"
-  [ -d "${DIR/#C:/\/mnt\/c}" ] && SOURCE_DIRS+=( "${DIR/#C:/\/mnt\/c}" ) && pass || fail
+  [ -d "${DIR/#C:/\/mnt\/c}" ] && SOURCE_DIRS+=( "${DIR/#C:/\/mnt\/c}" ) && yes || no
 done
 for DIR in "${SYMLINK_PROFILE_DIRS[@]}"
 do
   notice "checking whether ${USER_PROFILE/#\/mnt\/c/C:}/${DIR} exists"
-  [ -d "${USER_PROFILE}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE}/${DIR}" ) && pass || fail
+  [ -d "${USER_PROFILE}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE}/${DIR}" ) && yes || no
 done
 
 # Add OneDrive and any Onedrive directories.
 
 notice "checking whether OneDrive is available"
 ONEDRIVE_DIR=$(/bin/ls -1d "${USER_PROFILE}/OneDrive"* 2>/dev/null | tail -1)
-if [ -d "${ONEDRIVE_DIR}" ] || fail
+if [ -d "${ONEDRIVE_DIR}" ] || no
 then
-  pass
+  yes
   SOURCE_DIRS+=( "${ONEDRIVE_DIR}" )
   for DIR in "${ONEDRIVE_DIRS[@]}"
   do
     ONEDRIVE_DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
     notice "checking whether OneDrive $DIR directory exists"
     [ -d "${ONEDRIVE_DIR}/${DIR}" ] && SOURCE_DIRS+=( "${ONEDRIVE_DIR}/${DIR}" ) \
-     && pass || fail
+     && yes || no
   done
 fi
 

@@ -11,7 +11,7 @@ USER_PROFILE="/mnt/c/Users/${USER}"
 APPDATA_LOCAL="${USER_PROFILE}/AppData/Local"
 WINGET_PACKAGES_DIR="${APPDATA_LOCAL}/Microsoft/WinGet/Packages"
 NPIPERELAY_DIR=$(find "${WINGET_PACKAGES_DIR}" -name 'albertony.npiperelay_*' -type d)
-NPIPERELAY="${NPIPERELAY_DIR/\/mnt\/c/C:}/npiperelay.exe"
+NPIPERELAY="${NPIPERELAY_DIR}/npiperelay.exe"
 WINDOWS_SOCKET="${NPIPERELAY} -ei -s //./pipe/openssh-ssh-agent"
 
 # Array containing the socat command and arguments.
