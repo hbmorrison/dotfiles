@@ -113,6 +113,11 @@ then
   source $HOME/.bashrc_local
 fi
 
+if [ -r "${HOME}/.bashrc_onepass" ]
+then
+  source $HOME/.bashrc_onepass
+fi
+
 if [ -r "${HOME}/.bashrc_wsltools" ]
 then
   source $HOME/.bashrc_wsltools
