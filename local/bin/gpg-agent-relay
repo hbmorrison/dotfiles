@@ -14,8 +14,9 @@ NPIPERELAY="${NPIPERELAY_DIR}/npiperelay.exe"
 
 # Define the sockets.
 
-WSL_SOCKET="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent"
-WINDOWS_SOCKET="${NPIPERELAY} -ep -ei -s -a ${GNUPG_DIR}/S.gpg-agent.extra"
+SOCKET="S.gpg-agent"
+WSL_SOCKET="${XDG_RUNTIME_DIR/%\/}/gnupg/${SOCKET}"
+WINDOWS_SOCKET="${NPIPERELAY} -ep -ei -s -a ${GNUPG_DIR}/${SOCKET}"
 
 # Array containing the socat command and arguments.
 

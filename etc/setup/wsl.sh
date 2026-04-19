@@ -1,17 +1,33 @@
 #!/bin/bash
 
-# Configuration.
+# Location of Gpg4win binaries and config.
+
+GNUPG_DIR="${APPDATA_ROAMING_DIR}/gnupg"
+GNUPG_BIN_DIR="/mnt/c/Program Files/GnuPG/bin"
+
+# Winget packages to install.
 
 WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
-WINGET_PACKAGES=( "AgileBits.1Password.CLI" "albertony.npiperelay" "GnuPG.Gpg4win"
- "Insecure.nmap" )
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
-WINGET_EXECUTABLE_DIRS=( "AgileBits.1Password.CLI" "albertony.npiperelay" )
+WINGET_PACKAGES=(
+  "AgileBits.1Password.CLI"
+  "albertony.npiperelay"
+  "GnuPG.Gpg4win"
+  "Insecure.nmap"
+  "Yubico.YubiKeyManagerCLI"
+)
+
+# Directories to be symlinked from home directory.
+
 SYMLINK_PC_DIRS=( "C:/Workspace" )
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
-ONEDRIVE_DIRS=( "Archive" "System Documentation" )
-GNUPG_DIR="${APPDATA_ROAMING_DIR}/gnupg"
-GNUPG_EXECUTABLE_DIR="/mnt/c/Program Files/GnuPG/bin"
+SYMLINK_ONEDRIVE_DIRS=( "Archive" "System Documentation" )
+
+# Winget packages whose executables will be symlinked from .local/bin/.
+
+SYMLINK_WINGET_PACKAGE_DIRS=(
+  "AgileBits.1Password.CLI"
+)
 
 # Check that the Windows user profile directory is correct.
 
@@ -65,9 +81,10 @@ done
 
 # Create symlinks to the executables installed by winget.
 
-for PACKAGE in "${WINGET_EXECUTABLE_DIRS[@]}"
+for PACKAGE in "${SYMLINK_WINGET_PACKAGE_DIRS[@]}"
 do
-  for EXE in $(ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null)
+  mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
+  for EXE in "${EXECUTABLES[@]}"
   do
     EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
@@ -95,7 +112,7 @@ do
    && yes || no
 done
 
-# Add OneDrive and any Onedrive directories.
+# Add OneDrive directory and specific subdirectories.
 
 notice "checking whether OneDrive is available"
 ONEDRIVE_DIR=$(/bin/ls -1d "${USER_PROFILE_DIR}/OneDrive"* 2>/dev/null | tail -1)
@@ -103,10 +120,10 @@ if [ -d "${ONEDRIVE_DIR}" ] || no
 then
   yes
   SOURCE_DIRS+=( "${ONEDRIVE_DIR}" )
-  for DIR in "${ONEDRIVE_DIRS[@]}"
+  for DIR in "${SYMLINK_ONEDRIVE_DIRS[@]}"
   do
-    ONEDRIVE_DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
-    notice "checking whether OneDrive $DIR directory exists"
+    DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
+    notice "checking whether OneDrive ${DIR} directory exists"
     [ -d "${ONEDRIVE_DIR}/${DIR}" ] && SOURCE_DIRS+=( "${ONEDRIVE_DIR}/${DIR}" ) \
      && yes || no
   done
@@ -127,15 +144,21 @@ done
 # Configure Gpg4Win.
 
 [ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}"
-notice "copying gpg4win gpg-agent.conf"
-cp -f "${ETC_DIR}/wsl/gpg-agent.conf" "${GNUPG_DIR}/gpg-agent.conf" \
- &>/dev/null && pass || fatal "could not copy gpg-agent.conf to ${GNUPG_DIR}"
-notice "killing gpg4win gpg-agent"
-"${GNUPG_EXECUTABLE_DIR}/gpg-connect-agent.exe" killagent /bye \
- &>/dev/null && pass || fatal "could not kill gpg-agent"
+for CONFIG_FILE in gpg-agent.conf
+do
+  notice "copying gpg4win ${CONFIG_FILE}"
+  cp -f "${ETC_DIR}/wsl/${CONFIG_FILE}" "${GNUPG_DIR}/${CONFIG_FILE}" \
+   &>/dev/null && pass || fatal "could not copy ${CONFIG_FILE} to ${GNUPG_DIR}"
+done
+notice "stopping gpg4win gpg-agent"
+"${GNUPG_BIN_DIR}/gpg-connect-agent.exe" killagent /bye \
+ &>/dev/null && pass || fatal "could not stop gpg-agent"
 notice "starting gpg4win gpg-agent"
-"${GNUPG_EXECUTABLE_DIR}/gpg-connect-agent.exe" /bye \
+"${GNUPG_BIN_DIR}/gpg-connect-agent.exe" /bye \
  &>/dev/null && pass || fail "could not start gpg-agent"
+notice "reloading gpg4win scdaemon"
+"${GNUPG_BIN_DIR}/gpgconf.exe" --reload scdaemon \
+ &>/dev/null && pass || fatal "could not reload scdaemon"
 
 # Make sure sudo has valid credentials.
 
