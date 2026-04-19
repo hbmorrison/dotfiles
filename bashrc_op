@@ -2,7 +2,7 @@ function totp {
   local hostname="${1}"; shift
   if [ -z ${hostname:+z} ]
   then
-    echo "Usage: $FUNCNAME <HOSTNAME> [ARGUMENT]..."
+    echo "Usage: $FUNCNAME <HOSTNAME>"
     return
   fi
   if [ -z ${OP_VAULT:+z} ]
@@ -11,5 +11,4 @@ function totp {
   else
     op item get --vault "${OP_VAULT}" "${hostname}" --otp | clip.exe
   fi
-  command ssh "${hostname}" "$@"
 }
