@@ -43,20 +43,16 @@ pathprepend "/usr/bin"
 pathprepend "${HOME}/.local/bin"
 pathappend  "/opt/puppetlabs/sbin"
 
-# Start SSH and GPG agent relays on WSL.
+# Start SSH agent relay on WSL.
 
 case $SHELL_ENVIRONMENT in
   wsl)
-    AGENTS=( "ssh-agent-relay.service" "gpg-agent-relay.service" )
-    for AGENT in ${AGENTS[@]}
-    do
-      if ! systemctl --user is-enabled $AGENT.service &>/dev/null
-      then
-        systemctl --user daemon-reload \
-         && systemctl --user enable $AGENT.service \
-         && systemctl --user start $AGENT.service
-      fi
-    done
+    if ! systemctl --user is-enabled ssh-agent-relay.service &>/dev/null
+    then
+      systemctl --user daemon-reload \
+       && systemctl --user enable ssh-agent-relay.service \
+       && systemctl --user start ssh-agent-relay.service
+    fi
     source "${HOME}/.ssh/agent.env" &>/dev/null
     ;;
 esac

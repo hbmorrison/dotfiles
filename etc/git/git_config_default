@@ -1,7 +1,6 @@
 [user]
 	name = Hannah Blythe Morrison
 	email = 139557138+hbmorrison@users.noreply.github.com
-	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKKzrUN6aphg+kWqEcj/4jNAf7CNCSEjALfFueJNIjFU
 [commit]
 	gpgsign = true
 [tag]
