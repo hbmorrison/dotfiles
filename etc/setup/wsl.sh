@@ -15,8 +15,10 @@ ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 for PACKAGE in "${WINGET_PACKAGES[@]}"
 do
   notice "checking whether ${PACKAGE,,} is installed"
-  if ! winget.exe list --query "${PACKAGE}" &>/dev/null || pass
+  if winget.exe list --query "${PACKAGE}" &>/dev/null
   then
+    pass
+  else
     fail
     notice "installing ${PACKAGE,,}"
     winget.exe install ${WINGET_INSTALL_ARGS} --id "${PACKAGE}" \
@@ -33,8 +35,10 @@ do
     EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
     notice "creating symlink to ${EXE_NAME} in local bin directory"
-    [ -L "${SYMLINK_PATH}" ] && rm -f "${SYMLINK_PATH}" \
-     &>/dev/null || fatal "could not remove existing symlink ${SYMLINK_PATH}"
+    if [ -L "${SYMLINK_PATH}" ]
+    then
+      rm -f "${SYMLINK_PATH}" &>/dev/null || fatal "could not remove existing symlink ${SYMLINK_PATH}"
+    fi
     ln -s "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
   done
 done

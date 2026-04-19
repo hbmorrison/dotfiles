@@ -68,9 +68,11 @@ else
     notice "checking that user has sudo access"
     if [ ! -z ${SUDO} ]
     then
-      if ! sudo -n /bin/true 2>/dev/null && respond_yes
+      if sudo -n /bin/true 2>/dev/null
       then
-        respond_no
+        pass
+      else
+        fail
         sudo -v
         notice "checking sudo access again"
         sudo -n /bin/true 2>/dev/null && respond_yes || fatal "no sudo access"
