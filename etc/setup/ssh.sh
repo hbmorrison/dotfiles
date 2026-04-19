@@ -17,3 +17,12 @@ cp -f "${BASE_DIR}/ssh/config" "${HOME}/.ssh/config" &>/dev/null && pass || fail
 notice "adding ${SSH_CONFIG/*_} ssh configuration"
 [ -f "${SSH_CONFIG}" ] || fatal "${SSH_CONFIG/$BASE_DIR\/} missing"
 cat "${SSH_CONFIG}" >> "${HOME}/.ssh/config" 2>/dev/null && pass || fail
+
+# Additional config for WSL and Windows.
+
+if [ "${OS}" = "wsl" ]
+then
+  notice "copying ssh config files to Windows user profile"
+  WSL_SSH_DIR="//wsl.localhost/${WSL_DISTRO_NAME}/${HOME/#\/}/.ssh"
+  powershell.exe -Command "cp ${WSL_SSH_DIR}/config ~/.ssh" && pass || fail
+fi

@@ -6,7 +6,6 @@ WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
 WINGET_PACKAGES=( "AgileBits.1Password.CLI" "albertony.npiperelay" "Insecure.nmap" )
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
 WINGET_EXECUTABLE_DIRS=( "AgileBits.1Password.CLI" "albertony.npiperelay" )
-SYMLINK_EXECUTABLE_DIRS=( "C:/WINDOWS/System32/OpenSSH" )
 SYMLINK_PC_DIRS=( "C:/Workspace" )
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 ONEDRIVE_DIRS=( "Archive" "System Documentation" )
@@ -37,23 +36,6 @@ done
 for PACKAGE in "${WINGET_EXECUTABLE_DIRS[@]}"
 do
   for EXE in $(ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null)
-  do
-    EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
-    SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
-    notice "creating symlink to ${EXE_NAME} in local bin directory"
-    if [ -L "${SYMLINK_PATH}" ]
-    then
-      rm -f "${SYMLINK_PATH}" &>/dev/null || fatal "could not remove existing symlink ${SYMLINK_PATH}"
-    fi
-    ln -s "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
-  done
-done
-
-# Create symlinks to Windows executables.
-
-for DIR in "${SYMLINK_EXECUTABLE_DIRS[@]}"
-do
-  for EXE in $(ls -1 "${DIR/#C:/\/mnt\/c}"/*.exe 2>/dev/null)
   do
     EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
