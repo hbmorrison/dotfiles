@@ -69,11 +69,11 @@ fi
 
 # Install the debsig-verify policy.
 
-if [ ! -z ${DEBSIG_POLICY:+z} ]
+if [ ! -z ${DEBSIG_POLICY_ID:+z} ]
 then
-  DEBSIG_POLICY_DIR="/etc/debsig/policies/${DEBSIG_POLICY}"
+  DEBSIG_POLICY_DIR="/etc/debsig/policies/${DEBSIG_POLICY_ID}"
+  DEBSIG_KEYRING_DIR="/usr/share/debsig/keyrings/${DEBSIG_POLICY_ID}"
   DEBSIG_POLICY="${DEBSIG_POLICY_DIR}/${DEBSIG_POLICY_FILE}"
-  DEBSIG_KEYRING_DIR="/usr/share/debsig/keyrings/${DEBSIG_POLICY}"
   DEBSIG_KEYRING="${DEBSIG_KEYRING_DIR}/debsig.gpg"
 
   # Create the policy and policy keyring directories.
