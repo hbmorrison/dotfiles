@@ -59,6 +59,8 @@ cp -f "${BASE_DIR}/ssh/config" "${HOME}/.ssh/config" &>/dev/null && pass || fail
 # 1Password configuration in WSL.
 
 notice "copying ${PROFILE} 1Password agent config"
+[ -d "${OP_AGENT_CONFIG_DIR}" ] || mkdir -p "${OP_AGENT_CONFIG_DIR}" \
+ || fatal "could not create ${OP_AGENT_CONFIG_DIR}"
 [ -f "${OP_CONFIG}" ] || fatal "${OP_CONFIG/$BASE_DIR\/} missing"
 cp -f "${OP_CONFIG}" "${OP_AGENT_CONFIG_DIR}/agent.toml" &>/dev/null && pass || fail
 
