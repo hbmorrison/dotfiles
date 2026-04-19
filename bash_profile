@@ -65,10 +65,6 @@ case $SHELL_ENVIRONMENT in
     fi
 esac
 
-# Tell GPG which tty this session is running on.
-
-export GPG_TTY=$(/bin/tty)
-
 # Set the default editor.
 
 export EDITOR=vi

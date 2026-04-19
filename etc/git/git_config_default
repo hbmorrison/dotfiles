@@ -1,3 +1,8 @@
 [user]
 	name = Hannah Morrison
 	email = 139557138+hbmorrison@users.noreply.github.com
+	signingkey = 65613F7AE7F039BE
+[commit]
+	gpgsign = true
+[tag]
+	gpgSign = true

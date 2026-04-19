@@ -18,6 +18,10 @@ case $(/bin/cat /proc/version 2>/dev/null) in
   *microsoft-standard-WSL2*) SHELL_ENVIRONMENT="wsl";;
 esac
 
+# Tell GPG which tty this session is running on.
+
+export GPG_TTY=$(/bin/tty)
+
 # Don't put duplicate lines or lines starting with space in the history.
 
 HISTCONTROL=ignoreboth
