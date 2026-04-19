@@ -3,12 +3,15 @@
 # Configuration.
 
 WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
-WINGET_PACKAGES=( "AgileBits.1Password.CLI" "albertony.npiperelay" "Insecure.nmap" )
+WINGET_PACKAGES=( "AgileBits.1Password.CLI" "albertony.npiperelay" "GnuPG.Gpg4win"
+ "Insecure.nmap" )
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
 WINGET_EXECUTABLE_DIRS=( "AgileBits.1Password.CLI" "albertony.npiperelay" )
 SYMLINK_PC_DIRS=( "C:/Workspace" )
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 ONEDRIVE_DIRS=( "Archive" "System Documentation" )
+GNUPG_DIR="${APPDATA_ROAMING_DIR}/gnupg"
+GNUPG_EXECUTABLE_DIR="/mnt/c/Program Files/GnuPG/bin"
 
 # Check that the Windows user profile directory is correct.
 
@@ -121,6 +124,19 @@ do
   ln -s "${DIR}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
 done
 
+# Configure Gpg4Win.
+
+[ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}"
+notice "copying gpg4win gpg-agent.conf"
+cp -f "${ETC_DIR}/wsl/gpg-agent.conf" "${GNUPG_DIR}/gpg-agent.conf" \
+ &>/dev/null && pass || fatal "could not copy gpg-agent.conf to ${GNUPG_DIR}"
+notice "killing gpg4win gpg-agent"
+"${GNUPG_EXECUTABLE_DIR}/gpg-connect-agent.exe" killagent /bye \
+ &>/dev/null && pass || fatal "could not kill gpg-agent"
+notice "starting gpg4win gpg-agent"
+"${GNUPG_EXECUTABLE_DIR}/gpg-connect-agent.exe" /bye \
+ &>/dev/null && pass || fail "could not start gpg-agent"
+
 # Make sure sudo has valid credentials.
 
 setup_needs_sudo
@@ -140,9 +156,4 @@ $SUDO hwclock -s &>/dev/null && pass || fail
 
 # Run the debian setup script.
 
-if [ -z "${1:+z}" ]
-then
-  setup debian wsl
-else
-  setup debian "$@"
-fi
+setup debian "$@"

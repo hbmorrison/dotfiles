@@ -29,6 +29,7 @@ LOCAL_BIN="${LOCAL_DIR}/bin"
 SYSTEM_DIR="/mnt/c/Windows/System32"
 USER_PROFILE_DIR="/mnt/c/Users/${USER}"
 APPDATA_LOCAL_DIR="${USER_PROFILE_DIR}/AppData/Local"
+APPDATA_ROAMING_DIR="${USER_PROFILE_DIR}/AppData/Roaming"
 
 # Pretty feedback.
 
@@ -64,7 +65,7 @@ then
   SUDO=""
   setup_needs_sudo () {
     notice "checking that user is root"
-    pass
+    yes
   }
 else
   setup_needs_sudo () {
@@ -73,12 +74,12 @@ else
     then
       if sudo -n /bin/true 2>/dev/null
       then
-        pass
+        yes
       else
-        fail
+        no
         sudo -v
-        notice "checking sudo access again"
-        sudo -n /bin/true 2>/dev/null && pass || fatal "no sudo access"
+        notice "checking that user has sudo access"
+        sudo -n /bin/true 2>/dev/null && yes || fatal "no sudo access"
       fi
     fi
   }

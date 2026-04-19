@@ -1,24 +1,25 @@
 # Configuration.
 
-SHELL_PACKAGES="bash-completion curl expect fzf git-flow gpg hiera-eyaml jq \
-  man-db ripgrep shellcheck vim wget xclip zip"
-NETWORK_PACKAGES="bind9-dnsutils inetutils-traceroute lsof ncat nmap socat \
- whois"
-GPG_PACKAGES="gpg pinentry-tty scdaemon"
+DEBIAN_PACKAGES="bash-completion bind9-dnsutils curl expect fzf git-flow gpg \
+ hiera-eyaml inetutils-traceroute jq lsof man-db ncat nmap ripgrep shellcheck \
+ socat vim wget whois xclip zip"
 
 # Make sure sudo has valid credentials before starting.
 
 setup_needs_sudo
 
-# Update and install required packages.
+# Upgrade and install required packages for debian.
 
-notice "updating packages lists"
-$SUDO apt update -y &>/dev/null && pass || fatal
-notice "upgrading existing packages"
-$SUDO apt upgrade -y &>/dev/null && pass || fatal
-notice "upgrading required packages"
-$SUDO apt install -y --no-install-recommends $SHELL_PACKAGES $NETWORK_PACKAGES $GPG_PACKAGES \
- &>/dev/null && pass || fatal
+notice "upgrading debian"
+$SUDO apt update -y &>/dev/null \
+ && $SUDO apt upgrade -y &>/dev/null \
+ && pass || fatal
+
+# Install required packages.
+
+notice "installing required packages for debian"
+$SUDO apt install -y --no-install-recommends $DEBIAN_PACKAGES &>/dev/null \
+ && pass || fail
 
 # Set up the dotfiles.
 

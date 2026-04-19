@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Location of the ssh agent environment file.
-
-WSL_AGENT_ENV="${HOME}/.ssh/agent.env"
-
 # Windows directories.
 
 USER_PROFILE_DIR="/mnt/c/Users/${USER}"
@@ -18,8 +14,8 @@ NPIPERELAY="${NPIPERELAY_DIR}/npiperelay.exe"
 
 # Define the sockets.
 
-WSL_SOCKET="${XDG_RUNTIME_DIR}/agent.sock"
-WINDOWS_SOCKET="${NPIPERELAY} -ei -s //./pipe/openssh-ssh-agent"
+WSL_SOCKET="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent"
+WINDOWS_SOCKET="${NPIPERELAY} -ep -ei -s -a ${GNUPG_DIR}/S.gpg-agent.extra"
 
 # Array containing the socat command and arguments.
 
@@ -52,7 +48,6 @@ handle_status () {
     notice "is running with pid ${PID}"
   else
     notice "is not running"
-    rm -f "${WSL_AGENT_ENV}" &>/dev/null
     return 1
   fi
 }
@@ -64,10 +59,8 @@ handle_start () {
   else
     error "is already running"
   fi
-  if PID=$(pgrep --full --exact --uid=${UID} "${SOCAT[*]}") 2>/dev/null
+  if ! pgrep --full --exact --uid=${UID} "${SOCAT[*]}" &>/dev/null
   then
-    echo -e "SSH_AUTH_SOCK=${WSL_SOCKET}\nexport SSH_AUTH_SOCK" > "${WSL_AGENT_ENV}"
-  else
     error "did not start"
   fi
 }
@@ -75,7 +68,6 @@ handle_start () {
 handle_stop () {
   if pgrep --full --exact --uid=${UID} "${SOCAT[*]}" &>/dev/null
   then
-    rm -f "${WSL_AGENT_ENV}" &>/dev/null
     pkill --full --exact --uid=${UID} "${SOCAT[*]}" &>/dev/null
   else
     error "is not running"

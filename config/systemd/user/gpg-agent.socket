@@ -1,0 +1,11 @@
+[Unit]
+Description=GnuPG agent socket
+
+[Socket]
+ListenStream=%t/gnupg/S.gpg-agent
+SocketMode=0600
+DirectoryMode=0700
+Accept=true
+
+[Install]
+WantedBy=sockets.target
