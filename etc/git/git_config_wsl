@@ -4,8 +4,6 @@
 	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKKzrUN6aphg+kWqEcj/4jNAf7CNCSEjALfFueJNIjFU
 [gpg]
 	format = ssh
-[gpg "ssh"]
-	program = /usr/bin/ssh
 [commit]
 	gpgsign = true
 [tag]
