@@ -102,9 +102,10 @@ then
          2>/dev/null \
      ) || no || continue
 
-    # Extract the title and figure out the username and hostname.
+    # Extract the title and public key.
 
     TITLE=$(echo "${JSON}" | jq -r '.title')
+    PUBLIC_KEY=$(echo "${JSON}" | jq -r '.key')
 
     # Skip the item if the title is not a hostname.
 
