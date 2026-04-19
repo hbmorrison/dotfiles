@@ -113,7 +113,7 @@ $SUDO hwclock -s &>/dev/null && pass || fail
 
 if [ -z "${1:+z}" ]
 then
-  setup debian work
+  setup debian wsl
 else
   setup debian "$@"
 fi

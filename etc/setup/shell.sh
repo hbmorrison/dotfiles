@@ -75,8 +75,15 @@ sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini" \
 notice "reloading systemd"
 systemctl --user daemon-reload &>/dev/null && pass || fail
 
-# Configure Vim and Git.
+# Configure vim, git and ssh.
 
-setup vim "$@"
-setup git "$@"
-setup ssh "$@"
+if [ "${OS}" = "wsl" ] && [ -z "${1:+z}" ]
+then
+  setup vim wsl
+  setup git wsl
+  setup ssh wsl
+else
+  setup vim "$@"
+  setup git "$@"
+  setup ssh "$@"
+fi
