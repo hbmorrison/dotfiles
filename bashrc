@@ -22,6 +22,22 @@ esac
 
 export GPG_TTY=$(/bin/tty)
 
+# Start GPG agent early for SSH.
+
+if [ -x /usr/bin/gpgconf ]
+then
+  if /usr/bin/gpgconf --list-options gpg-agent | grep -q '^enable-ssh-support:.*:1$'
+  then
+    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+    gpg-connect-agent /bye &>/dev/null
+  fi
+fi
+
+if [ -z ${SSH_AUTH_SOCK:+z} ] && [ -f "${HOME}/.ssh/agent.env" ]
+then
+  source "${HOME}/.ssh/agent.env"
+fi
+
 # Don't put duplicate lines or lines starting with space in the history.
 
 HISTCONTROL=ignoreboth

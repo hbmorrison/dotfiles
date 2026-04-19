@@ -1,3 +1,4 @@
+Match host * exec "gpg-connect-agent updatestartuptty /bye"
 Host router nas-01 nas-02 pbs-local pbs-remote
   User hannah
 Host docker-apps docker-fabric docker-media docker-remote docker-test docker-wifi

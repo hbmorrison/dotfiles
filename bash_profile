@@ -56,25 +56,7 @@ case $SHELL_ENVIRONMENT in
     fi
     source "${HOME}/.ssh/agent.env" &>/dev/null
     ;;
-  *)
-    if systemctl --user is-enabled ssh-agent-relay.service &>/dev/null
-    then
-      systemctl --user daemon-reload \
-       && systemctl --user stop ssh-agent-relay.service \
-       && systemctl --user disable ssh-agent-relay.service
-    fi
 esac
-
-# Start GPG agent for SSH if needed.
-
-if [ -x /usr/bin/gpgconf ]
-then
-  if /usr/bin/gpgconf --list-options gpg-agent | grep -q '^enable-ssh-support:.*:1$'
-  then
-    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-    gpg-connect-agent /bye &>/dev/null
-  fi
-fi
 
 # Set the default editor.
 
