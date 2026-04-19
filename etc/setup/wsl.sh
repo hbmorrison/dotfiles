@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 1Password agent configuration.
+
+OP_CONFIG_DIR="${APPDATA_LOCAL_DIR}/1Password/config/ssh"
+
 # Location of Gpg4win binaries and config.
 
 GNUPG_DIR="${APPDATA_ROAMING_DIR}/gnupg"
@@ -140,6 +144,18 @@ do
   [ -L "${SYMLINK_PATH}" ] && rm -f "${SYMLINK_PATH}" &>/dev/null
   ln -s "${DIR}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
 done
+
+# Make sure 1Password CLI is installed.
+
+setup install op
+
+# 1Password configuration.
+
+notice "copying 1Password agent config"
+[ -d "${OP_CONFIG_DIR}" ] || mkdir -p "${OP_CONFIG_DIR}" \
+ || fatal "could not create ${OP_CONFIG_DIR}"
+cp -f "${ETC_DIR}/wsl/agent.toml" "${OP_CONFIG_DIR}/agent.toml" \
+ &>/dev/null && pass || fail
 
 # Configure Gpg4Win.
 
