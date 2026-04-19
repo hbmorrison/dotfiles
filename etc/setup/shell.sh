@@ -77,3 +77,10 @@ systemctl --user daemon-reload &>/dev/null && pass || fail
 
 setup vim "$@"
 setup git "$@"
+
+if [ "${OS}" = "wsl" ]
+then
+  setup op "$@"
+else
+  setup ssh "$@"
+fi
