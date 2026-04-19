@@ -98,7 +98,7 @@ function cd {
 # Basic shell aliases.
 
 alias c=clear
-alias ls="LC_COLLATE=C command ls -F --color=auto"
+alias ls="LC_COLLATE=C command ls -h -FHLN --group-directories-first --color=auto"
 
 # Source other bashrc scripts.
 
