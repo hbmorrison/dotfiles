@@ -1,11 +1,22 @@
 #!/bin/bash
 
-# Configuration.
+# Location of WSL side files.
 
 SSH_ENV="$HOME/.ssh/agent.env"
 SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
-WINDOWS_SOCKET="$HOME/.local/bin/npiperelay -ei -s //./pipe/openssh-ssh-agent"
-NPIPERELAY=(socat "UNIX-LISTEN:${SSH_AUTH_SOCK},fork" "EXEC:'${WINDOWS_SOCKET}',nofork")
+
+# Location of Windows side files.
+
+USER_PROFILE="/mnt/c/Users/${USER}"
+APPDATA_LOCAL="${USER_PROFILE}/AppData/Local"
+WINGET_PACKAGES_DIR="${APPDATA_LOCAL}/Microsoft/WinGet/Packages"
+NPIPERELAY_DIR=$(find "${WINGET_PACKAGES_DIR}" -name 'albertony.npiperelay_*' -type d)
+NPIPERELAY="${NPIPERELAY_DIR/\/mnt\/c/C:}/npiperelay.exe"
+WINDOWS_SOCKET="${NPIPERELAY} -ei -s //./pipe/openssh-ssh-agent"
+
+# Array containing the socat command and arguments.
+
+SOCAT=(socat "UNIX-LISTEN:${SSH_AUTH_SOCK},fork" "EXEC:${WINDOWS_SOCKET},nofork")
 
 # Functions for sending info to stderr.
 
@@ -29,7 +40,7 @@ error () {
 # Functions for managing socat.
 
 handle_status () {
-  if PID=$(pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}" 2>/dev/null)
+  if PID=$(pgrep --full --exact --uid=${UID} "${SOCAT[*]}" 2>/dev/null)
   then
     notice "is running with pid ${PID}"
   else
@@ -40,13 +51,13 @@ handle_status () {
 }
 
 handle_start () {
-  if ! pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}" &>/dev/null
+  if ! pgrep --full --exact --uid=${UID} "${SOCAT[*]}" &>/dev/null
   then
-    (rm -f "${SSH_AUTH_SOCK}" &>/dev/null && (setsid "${NPIPERELAY[@]}" &) &>/dev/null)
+    (rm -f "${SSH_AUTH_SOCK}" &>/dev/null && (setsid "${SOCAT[@]}" &) &>/dev/null)
   else
     error "is already running"
   fi
-  if PID=$(pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}") 2>/dev/null
+  if PID=$(pgrep --full --exact --uid=${UID} "${SOCAT[*]}") 2>/dev/null
   then
     echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" > "${SSH_ENV}"
   else
@@ -55,10 +66,10 @@ handle_start () {
 }
 
 handle_stop () {
-  if pgrep --full --exact --uid=${UID} "${NPIPERELAY[*]}" &>/dev/null
+  if pgrep --full --exact --uid=${UID} "${SOCAT[*]}" &>/dev/null
   then
     rm -f "${AGENT_ENV}" &>/dev/null
-    pkill --full --exact --uid=${UID} "${NPIPERELAY[*]}" &>/dev/null
+    pkill --full --exact --uid=${UID} "${SOCAT[*]}" &>/dev/null
   else
     error "is not running"
   fi
