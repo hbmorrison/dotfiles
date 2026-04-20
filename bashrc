@@ -22,28 +22,6 @@ esac
 
 export GPG_TTY=$(/bin/tty)
 
-# Start GPG agent early for SSH.
-
-if [ -x /usr/bin/gpgconf ]
-then
-  if /usr/bin/gpgconf --list-options gpg-agent | grep -q '^enable-ssh-support:.*:1$'
-  then
-    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-    gpg-connect-agent /bye &>/dev/null
-  fi
-fi
-
-if [ -z ${SSH_AUTH_SOCK:+z} ] && [ -f "${HOME}/.ssh/agent.env" ]
-then
-  source "${HOME}/.ssh/agent.env"
-fi
-
-# Don't put duplicate lines or lines starting with space in the history.
-
-HISTCONTROL=ignoreboth
-HISTSIZE=1000
-HISTFILESIZE=2000
-
 # Append to the history file.
 
 shopt -s histappend
@@ -118,14 +96,14 @@ alias ls="LC_COLLATE=C command ls -h -FHLN --group-directories-first --color=aut
 
 # Source other bashrc scripts.
 
-if [ -r "${HOME}/.bashrc_prompt" ]
-then
-  source $HOME/.bashrc_prompt
-fi
-
 if [ -r "${HOME}/.bashrc_aliases" ]
 then
   source $HOME/.bashrc_aliases
+fi
+
+if [ -r "${HOME}/.bashrc_git" ]
+then
+  source $HOME/.bashrc_git
 fi
 
 if [ -r "${HOME}/.bashrc_op" ]
