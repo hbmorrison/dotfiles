@@ -17,7 +17,6 @@ WINGET_PACKAGES=(
   "AgileBits.1Password.CLI"
   "albertony.npiperelay"
   "GnuPG.Gpg4win"
-  "Insecure.nmap"
   "Yubico.YubiKeyManagerCLI"
 )
 
@@ -31,6 +30,12 @@ SYMLINK_ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 
 SYMLINK_WINGET_PACKAGE_DIRS=(
   "AgileBits.1Password.CLI"
+  "albertony.npiperelay"
+)
+
+SYMLINK_APPS=(
+  "/mnt/c/Program Files/GnuPG/bin/gpgconf.exe"
+  "/mnt/c/Program Files/Yubico/YubiKey Manager CLI/ykman.exe"
 )
 
 # Check that the Windows user profile directory is correct.
@@ -83,24 +88,6 @@ do
   fi
 done
 
-# Create symlinks to the executables installed by winget.
-
-for PACKAGE in "${SYMLINK_WINGET_PACKAGE_DIRS[@]}"
-do
-  mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
-  for EXE in "${EXECUTABLES[@]}"
-  do
-    EXE_NAME=$(basename -s .exe "${EXE}" | sed 's/\s\+/_/g')
-    SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME,,}"
-    notice "creating symlink to ${EXE_NAME} in local bin directory"
-    if [ -L "${SYMLINK_PATH}" ]
-    then
-      rm -f "${SYMLINK_PATH}" &>/dev/null || fatal "could not remove existing symlink ${SYMLINK_PATH}"
-    fi
-    ln -s "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
-  done
-done
-
 # Add the user profile directories and PC directories together.
 
 declare -a SOURCE_DIRS
@@ -141,15 +128,32 @@ do
   SYMLINK_NAME="${DIR_NAME/_-_*}"
   SYMLINK_PATH="${HOME}/${SYMLINK_NAME,,}"
   notice "creating symlink ${SYMLINK_NAME,,} in home directory"
-  [ -L "${SYMLINK_PATH}" ] && rm -f "${SYMLINK_PATH}" &>/dev/null
-  ln -s "${DIR}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
+  ln -nfs "${DIR}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
 done
 
-# Make sure 1Password CLI is installed.
+# Create symlinks to the executables installed by winget.
 
-setup install op
+for PACKAGE in "${SYMLINK_WINGET_PACKAGE_DIRS[@]}"
+do
+  mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
+  for EXE in "${EXECUTABLES[@]}"
+  do
+    EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
+    SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
+    notice "creating symlink to ${EXE_NAME} in local bin directory"
+    ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
+  done
+done
 
-# 1Password configuration.
+for EXE in "${SYMLINK_APPS[@]}"
+do
+  EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
+  SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
+  notice "creating symlink to ${EXE_NAME} in local bin directory"
+  ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null && pass || fail
+done
+
+# Configure 1Password CLI.
 
 notice "copying 1Password agent config"
 [ -d "${OP_CONFIG_DIR}" ] || mkdir -p "${OP_CONFIG_DIR}" \
