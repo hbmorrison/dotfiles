@@ -1,0 +1,12 @@
+[Unit]
+Description=gpg4win to WSL connector for GPG
+Requires=gpg-agent-relay.socket
+
+[Service]
+Type=simple
+ExecStartPre=-%h/.local/bin/gpgconf.exe --launch gpg-agent
+ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/hmorris/AppData/Local/gnupg/S.gpg-agent'
+StandardInput=socket
+
+[Install]
+WantedBy=default.target
