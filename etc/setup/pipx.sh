@@ -11,13 +11,13 @@ shift
 ENV_FILE="${ETC_DIR}/pipx/${INSTALL_ENV}.env"
 if [ ! -f $ENV_FILE ]
 then
-  AVAILABLE_ENVS="("
+  AVAILABLE_ENVS="<"
   for FILE in $ETC_DIR/pipx/*.env
   do
     NAME=$(basename -s .env $FILE | sed 's/^pipx_//')
     AVAILABLE_ENVS+="${NAME}|"
   done
-  usage "${AVAILABLE_ENVS/%|/)}"
+  usage "${AVAILABLE_ENVS/%|/>}"
 fi
 
 # Source the environment file.

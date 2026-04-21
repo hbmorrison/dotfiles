@@ -15,13 +15,13 @@ shift
 ENV_FILE="${ETC_DIR}/install/${INSTALL_ENV}.env"
 if [ ! -f $ENV_FILE ]
 then
-  AVAILABLE_ENVS="("
+  AVAILABLE_ENVS="<"
   for FILE in $ETC_DIR/install/*.env
   do
     NAME=$(basename -s .env $FILE | sed 's/^install_//')
     AVAILABLE_ENVS+="${NAME}|"
   done
-  usage "${AVAILABLE_ENVS/%|/)}"
+  usage "${AVAILABLE_ENVS/%|/>}"
 fi
 
 # Source the environment file.

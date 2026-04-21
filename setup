@@ -31,7 +31,7 @@ USER_PROFILE_DIR="/mnt/c/Users/${USER}"
 APPDATA_LOCAL_DIR="${USER_PROFILE_DIR}/AppData/Local"
 APPDATA_ROAMING_DIR="${USER_PROFILE_DIR}/AppData/Roaming"
 
-# Pretty feedback.
+# Pretty colours.
 
 GOTO_COLUMN="\\033[74G"
 RED='\033[00;31m'
@@ -39,11 +39,30 @@ GREEN='\033[00;32m'
 YELLOW='\033[00;33m'
 CLEAR='\033[00m'
 
-notice () { echo -en "${1^} " 1>&2; }
+# Function to call setup scripts from other setup scripts.
+
+setup () {
+  local script="${1}"
+  shift
+  if [ -f "${SCRIPT_DIR}/${script}.sh" ]
+  then
+    echo -e "Setting up ${GREEN}${script}${CLEAR}:"
+    source "${SCRIPT_DIR}/${script}.sh" "$@"
+  fi
+}
+
+# Sent a notice to stderr.
+
+notice () { echo -en " - ${1^} " 1>&2; }
+
+# Non-fatal feedback is sent to stderr.
+
 pass () { echo -e "${GOTO_COLUMN}${GREEN}Done${CLEAR}" 1>&2; }
 fail () { echo -e "${GOTO_COLUMN}${YELLOW}Failed${CLEAR}" 1>&2; return 1; }
 yes () { echo -e "${GOTO_COLUMN}${GREEN}Yes${CLEAR}" 1>&2; }
 no () { echo -e "${GOTO_COLUMN}${YELLOW}No${CLEAR}" 1>&2; return 1; }
+
+# Fatal feedback that ends the script immediately.
 
 fatal () {
   echo -e "${GOTO_COLUMN}${RED}Failed${CLEAR}" 1>&2;
@@ -64,12 +83,12 @@ if [ $(id -u) -eq 0 ]
 then
   SUDO=""
   setup_needs_sudo () {
-    notice "checking that user is root"
+    notice "checking whether user is root"
     yes
   }
 else
   setup_needs_sudo () {
-    notice "checking that user has sudo access"
+    notice "checking whether user has sudo access"
     if [ ! -z ${SUDO} ]
     then
       if sudo -n /bin/true 2>/dev/null
@@ -78,7 +97,7 @@ else
       else
         no
         sudo -v
-        notice "checking that user has sudo access"
+        notice "confirming that user has sudo access"
         sudo -n /bin/true 2>/dev/null && yes || fatal "no sudo access"
       fi
     fi
@@ -87,16 +106,8 @@ fi
 
 # Check that symlink is set up.
 
-if [ ! -d $LOCAL_BIN ]
-then
-  mkdir -p $LOCAL_BIN
-fi
-
-if [ -L $LOCAL_BIN/setup ]
-then
-  rm -f $LOCAL_BIN/setup
-fi
-ln -s $BASE_DIR/setup $LOCAL_BIN/setup
+[ -d $LOCAL_BIN ] || mkdir -p $LOCAL_BIN &>/dev/null
+ln -nfs $BASE_DIR/setup $LOCAL_BIN/setup &>/dev/null
 
 # Get the name of the setup script from the command line.
 
@@ -115,25 +126,14 @@ then
 
   # Print a usage message listing all available setup scripts.
 
-  AVAILABLE_SCRIPTS="("
+  AVAILABLE_SCRIPTS="<"
   for FILE in "${SCRIPT_DIR}/"*
   do
     NAME=$(basename -s .sh $FILE)
     AVAILABLE_SCRIPTS+="${NAME}|"
   done
-  usage "${AVAILABLE_SCRIPTS/%|/)}"
+  echo -e "${YELLOW}Usage:${CLEAR} setup ${AVAILABLE_SCRIPTS/%|/>}" 1>&2
 fi
-
-# Function to call setup scripts from other setup scripts.
-
-setup () {
-  local script="${1}"
-  shift
-  if [ -f "${SCRIPT_DIR}/${script}.sh" ]
-  then
-    source "${SCRIPT_DIR}/${script}.sh" "$@"
-  fi
-}
 
 # Run the setup script.
 
