@@ -209,11 +209,10 @@ pass
 notice "copying gpg4win config files"
 [ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}" &>/dev/null \
  || fatal "could not create ${GNUPG_DIR}"
-for CONFIG_FILE in gpg.conf gpg-agent.conf
-do
-  cp -f "${ETC_DIR}/wsl/${CONFIG_FILE}" "${GNUPG_DIR}/${CONFIG_FILE}" &>/dev/null \
-   || fatal "could not copy ${CONFIG_FILE} to ${GNUPG_DIR}"
-done
+cp -f "${BASE_DIR}/gnupg/gpg.conf" "${GNUPG_DIR}/${CONFIG_FILE}" &>/dev/null \
+ || fatal "could not copy gpg.conf to ${GNUPG_DIR}"
+cp -f "${ETC_DIR}/wsl/gpg-agent.conf" "${GNUPG_DIR}/${CONFIG_FILE}" &>/dev/null \
+ || fatal "could not copy gpg-agent.conf to ${GNUPG_DIR}"
 pass
 notice "restarting gpg4win gpg-agent"
 "${GNUPG_BIN_DIR}/gpg-connect-agent.exe" killagent /bye &>/dev/null \
