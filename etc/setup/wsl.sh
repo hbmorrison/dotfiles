@@ -7,11 +7,15 @@ PACKAGES="gpg"
 # Systemd units for integrating with gpg4win.
 
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
-SYSTEMD_LAUNCH_UNITS=(
+EXISTING_SYSTEMD_UNITS=(
+  "keyboxd.socket"
+  "keyboxd.service"
+  "ssh-agent.socket"
+  "ssh-agent.service"
+)
+RELAY_SYSTEMD_UNITS=(
   "gpg-agent-launch.service"
   "keyboxd-launch.service"
-)
-SYSTEMD_SOCKETS=(
   "gpg-agent-relay.socket"
   "gpg-agent.extra-relay.socket"
   "gpg-agent.ssh-relay.socket"
@@ -208,7 +212,6 @@ do
    || fatal "could not copy ${CONFIG_FILE} to ${GNUPG_DIR}"
 done
 pass
-
 notice "restarting gpg4win gpg-agent"
 "${GNUPG_BIN_DIR}/gpg-connect-agent.exe" killagent /bye &>/dev/null \
  && "${GNUPG_BIN_DIR}/gpg-connect-agent.exe" /bye &>/dev/null \
@@ -218,11 +221,12 @@ notice "reloading gpg4win scdaemon"
 
 # Mask existing ssh-agent socket and service.
 
-notice "masking existing ssh-agent systemd units"
-systemctl --user mask ssh-agent.socket &>/dev/null \
- || fatal "could not mask ssh-agent.socket"
-systemctl --user mask ssh-agent.service &>/dev/null \
- || fatal "could not mask ssh-agent.service"
+notice "masking existing gpg and ssh systemd units"
+for UNIT in "${EXISTING_SYSTEMD_UNITS[@]}"
+do
+  systemctl --user mask ${UNIT} &>/dev/null \
+   || fatal "could not mask ${UNIT}"
+done
 pass
 
 # Enable user systemd units.
@@ -230,14 +234,14 @@ pass
 notice "installing systemd units into user systemd directory"
 [ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" &>/dev/null \
  || fatal "could not create ${SYSTEMD_USER_DIR}"
-for UNIT in ${SYSTEMD_LAUNCH_UNITS[@]} ${SYSTEMD_SOCKETS[@]}
+for UNIT in "${RELAY_SYSTEMD_UNITS[@]}"
 do
   cp -f "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_USER_DIR}" &> /dev/null \
    || fatal "could not copy ${UNIT}"
 done
 systemctl --user daemon-reload &>/dev/null \
  || fatal "could not reload systemd"
-for UNIT in ${SYSTEMD_LAUNCH_UNITS[@]} ${SYSTEMD_SOCKETS[@]}
+for UNIT in ${RELAY_SYSTEMD_UNITS[@]}
 do
   systemctl --user enable --now $UNIT &>/dev/null \
    || fatal "could not enable ${UNIT}"
@@ -251,16 +255,10 @@ for KEY in ${MY_GPG_PUBLIC_KEYS[@]}
 do
   /usr/bin/gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
    || fatal "could not import ${KEY}"
-  "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
-   || fatal "could not import ${KEY} into gpg4win"
-done
-pass
-
-notice "trusting my public keys"
-for KEY in ${MY_GPG_PUBLIC_KEYS[@]}
-do
   echo "${KEY}:6:" | /usr/bin/gpg --import-ownertrust &>/dev/null \
    || fatal "could not trust ${KEY}"
+  "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+   || fatal "could not import ${KEY} into gpg4win"
   echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
    || fatal "gpg4win could not trust ${KEY}"
 done
