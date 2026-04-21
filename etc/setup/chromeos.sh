@@ -33,8 +33,18 @@ then
   $SUDO systemctl restart networking &>/dev/null && pass || fail
 fi
 
-# Run the debian setup script.
+# Install required packages and configure udisks and yubikey.
 
-setup debian "$@"
+setup packages "$@"
 setup udisks "$@"
 setup yubikey "$@"
+
+# Set up the shell.
+
+setup shell "$@"
+
+# Customise tools.
+
+setup git "$@"
+setup ssh "$@"
+setup vim "$@"

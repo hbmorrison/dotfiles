@@ -26,14 +26,18 @@ SYMLINK_PC_DIRS=( "C:/Workspace" )
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 SYMLINK_ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 
-# Winget packages whose executables will be symlinked from .local/bin/.
+# Winget packages whose executables will be symlinked from the local bin
+# directory.
 
 SYMLINK_WINGET_PACKAGE_DIRS=(
   "AgileBits.1Password.CLI"
   "albertony.npiperelay"
 )
 
+# Additional apps that require symlinks.
+
 SYMLINK_APPS=(
+  "/mnt/c/Program Files/GnuPG/bin/gpg.exe"
   "/mnt/c/Program Files/GnuPG/bin/gpgconf.exe"
   "/mnt/c/Program Files/Yubico/YubiKey Manager CLI/ykman.exe"
 )
@@ -145,6 +149,8 @@ do
   done
 done
 
+# Create symlinks to named apps.
+
 for EXE in "${SYMLINK_APPS[@]}"
 do
   EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
@@ -197,6 +203,16 @@ fi
 notice "setting system clock from the hardware clock"
 $SUDO hwclock -s &>/dev/null && pass || fail
 
-# Run the debian setup script.
+# Install required packages.
 
-setup debian "$@"
+setup packages wsl
+
+# Set up the shell.
+
+setup shell wsl
+
+# Customise tools.
+
+setup git wsl
+setup ssh wsl
+setup vim wsl

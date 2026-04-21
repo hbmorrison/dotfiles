@@ -20,7 +20,3 @@ $SUDO apt update -y &>/dev/null \
 notice "installing required packages for debian"
 $SUDO apt install -y --no-install-recommends $DEBIAN_PACKAGES &>/dev/null \
  && pass || fail
-
-# Set up the dotfiles.
-
-setup shell "$@"

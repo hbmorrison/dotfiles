@@ -228,7 +228,6 @@ notice "configuring ${NON_ROOT_USER}'s shell"
  && su -l -c "$NON_ROOT_DOTFILES/bin/setup shell" $NON_ROOT_USER \
  && pass || fatal "dotfiles setup script failed"
 
-
 # Set the user's password.
 
 if [ $(grep ^$NON_ROOT_USER: /etc/shadow 2>/dev/null | cut -d: -f2 | wc -c) -lt 3 ]
