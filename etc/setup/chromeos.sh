@@ -1,10 +1,31 @@
 # Configuration.
 
 SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
+PACKAGES="gpg gpg-agent pcscd pcsc-tools scdaemon yubikey-manager"
 
 # Make sure sudo has valid credentials before starting.
 
 setup_needs_sudo
+
+# Update and install required packages.
+
+notice "installing required packages for yubikey"
+$SUDO apt update -y &>/dev/null \
+ && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
+ && pass || fail
+
+# Configure access to yubikey smartcard interface.
+
+notice "Copying yubikey polkit rules"
+$SUDO cp -f $ETC_DIR/chromeos/99-yubikey-polkit.rules /etc/polkit-1/rules.d/99-yubikey.rules \
+ &>/dev/null && pass || fail
+notice "Copying yubikey udev rules"
+$SUDO cp -f $ETC_DIR/chromeos/99-yubikey-udev.rules /etc/udev/rules.d/99-yubikey.rules \
+ &>/dev/null && pass || fail
+notice "Reloading udev rules"
+$SUDO udevadm control --reload &>/dev/null && pass || fail
+notice "Enabling pcscd"
+$SUDO systemctl enable --now pcscd.socket &>/dev/null && pass || fail
 
 # Fix search domains.
 
@@ -25,18 +46,14 @@ then
   $SUDO systemctl restart networking &>/dev/null && pass || fail
 fi
 
-# Install required packages and configure udisks and yubikey.
+# Install required packages.
 
-setup packages "$@"
-setup udisks4chromeos "$@"
-setup gpg4chromeos "$@"
+setup debian
+setup udisks
 
-# Set up the shell.
+# Customise the shell environment.
 
-setup shell "$@"
-
-# Customise tools.
-
-setup git "$@"
-setup ssh "$@"
-setup vim "$@"
+setup shell
+setup git
+setup ssh
+setup vim

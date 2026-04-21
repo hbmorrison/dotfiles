@@ -6,6 +6,7 @@ ListenStream=%t/gnupg/S.gpg-agent.extra
 SocketMode=0600
 DirectoryMode=0700
 Accept=true
+RemoveOnStop=true
 
 [Install]
 WantedBy=sockets.target

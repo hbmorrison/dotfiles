@@ -37,6 +37,7 @@ GOTO_COLUMN="\\033[74G"
 RED='\033[00;31m'
 GREEN='\033[00;32m'
 YELLOW='\033[00;33m'
+BLUE='\033[00;36m'
 CLEAR='\033[00m'
 
 # Function to call setup scripts from other setup scripts.
@@ -47,7 +48,7 @@ setup () {
   shift
   if [ -f "${SCRIPT_DIR}/${script}.sh" ]
   then
-    echo -e "Setting up ${GREEN}${name}${CLEAR}:"
+    echo -e "${BLUE}Setting up ${name}:${CLEAR}"
     source "${SCRIPT_DIR}/${script}.sh" "$@"
   fi
 }

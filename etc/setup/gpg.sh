@@ -35,6 +35,20 @@ SYSTEMD_LAUNCH_SERVICES=(
   "keyboxd-launch.service"
 )
 
+# Winget packages that contain executables that will be symlinked.
+
+SYMLINK_WINGET_PACKAGE_DIRS=(
+  "albertony.npiperelay"
+)
+
+# Additional Windows apps that require symlinks.
+
+SYMLINK_WINDOWS_APPS=(
+  "/mnt/c/Program Files/GnuPG/bin/gpg.exe"
+  "/mnt/c/Program Files/GnuPG/bin/gpgconf.exe"
+  "/mnt/c/Program Files/Yubico/YubiKey Manager CLI/ykman.exe"
+)
+
 # Location of Gpg4win binaries and config.
 
 GNUPG_DIR="${APPDATA_ROAMING_DIR}/gnupg"
@@ -51,17 +65,20 @@ TRUSTED_GPG_PUBLIC_KEYS=(
 WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
 WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
 WINGET_PACKAGES=(
-  "AgileBits.1Password.CLI"
   "albertony.npiperelay"
   "GnuPG.Gpg4win"
   "Yubico.YubikeyManager"
   "Yubico.YubiKeyManagerCLI"
 )
 
-# Check that the Windows user profile directory is correct.
+# Check that various directories exist first.
 
 notice "checking whether user profile directory is accessible"
 [ -d "${USER_PROFILE_DIR}" ] && yes || fatal "could not find ${USER_PROFILE_DIR}"
+
+notice "checking whether systemd user directory exists"
+[ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" &>/dev/null \
+ && yes || fatal "could not create ${SYSTEMD_USER_DIR}"
 
 # Make sure sudo has valid credentials.
 
@@ -74,46 +91,31 @@ $SUDO apt update -y &>/dev/null \
  && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
  && pass || fail
 
-# Run gpg to create the .gnupg directory structure.
-
-notice "creating .gnupg directory structure"
-/usr/bin/gpg --list-keys &>/dev/null \
- && pass || fatal "could not run gpg to create .gnupg"
-
-# Import trusted public keys.
-
-notice "importing trusted public keys"
-for KEY in ${TRUSTED_GPG_PUBLIC_KEYS[@]}
-do
-  if [ -f "${ETC_DIR}/gpg/${KEY}.asc" ]
-  then
-    /usr/bin/gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
-     || fatal "could not import ${KEY}"
-    echo "${KEY}:6:" | /usr/bin/gpg --import-ownertrust &>/dev/null \
-     || fatal "could not trust ${KEY}"
-    "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
-     || fatal "could not import ${KEY} into gpg4win"
-    echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
-     || fatal "gpg4win could not trust ${KEY}"
-  else
-    fatal "Public key ${KEY} does not exist"
-  fi
-done
-pass
-
-# Shut down the local gpg-agent which will have started in the background.
+# Shut down the local gpg-agent which may have started in the background.
 
 notice "shutting down local gpg-agent"
 /usr/bin/gpgconf --kill gpg-agent &>/dev/null \
  && pass || fatal "could not shut down gpg-agent"
 
-# Mask existing ssh-agent socket and service.
+# Mask existing agent sockets and services.
 
 notice "masking existing gpg and ssh systemd units"
 for UNIT in "${EXISTING_SYSTEMD_SOCKETS[@]}"
 do
   systemctl --user mask ${UNIT} &>/dev/null \
    || fatal "could not mask ${UNIT}"
+done
+pass
+
+# Stop any relay sockets that might already be in place.
+
+notice "stopping any existing relay sockets"
+for UNIT in "${SYSTEMD_SOCKETS[@]}"
+do
+  if systemctl --user status $UNIT &>/dev/null
+  then
+    systemctl --user stop $UNIT &>/dev/null || fatal "could not stop ${UNIT}"
+  fi
 done
 pass
 
@@ -139,7 +141,30 @@ do
   fi
 done
 
-# Configure Gpg4Win.
+# Create symlinks to the executables.
+
+notice "creating symlinks to executables"
+for PACKAGE in "${SYMLINK_WINGET_PACKAGE_DIRS[@]}"
+do
+  mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
+  for EXE in "${EXECUTABLES[@]}"
+  do
+    EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
+    SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
+    ln -fs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
+     || fatal "could not symlink ${SYMLINK_PATH}"
+  done
+done
+for EXE in "${SYMLINK_WINDOWS_APPS[@]}"
+do
+  EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
+  SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
+  ln -fs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
+   || fatal "could not symlink ${SYMLINK_PATH}"
+done
+pass
+
+# Configure gpg4Win.
 
 notice "copying gpg4win config files"
 [ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}" &>/dev/null \
@@ -159,8 +184,6 @@ notice "reloading gpg4win scdaemon"
 # Enable user systemd units.
 
 notice "installing gpg and ssh relay systemd units"
-[ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" &>/dev/null \
- || fatal "could not create ${SYSTEMD_USER_DIR}"
 for UNIT in "${SYSTEMD_SOCKETS[@]}" "${SYSTEMD_SERVICES[@]}" "${SYSTEMD_LAUNCH_SERVICES[@]}"
 do
   cp -f "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_USER_DIR}" &> /dev/null \
@@ -172,5 +195,32 @@ for UNIT in "${SYSTEMD_SOCKETS[@]}" "${SYSTEMD_LAUNCH_SERVICES[@]}"
 do
   systemctl --user enable --now $UNIT &>/dev/null \
    || fatal "could not enable ${UNIT}"
+done
+pass
+
+# Run gpg to create the .gnupg directory structure.
+
+notice "creating .gnupg directory structure"
+/usr/bin/gpg --list-keys &>/dev/null \
+ && pass || fatal "could not run gpg to create .gnupg"
+
+# Import trusted public keys.
+
+notice "importing trusted public keys"
+for KEY in ${TRUSTED_GPG_PUBLIC_KEYS[@]}
+do
+  if [ -f "${ETC_DIR}/gpg/${KEY}.asc" ]
+  then
+    /usr/bin/gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+     || fatal "could not import ${KEY}"
+    echo "${KEY}:6:" | /usr/bin/gpg --import-ownertrust &>/dev/null \
+     || fatal "could not trust ${KEY}"
+    "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+     || fatal "could not import ${KEY} into gpg4win"
+    echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
+     || fatal "gpg4win could not trust ${KEY}"
+  else
+    fatal "Public key ${KEY} does not exist"
+  fi
 done
 pass

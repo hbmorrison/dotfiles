@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# 1Password agent configuration.
-
-OP_CONFIG_DIR="${APPDATA_LOCAL_DIR}/1Password/config/ssh"
-
 # Make sure sudo has valid credentials.
 
 setup_needs_sudo
@@ -29,22 +25,13 @@ else
   echo
   echo " 1. Hit Enter to restart WSL"
   echo " 2. Accept the UAC prompt for Powershell"
-  echo " 3. Open the Terminal app again"
+  echo " 3. Exit and re-open the Terminal app"
   echo " 4. Re-run 'setup ${SCRIPT}'"
   echo
   read -s
   echo "Restarting..."
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl --shutdown\""
 fi
-
-# Configure 1Password CLI.
-
-notice "copying 1Password agent config"
-[ -d "${OP_CONFIG_DIR}" ] || mkdir -p "${OP_CONFIG_DIR}" &>/dev/null \
- || fatal "could not create ${OP_CONFIG_DIR}"
-cp -f "${ETC_DIR}/wsl/agent.toml" "${OP_CONFIG_DIR}/agent.toml" &>/dev/null \
- || fatal "could not copy agent.toml to ${OP_CONFIG_DIR}"
-pass
 
 # Fix the WSL2 / Debian clock issue.
 
@@ -61,19 +48,14 @@ $SUDO hwclock -s &>/dev/null && pass || fail
 
 # Install required packages.
 
-setup packages wsl
+setup packages
+setup op
+setup gpg
 
-# Set up the shell.
+# Customise the shell environment.
 
-setup shell wsl
-setup symlinks4wsl "$@"
-
-# Set up gpg.
-
-setup gpg4wsl "$@"
-
-# Customise tools.
-
+setup shell
+setup symlinks
 setup git wsl
 setup ssh wsl
 setup vim wsl

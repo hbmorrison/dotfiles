@@ -1,25 +1,15 @@
 #!/bin/bash
 
-# Directories to be symlinked from home directory.
+# Directories that will be symlinked.
 
 SYMLINK_PC_DIRS=( "C:/Workspace" )
 SYMLINK_PROFILE_DIRS=( "Downloads" "Documents" "AppData" )
 SYMLINK_ONEDRIVE_DIRS=( "Archive" "System Documentation" )
 
-# Winget packages whose executables will be symlinked from the local bin
-# directory.
+# Winget packages that contain executables that will be symlinked.
 
 SYMLINK_WINGET_PACKAGE_DIRS=(
   "AgileBits.1Password.CLI"
-  "albertony.npiperelay"
-)
-
-# Additional apps that require symlinks.
-
-SYMLINK_APPS=(
-  "/mnt/c/Program Files/GnuPG/bin/gpg.exe"
-  "/mnt/c/Program Files/GnuPG/bin/gpgconf.exe"
-  "/mnt/c/Program Files/Yubico/YubiKey Manager CLI/ykman.exe"
 )
 
 # Collect all of the Windows directories that will be symlinked.
@@ -54,14 +44,14 @@ do
   DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
   SYMLINK_NAME="${DIR_NAME/_-_*}"
   SYMLINK_PATH="${HOME}/${SYMLINK_NAME,,}"
-  ln -nfs "${DIR}" "${SYMLINK_PATH}" &>/dev/null \
-   fatal "could not symlink ${SYMLINK_PATH}"
+  ln -fs "${DIR}" "${SYMLINK_PATH}" &>/dev/null \
+   || fatal "could not symlink ${SYMLINK_PATH}"
 done
 pass
 
 # Create symlinks to the executables.
 
-notice "creating symlinks to executables"
+notice "creating symlinks to executables in local bin directory"
 for PACKAGE in "${SYMLINK_WINGET_PACKAGE_DIRS[@]}"
 do
   mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
@@ -69,15 +59,8 @@ do
   do
     EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
-    ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
+    ln -fs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
      || fatal "could not symlink ${SYMLINK_PATH}"
   done
-done
-for EXE in "${SYMLINK_APPS[@]}"
-do
-  EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
-  SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
-  ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
-   || fatal "could not symlink ${SYMLINK_PATH}"
 done
 pass
