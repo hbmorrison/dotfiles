@@ -38,7 +38,7 @@ GNUPG_BIN_DIR="/mnt/c/Program Files/GnuPG/bin"
 
 # Public keys to import.
 
-GPG_PUBLIC_KEYS=( "4775913995D1E4B179DFA97A01033E1BAB44EAB5" )
+TRUSTED_GPG_PUBLIC_KEYS=( "4775913995D1E4B179DFA97A01033E1BAB44EAB5" )
 
 # Winget packages to install.
 
@@ -79,6 +79,10 @@ SYMLINK_APPS=(
 notice "checking whether user profile directory is accessible"
 [ -d "${USER_PROFILE_DIR}" ] && yes || fatal "could not find ${USER_PROFILE_DIR}"
 
+# Make sure sudo has valid credentials.
+
+setup_needs_sudo
+
 # Check that WSL is configured correctly.
 
 notice "checking whether WSL is configured correctly"
@@ -108,16 +112,40 @@ else
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl --shutdown\""
 fi
 
-# Make sure sudo has valid credentials.
-
-setup_needs_sudo
-
 # Update and install required packages.
 
 notice "installing required packages"
 $SUDO apt update -y &>/dev/null \
  && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
  && pass || fail
+
+# Run gpg to create the .gnupg directory structure.
+
+notice "creating .gnupg directory structure"
+/usr/bin/gpg --list-keys &>/dev/null && pass || fail
+
+# Import trusted public keys.
+
+notice "importing trusted public keys"
+for KEY in ${TRUSTED_GPG_PUBLIC_KEYS[@]}
+do
+  [ -f "${ETC_DIR}/gpg/${KEY}.asc" ] || fatal "Public key ${KEY} does not exist"
+  /usr/bin/gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+   || fatal "could not import ${KEY}"
+  echo "${KEY}:6:" | /usr/bin/gpg --import-ownertrust &>/dev/null \
+   || fatal "could not trust ${KEY}"
+  "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+   || fatal "could not import ${KEY} into gpg4win"
+  echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
+   || fatal "gpg4win could not trust ${KEY}"
+done
+pass
+
+# Shut down the local gpg-agent which will have started in the background.
+
+notice "shutting down local gpg-agent"
+/usr/bin/gpgconf --kill gpg-agent &>/dev/null \
+ && pass || fatal "could not shut down gpg-agent"
 
 # Install the required winget packages.
 
@@ -265,10 +293,6 @@ do
    || fatal "gpg4win could not trust ${KEY}"
 done
 pass
-
-# Make sure sudo has valid credentials.
-
-setup_needs_sudo
 
 # Fix the WSL2 / Debian clock issue.
 
