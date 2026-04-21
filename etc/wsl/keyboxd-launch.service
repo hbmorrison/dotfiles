@@ -1,5 +1,5 @@
 [Unit]
-Description=Launch Windows keyboxd WSL relay
+Description=Launch gpg4win keyboxd at WSL login
 
 [Service]
 Type=oneshot

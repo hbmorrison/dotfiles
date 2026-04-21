@@ -1,5 +1,5 @@
 [Unit]
-Description=gpg4win to WSL connector for SSH
+Description=Relay gpg4win gpg-agent.extra socket to WSL
 Requires=gpg-agent.extra-relay.socket
 
 [Service]

@@ -1,6 +1,5 @@
 [Unit]
-Description=GnuPG cryptographic agent (ssh-agent emulation)
-Documentation=man:gpg-agent(1) man:ssh-add(1) man:ssh-agent(1) man:ssh(1)
+Description=Unix socket for relaying gpg4win gpg-agent.ssh socket
 
 [Socket]
 ListenStream=%t/gnupg/S.gpg-agent.ssh

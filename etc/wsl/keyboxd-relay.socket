@@ -1,6 +1,5 @@
 [Unit]
-Description=GnuPG cryptographic agent and passphrase cache
-Documentation=man:gpg-agent(1)
+Description=Unix socket for relaying gpg4win keyboxd socket
 
 [Socket]
 ListenStream=%t/gnupg/S.keyboxd

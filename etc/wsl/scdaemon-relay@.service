@@ -1,5 +1,5 @@
 [Unit]
-Description=gpg4win to WSL connector for GPG
+Description=Relay gpg4win scdaemon socket to WSL
 Requires=scdaemon-relay.socket
 
 [Service]

@@ -1,5 +1,5 @@
 [Unit]
-Description=Launch Windows gpg-agent for WSL relay
+Description=Launch gpg4win gpg-agent at WSL login
 
 [Service]
 Type=oneshot

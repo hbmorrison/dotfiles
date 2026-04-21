@@ -1,5 +1,5 @@
 [Unit]
-Description=gpg4win to WSL connector for GPG
+Description=Relay gpg4win keyboxd socket to WSL
 Requires=keyboxd-relay.socket
 
 [Service]

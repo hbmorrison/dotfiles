@@ -1,5 +1,5 @@
 [Unit]
-Description=gpg4win to WSL connector for GPG
+Description=Relay gpg4win gpg-agent socket to WSL
 Requires=gpg-agent-relay.socket
 
 [Service]
