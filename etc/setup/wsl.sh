@@ -249,9 +249,9 @@ pass
 notice "importing my public keys"
 for KEY in ${MY_GPG_PUBLIC_KEYS[@]}
 do
-  gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+  /usr/bin/gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
    || fatal "could not import ${KEY}"
-  gpg.exe --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+  "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
    || fatal "could not import ${KEY} into gpg4win"
 done
 pass
@@ -259,7 +259,7 @@ pass
 notice "trusting my public keys"
 for KEY in ${MY_GPG_PUBLIC_KEYS[@]}
 do
-  echo "${KEY}:6:" | gpg --import-ownertrust &>/dev/null \
+  echo "${KEY}:6:" | /usr/bin/gpg --import-ownertrust &>/dev/null \
    || fatal "could not trust ${KEY}"
   echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
    || fatal "gpg4win could not trust ${KEY}"
