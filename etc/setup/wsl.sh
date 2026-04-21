@@ -115,40 +115,32 @@ done
 
 # Add the user profile directories and PC directories together.
 
-declare -a SOURCE_DIRS
+notice "collecting directories to symlink from the home directory"
+declare -a SYMLINK_DIRS
 for DIR in "${SYMLINK_PC_DIRS[@]}"
 do
-  notice "checking whether ${DIR} exists"
-  [ -d "${DIR/#C:/\/mnt\/c}" ] && SOURCE_DIRS+=( "${DIR/#C:/\/mnt\/c}" ) && yes || no
+  [ -d "${DIR/#C:/\/mnt\/c}" ] && SYMLINK_DIRS+=( "${DIR/#C:/\/mnt\/c}" )
 done
 for DIR in "${SYMLINK_PROFILE_DIRS[@]}"
 do
-  notice "checking whether ${USER_PROFILE_DIR/#\/mnt\/c/C:}/${DIR} exists"
-  [ -d "${USER_PROFILE_DIR}/${DIR}" ] && SOURCE_DIRS+=( "${USER_PROFILE_DIR}/${DIR}" ) \
-   && yes || no
+  [ -d "${USER_PROFILE_DIR}/${DIR}" ] && SYMLINK_DIRS+=( "${USER_PROFILE_DIR}/${DIR}" )
 done
-
-# Add OneDrive directory and specific subdirectories.
-
-notice "checking whether OneDrive is available"
 ONEDRIVE_DIR=$(/bin/ls -1d "${USER_PROFILE_DIR}/OneDrive"* 2>/dev/null | tail -1)
-if [ -d "${ONEDRIVE_DIR}" ] || no
+if [ -d "${ONEDRIVE_DIR}" ]
 then
-  yes
-  SOURCE_DIRS+=( "${ONEDRIVE_DIR}" )
+  SYMLINK_DIRS+=( "${ONEDRIVE_DIR}" )
   for DIR in "${SYMLINK_ONEDRIVE_DIRS[@]}"
   do
     DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
-    notice "checking whether OneDrive ${DIR} directory exists"
-    [ -d "${ONEDRIVE_DIR}/${DIR}" ] && SOURCE_DIRS+=( "${ONEDRIVE_DIR}/${DIR}" ) \
-     && yes || no
+    [ -d "${ONEDRIVE_DIR}/${DIR}" ] && SYMLINK_DIRS+=( "${ONEDRIVE_DIR}/${DIR}" )
   done
 fi
+pass
 
 # Create symlinks.
 
 notice "creating symlinks in home directory"
-for DIR in "${SOURCE_DIRS[@]}"
+for DIR in "${SYMLINK_DIRS[@]}"
 do
   DIR_NAME=$(basename "${DIR}" | sed 's/\s\+/_/g')
   SYMLINK_NAME="${DIR_NAME/_-_*}"
@@ -158,9 +150,9 @@ do
 done
 pass
 
-# Create symlinks to the executables installed by winget.
+# Create symlinks to the executables.
 
-notice "creating symlinks to winget executables"
+notice "creating symlinks to executables"
 for PACKAGE in "${SYMLINK_WINGET_PACKAGE_DIRS[@]}"
 do
   mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
@@ -169,20 +161,15 @@ do
     EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
     SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
     ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
-     fatal "could not symlink ${SYMLINK_PATH}"
+     || fatal "could not symlink ${SYMLINK_PATH}"
   done
 done
-pass
-
-# Create symlinks to named apps.
-
-notice "creating symlinks to applications in local bin directory"
 for EXE in "${SYMLINK_APPS[@]}"
 do
   EXE_NAME=$(basename "${EXE}" | sed 's/\s\+/_/g')
   SYMLINK_PATH="${LOCAL_BIN}/${EXE_NAME}"
-  ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null ||
-   fatal "could not symlink ${SYMLINK_PATH}"
+  ln -nfs "${EXE}" "${SYMLINK_PATH}" &>/dev/null \
+   || fatal "could not symlink ${SYMLINK_PATH}"
 done
 pass
 
@@ -198,7 +185,7 @@ pass
 # Configure Gpg4Win.
 
 notice "copying gpg4win config files"
-[ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}" \
+[ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}" &>/dev/null \
  || fatal "could not create ${GNUPG_DIR}"
 for CONFIG_FILE in gpg.conf gpg-agent.conf
 do
@@ -214,21 +201,30 @@ notice "restarting gpg4win gpg-agent"
 notice "reloading gpg4win scdaemon"
 "${GNUPG_BIN_DIR}/gpgconf.exe" --reload scdaemon &>/dev/null && pass || fail
 
+# Mask existing ssh-agent socket and service.
+
+notice "masking existing ssh-agent systemd units"
+systemctl --user mask ssh-agent.socket &>/dev/null \
+ || fatal "could not mask ssh-agent.socket"
+systemctl --user mask ssh-agent.service &>/dev/null \
+ || fatal "could not mask ssh-agent.service"
+pass
+
 # Enable user systemd units.
 
 notice "installing systemd units into user systemd directory"
-[ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" \
+[ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" &>/dev/null \
  || fatal "could not create ${SYSTEMD_USER_DIR}"
 for UNIT in ${SYSTEMD_LAUNCH_UNITS[@]} ${SYSTEMD_SOCKETS[@]}
 do
-  cp -r "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_USER_DIR}" \
+  cp -f "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_USER_DIR}" &> /dev/null \
    || fatal "could not copy ${UNIT}"
 done
 systemctl --user daemon-reload &>/dev/null \
  || fatal "could not reload systemd"
 for UNIT in ${SYSTEMD_LAUNCH_UNITS[@]} ${SYSTEMD_SOCKETS[@]}
 do
-  systemctl --user enable --now $UNIT \
+  systemctl --user enable --now $UNIT &>/dev/null \
    || fatal "could not enable ${UNIT}"
 done
 pass
@@ -248,13 +244,13 @@ pass
 notice "trusting my public keys"
 for KEY in ${MY_GPG_PUBLIC_KEYS[@]}
 do
-  echo -e "5\ny\n" | gpg --command-fd 0 --expert --edit-key "${KEY}" trust \
+  echo "${KEY}:6:" | gpg --import-ownertrust &>/dev/null \
    || fatal "could not trust ${KEY}"
-  echo -e "5\ny\n" | gpg.exe --command-fd 0 --expert --edit-key "${KEY}" trust \
+  echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
    || fatal "gpg4win could not trust ${KEY}"
 done
 pass
-exit
+
 # Make sure sudo has valid credentials.
 
 setup_needs_sudo
