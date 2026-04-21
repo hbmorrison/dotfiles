@@ -43,10 +43,11 @@ CLEAR='\033[00m'
 
 setup () {
   local script="${1}"
+  local name="${1/4/ for }"
   shift
   if [ -f "${SCRIPT_DIR}/${script}.sh" ]
   then
-    echo -e "Setting up ${GREEN}${script}${CLEAR}:"
+    echo -e "Setting up ${GREEN}${name}${CLEAR}:"
     source "${SCRIPT_DIR}/${script}.sh" "$@"
   fi
 }

@@ -2,7 +2,7 @@
 
 # Configuration.
 
-PACKAGES="pcscd pcsc-tools scdaemon yubikey-manager"
+PACKAGES="gpg gpg-agent pcscd pcsc-tools scdaemon yubikey-manager"
 
 # Make sure sudo has valid credentials before starting.
 

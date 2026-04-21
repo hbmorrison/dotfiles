@@ -1,18 +1,10 @@
 # Configuration.
 
-PACKAGES="gpg gpg-agent"
 SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
 
 # Make sure sudo has valid credentials before starting.
 
 setup_needs_sudo
-
-# Update and install required packages.
-
-notice "installing required packages"
-$SUDO apt update -y &>/dev/null \
- && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
- && pass || fail
 
 # Fix search domains.
 
@@ -36,8 +28,8 @@ fi
 # Install required packages and configure udisks and yubikey.
 
 setup packages "$@"
-setup udisks "$@"
-setup yubikey "$@"
+setup udisks4chromeos "$@"
+setup gpg4chromeos "$@"
 
 # Set up the shell.
 
