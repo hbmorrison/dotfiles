@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Prerequisite packages.
+
+PACKAGES="gpg"
+
 # Systemd units for integrating with gpg4win.
 
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
@@ -97,7 +101,18 @@ else
   powershell.exe Start-Process -Verb runas -Wait powershell -ArgumentList "\"wsl --shutdown\""
 fi
 
-# Install the required packages using winget.
+# Make sure sudo has valid credentials.
+
+setup_needs_sudo
+
+# Update and install required packages.
+
+notice "installing required packages for chromeos"
+$SUDO apt update -y &>/dev/null \
+ && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
+ && pass || fail
+
+# Install the required winget packages.
 
 for PACKAGE in "${WINGET_PACKAGES[@]}"
 do
@@ -113,7 +128,7 @@ do
   fi
 done
 
-# Add the user profile directories and PC directories together.
+# Collect all of the Windows directories that will be symlinked.
 
 notice "collecting directories to symlink from the home directory"
 declare -a SYMLINK_DIRS
