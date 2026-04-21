@@ -4,7 +4,7 @@ Requires=gpg-agent.ssh-relay.socket
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/npiperelay.exe -ei -s '//./pipe/openssh-ssh-agent'
+ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/hmorris/AppData/Local/gnupg/S.gpg-agent.ssh'
 StandardInput=socket
 
 [Install]

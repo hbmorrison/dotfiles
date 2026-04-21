@@ -12,6 +12,7 @@ SYSTEMD_SOCKETS=(
   "gpg-agent.extra-relay.socket"
   "gpg-agent.ssh-relay.socket"
   "keyboxd-relay.socket"
+  "openssh-ssh-agent.socket"
   "scdaemon-relay.socket"
 )
 
