@@ -37,6 +37,7 @@ WINGET_PACKAGES=(
   "AgileBits.1Password.CLI"
   "albertony.npiperelay"
   "GnuPG.Gpg4win"
+  "Yubico.YubikeyManager"
   "Yubico.YubiKeyManagerCLI"
 )
 
@@ -101,7 +102,7 @@ fi
 for PACKAGE in "${WINGET_PACKAGES[@]}"
 do
   notice "checking whether ${PACKAGE,,} is installed"
-  if winget.exe list --query "${PACKAGE}" &>/dev/null
+  if winget.exe list --exact --id "${PACKAGE}" &>/dev/null
   then
     yes
   else
