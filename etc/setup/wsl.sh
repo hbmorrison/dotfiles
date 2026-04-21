@@ -2,26 +2,29 @@
 
 # Prerequisite packages.
 
-PACKAGES="gpg"
+PACKAGES="gpg gpg-agent socat"
 
 # Systemd units for integrating with gpg4win.
 
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
-EXISTING_SYSTEMD_UNITS=(
+EXISTING_SYSTEMD_SOCKETS=(
   "keyboxd.socket"
-  "keyboxd.service"
   "ssh-agent.socket"
-  "ssh-agent.service"
+  "ssh-agent-browser.socket"
+  "ssh-agent-extra.socket"
+  "ssh-agent-ssh.socket"
 )
-RELAY_SYSTEMD_UNITS=(
-  "gpg-agent-launch.service"
-  "keyboxd-launch.service"
+SYSTEMD_SOCKETS=(
   "gpg-agent-relay.socket"
-  "gpg-agent.extra-relay.socket"
-  "gpg-agent.ssh-relay.socket"
+  "gpg-agent-extra-relay.socket"
+  "gpg-agent-ssh-relay.socket"
   "keyboxd-relay.socket"
   "openssh-ssh-agent.socket"
   "scdaemon-relay.socket"
+)
+SYSTEMD_SERVICES=(
+  "gpg-agent-launch.service"
+  "keyboxd-launch.service"
 )
 
 # 1Password agent configuration.
@@ -35,7 +38,7 @@ GNUPG_BIN_DIR="/mnt/c/Program Files/GnuPG/bin"
 
 # Public keys to import.
 
-MY_GPG_PUBLIC_KEYS=( "4775913995D1E4B179DFA97A01033E1BAB44EAB5" )
+GPG_PUBLIC_KEYS=( "4775913995D1E4B179DFA97A01033E1BAB44EAB5" )
 
 # Winget packages to install.
 
@@ -111,7 +114,7 @@ setup_needs_sudo
 
 # Update and install required packages.
 
-notice "installing required packages for chromeos"
+notice "installing required packages"
 $SUDO apt update -y &>/dev/null \
  && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
  && pass || fail
@@ -222,7 +225,7 @@ notice "reloading gpg4win scdaemon"
 # Mask existing ssh-agent socket and service.
 
 notice "masking existing gpg and ssh systemd units"
-for UNIT in "${EXISTING_SYSTEMD_UNITS[@]}"
+for UNIT in "${EXISTING_SYSTEMD_SOCKETS[@]}"
 do
   systemctl --user mask ${UNIT} &>/dev/null \
    || fatal "could not mask ${UNIT}"
@@ -231,17 +234,17 @@ pass
 
 # Enable user systemd units.
 
-notice "installing systemd units into user systemd directory"
+notice "installing systemd units"
 [ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" &>/dev/null \
  || fatal "could not create ${SYSTEMD_USER_DIR}"
-for UNIT in "${RELAY_SYSTEMD_UNITS[@]}"
+for UNIT in "${SYSTEMD_SOCKETS[@]}" "${SYSTEMD_SERVICES[@]}"
 do
   cp -f "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_USER_DIR}" &> /dev/null \
    || fatal "could not copy ${UNIT}"
 done
 systemctl --user daemon-reload &>/dev/null \
  || fatal "could not reload systemd"
-for UNIT in ${RELAY_SYSTEMD_UNITS[@]}
+for UNIT in ${SYSTEMD_SOCKETS[@]} ${SYSTEMD_SERVICES[@]}
 do
   systemctl --user enable --now $UNIT &>/dev/null \
    || fatal "could not enable ${UNIT}"
@@ -250,8 +253,8 @@ pass
 
 # Import public keys.
 
-notice "importing my public keys"
-for KEY in ${MY_GPG_PUBLIC_KEYS[@]}
+notice "importing public keys"
+for KEY in ${GPG_PUBLIC_KEYS[@]}
 do
   /usr/bin/gpg --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
    || fatal "could not import ${KEY}"

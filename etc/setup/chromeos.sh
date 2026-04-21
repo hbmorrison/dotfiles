@@ -1,6 +1,6 @@
 # Configuration.
 
-CHROMEOS_PACKAGES="gpg-agent pinentry-tty"
+PACKAGES="gpg gpg-agent"
 SEARCH_DOMAINS="gerbil-koi.ts.net frogstar.party home"
 
 # Make sure sudo has valid credentials before starting.
@@ -9,9 +9,9 @@ setup_needs_sudo
 
 # Update and install required packages.
 
-notice "installing required packages for chromeos"
+notice "installing required packages"
 $SUDO apt update -y &>/dev/null \
- && $SUDO apt install -y --no-install-recommends $CHROMEOS_PACKAGES &>/dev/null \
+ && $SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
  && pass || fail
 
 # Fix search domains.

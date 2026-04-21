@@ -1,8 +1,9 @@
+#!/bin/bash
+
 # Configuration.
 
-DEBIAN_PACKAGES="bash-completion bind9-dnsutils curl expect fzf git-flow \
- hiera-eyaml inetutils-traceroute jq lsof man-db ncat nmap ripgrep shellcheck \
- socat vim wget whois xclip zip"
+PACKAGES="bash-completion bind9-dnsutils curl expect fzf git-flow hiera-eyaml \
+ inetutils-traceroute jq lsof man-db ncat vim wget whois xclip zip"
 
 # Make sure sudo has valid credentials before starting.
 
@@ -18,5 +19,5 @@ $SUDO apt update -y &>/dev/null \
 # Install required packages.
 
 notice "installing required packages for debian"
-$SUDO apt install -y --no-install-recommends $DEBIAN_PACKAGES &>/dev/null \
+$SUDO apt install -y --no-install-recommends $PACKAGES &>/dev/null \
  && pass || fail
