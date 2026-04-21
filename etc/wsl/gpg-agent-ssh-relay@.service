@@ -1,6 +1,6 @@
 [Unit]
 Description=Relay gpg4win gpg-agent.ssh socket to WSL
-Requires=gpg-agent.ssh-relay.socket
+Requires=gpg-agent-ssh-relay.socket
 
 [Service]
 Type=simple
