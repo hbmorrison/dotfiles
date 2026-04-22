@@ -1,13 +1,21 @@
 #!/bin/bash
 
-# 1Password agent configuration.
+# Configuration.
 
-OP_CONFIG_DIR="${APPDATA_LOCAL_DIR}/1Password/config/ssh"
+WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
+
+# Get Windows environment variables.
+
+WIN_LOCALAPPDATA=$(powershell.exe '$Env:LOCALAPPDATA' | tr -d '\r')
+LOCALAPPDATA=$(wslpath -u "${WIN_LOCALAPPDATA}")
+
+# Windows directories.
+
+WINGET_PACKAGES_DIR="${LOCALAPPDATA}/Microsoft/WinGet/Packages"
+OP_CONFIG_DIR="${LOCALAPPDATA}/1Password/config/ssh"
 
 # Winget packages to install.
 
-WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
-WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
 WINGET_PACKAGES=(
   "AgileBits.1Password.CLI"
 )
@@ -31,7 +39,7 @@ done
 # Create symlinks to the executables.
 
 notice "creating symlinks to executables"
-for PACKAGE in "${WINGET_PACKAGES[@]}"
+for PACKAGE in "${SYMLINK_WINGET_PACKAGES[@]}"
 do
   mapfile -t EXECUTABLES < <( ls -1 "${WINGET_PACKAGES_DIR}/${PACKAGE}"*/*.exe 2>/dev/null )
   for EXE in "${EXECUTABLES[@]}"
@@ -42,6 +50,7 @@ do
      || fatal "could not symlink ${SYMLINK_PATH}"
   done
 done
+pass
 
 # Configure 1Password CLI.
 

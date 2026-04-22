@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Program for awk that trims the second field before printing it.
+# Awk program that trims the second field from a gitconfig file and prints it.
 
 PROGRAM='{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2);print $2}'
 
 # Get the git config.
 
 GIT_CONFIG_DIR="${ETC_DIR}/git"
-GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_${1,,}"
+GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_${OS}"
 [ -f "${GIT_CONFIG}" ] || GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_default"
 
 # Set the name and email from the git config.

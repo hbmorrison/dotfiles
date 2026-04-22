@@ -1,12 +1,43 @@
 #!/bin/bash
 
+# Configuration.
+
+WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
+
+# Get Windows environment variables.
+
+WIN_APPDATA=$(powershell.exe '$Env:APPDATA' | tr -d '\r')
+WIN_LOCALAPPDATA=$(powershell.exe '$Env:LOCALAPPDATA' | tr -d '\r')
+WIN_USERPROFILE=$(powershell.exe '$Env:USERPROFILE' | tr -d '\r')
+APPDATA=$(wslpath -u "${WIN_APPDATA}")
+LOCALAPPDATA=$(wslpath -u "${WIN_LOCALAPPDATA}")
+USERPROFILE=$(wslpath -u "${WIN_USERPROFILE}")
+
+# Windows directories.
+
+WINGET_PACKAGES_DIR="${LOCALAPPDATA}/Microsoft/WinGet/Packages"
+GPG_CONFIG_DIR="${APPDATA}/gnupg"
+GPG_BIN_DIR="/mnt/c/Program Files/GnuPG/bin"
+
+# WSL directories.
+
+SYSTEMD_DIR="${HOME}/.config/systemd/user"
+
 # Prerequisite packages.
 
 PACKAGES="gpg gpg-agent socat"
 
+# Winget prerequisite packages.
+
+WINGET_PACKAGES=(
+  "albertony.npiperelay"
+  "GnuPG.Gpg4win"
+  "Yubico.YubikeyManager"
+  "Yubico.YubiKeyManagerCLI"
+)
+
 # Systemd units for integrating with gpg4win.
 
-SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 EXISTING_SYSTEMD_UNITS=(
   "gpg-agent.service"
   "gpg-agent.socket"
@@ -50,38 +81,22 @@ SYMLINK_WINDOWS_APPS=(
   "/mnt/c/Program Files/GnuPG/bin/gpg.exe"
   "/mnt/c/Program Files/GnuPG/bin/gpgconf.exe"
   "/mnt/c/Program Files/Yubico/YubiKey Manager CLI/ykman.exe"
+  "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
 )
-
-# Location of Gpg4win binaries and config.
-
-GNUPG_DIR="${APPDATA_ROAMING_DIR}/gnupg"
-GNUPG_BIN_DIR="/mnt/c/Program Files/GnuPG/bin"
 
 # Public keys to import.
 
-TRUSTED_GPG_PUBLIC_KEYS=(
+GPG_TRUSTED_PUBLIC_KEYS=(
   "4775913995D1E4B179DFA97A01033E1BAB44EAB5"
-)
-
-# Winget packages to install.
-
-WINGET_PACKAGES_DIR="${APPDATA_LOCAL_DIR}/Microsoft/WinGet/Packages"
-WINGET_INSTALL_ARGS="--silent --accept-package-agreements --accept-source-agreements"
-WINGET_PACKAGES=(
-  "albertony.npiperelay"
-  "GnuPG.Gpg4win"
-  "Yubico.YubikeyManager"
-  "Yubico.YubiKeyManagerCLI"
 )
 
 # Check that various directories exist first.
 
 notice "checking whether user profile directory is accessible"
-[ -d "${USER_PROFILE_DIR}" ] && yes || fatal "could not find ${USER_PROFILE_DIR}"
-
+[ -d "${USERPROFILE}" ] && yes || fatal "could not find ${USERPROFILE}"
 notice "checking whether systemd user directory exists"
-[ -d "${SYSTEMD_USER_DIR}" ] || mkdir -p "${SYSTEMD_USER_DIR}" &>/dev/null \
- && yes || fatal "could not create ${SYSTEMD_USER_DIR}"
+[ -d "${SYSTEMD_DIR}" ] || mkdir -p "${SYSTEMD_DIR}" &>/dev/null \
+ && yes || fatal "could not create ${SYSTEMD_DIR}"
 
 # Make sure sudo has valid credentials.
 
@@ -170,26 +185,26 @@ pass
 # Configure gpg4Win.
 
 notice "copying gpg4win config files"
-[ -d "${GNUPG_DIR}" ] || mkdir "${GNUPG_DIR}" &>/dev/null \
- || fatal "could not create ${GNUPG_DIR}"
-cp -f "${BASE_DIR}/gnupg/gpg.conf" "${GNUPG_DIR}/${CONFIG_FILE}" &>/dev/null \
- || fatal "could not copy gpg.conf to ${GNUPG_DIR}"
-cp -f "${ETC_DIR}/wsl/gpg-agent.conf" "${GNUPG_DIR}/${CONFIG_FILE}" &>/dev/null \
- || fatal "could not copy gpg-agent.conf to ${GNUPG_DIR}"
+[ -d "${GPG_CONFIG_DIR}" ] || mkdir "${GPG_CONFIG_DIR}" &>/dev/null \
+ || fatal "could not create ${GPG_CONFIG_DIR}"
+cp -f "${BASE_DIR}/gnupg/gpg.conf" "${GPG_CONFIG_DIR}/gpg.conf" &>/dev/null \
+ || fatal "could not copy gpg.conf to ${GPG_CONFIG_DIR}"
+cp -f "${ETC_DIR}/wsl/gpg-agent.conf" "${GPG_CONFIG_DIR}/gpg-agent.conf" &>/dev/null \
+ || fatal "could not copy gpg-agent.conf to ${GPG_CONFIG_DIR}"
 pass
 notice "restarting gpg4win gpg-agent"
-"${GNUPG_BIN_DIR}/gpg-connect-agent.exe" killagent /bye &>/dev/null \
- && "${GNUPG_BIN_DIR}/gpg-connect-agent.exe" /bye &>/dev/null \
+"${GPG_BIN_DIR}/gpg-connect-agent.exe" killagent /bye &>/dev/null \
+ && "${GPG_BIN_DIR}/gpg-connect-agent.exe" /bye &>/dev/null \
  && pass || fail
 notice "reloading gpg4win scdaemon"
-"${GNUPG_BIN_DIR}/gpgconf.exe" --reload scdaemon &>/dev/null && pass || fail
+"${GPG_BIN_DIR}/gpgconf.exe" --reload scdaemon &>/dev/null && pass || fail
 
 # Enable user systemd units.
 
 notice "installing gpg and ssh relay systemd units"
 for UNIT in "${SYSTEMD_SOCKETS[@]}" "${SYSTEMD_SERVICES[@]}" "${SYSTEMD_LAUNCH_SERVICES[@]}"
 do
-  cp -f "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_USER_DIR}" &> /dev/null \
+  cp -f "${ETC_DIR}/wsl/${UNIT}" "${SYSTEMD_DIR}" &> /dev/null \
    || fatal "could not copy ${UNIT}"
 done
 systemctl --user daemon-reload &>/dev/null \
@@ -210,7 +225,7 @@ notice "creating .gnupg directory structure"
 # Import trusted public keys.
 
 notice "importing trusted public keys"
-for KEY in ${TRUSTED_GPG_PUBLIC_KEYS[@]}
+for KEY in ${GPG_TRUSTED_PUBLIC_KEYS[@]}
 do
   if [ -f "${ETC_DIR}/gpg/${KEY}.asc" ]
   then
@@ -218,9 +233,9 @@ do
      || fatal "could not import ${KEY}"
     echo "${KEY}:6:" | /usr/bin/gpg --import-ownertrust &>/dev/null \
      || fatal "could not trust ${KEY}"
-    "${GNUPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
+    "${GPG_BIN_DIR}/gpg.exe" --import "${ETC_DIR}/gpg/${KEY}.asc" &>/dev/null \
      || fatal "could not import ${KEY} into gpg4win"
-    echo "${KEY}:6:" | "${GNUPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
+    echo "${KEY}:6:" | "${GPG_BIN_DIR}/gpg.exe" --import-ownertrust &> /dev/null \
      || fatal "gpg4win could not trust ${KEY}"
   else
     fatal "Public key ${KEY} does not exist"

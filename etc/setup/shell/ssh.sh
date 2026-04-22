@@ -4,7 +4,7 @@
 
 USER_SSH_DIR="${HOME}/.ssh"
 SSH_CONFIG_DIR="${ETC_DIR}/ssh"
-SSH_CONFIG="${SSH_CONFIG_DIR}/ssh_config_${1,,}"
+SSH_CONFIG="${SSH_CONFIG_DIR}/ssh_config_${OS}"
 [ -f "${SSH_CONFIG}" ] || SSH_CONFIG="${SSH_CONFIG_DIR}/ssh_config_default"
 
 # Copy the SSH config file from this repo.

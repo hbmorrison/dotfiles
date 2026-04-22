@@ -3,7 +3,7 @@
 # Configuration.
 
 GIT_CONFIG_DIR="${ETC_DIR}/git"
-GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_${1,,}"
+GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_${OS}"
 [ -f "${GIT_CONFIG}" ] || GIT_CONFIG="${GIT_CONFIG_DIR}/git_config_default"
 
 # Copy the gitconfig file from this repo.

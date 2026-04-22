@@ -49,11 +49,8 @@ fi
 # Install required packages.
 
 setup debian
-setup udisks
+setup chromeos/udisks
 
 # Customise the shell environment.
 
 setup shell
-setup git
-setup ssh
-setup vim

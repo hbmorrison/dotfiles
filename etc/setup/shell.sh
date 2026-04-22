@@ -70,7 +70,8 @@ notice "setting username in qmk.ini"
 sed -i -e "/USER/s/USER/${USER}/g" "${HOME}/.config/qmk/qmk.ini" \
  &>/dev/null && pass || fail
 
-# Reload systemd in case user unit files have changed.
+# Configure tools.
 
-notice "reloading systemd"
-systemctl --user daemon-reload &>/dev/null && pass || fail
+setup shell/git
+setup shell/ssh
+setup shell/vim

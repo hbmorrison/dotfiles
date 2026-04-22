@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Get Windows environment variables.
+
+WIN_USERPROFILE=$(powershell.exe '$Env:USERPROFILE' | tr -d '\r')
+USERPROFILE=$(wslpath -u "${WIN_USERPROFILE}")
+
 # Make sure sudo has valid credentials.
 
 setup_needs_sudo
@@ -12,9 +17,9 @@ then
   $SUDO cp -f "${ETC_DIR}/wsl/wsl.conf" /etc/wsl.conf
   RESTART_WSL=1
 fi
-if ! diff $ETC_DIR/wsl/wslconfig "${USER_PROFILE_DIR}/.wslconfig" &>/dev/null
+if ! diff $ETC_DIR/wsl/wslconfig "${USERPROFILE}/.wslconfig" &>/dev/null
 then
-  cp -f $ETC_DIR/wsl/wslconfig "${USER_PROFILE_DIR}/.wslconfig"
+  cp -f $ETC_DIR/wsl/wslconfig "${USERPROFILE}/.wslconfig"
   RESTART_WSL=1
 fi
 if [ -z ${RESTART_WSL:+z} ]
@@ -46,16 +51,16 @@ fi
 notice "setting system clock from the hardware clock"
 $SUDO hwclock -s &>/dev/null && pass || fail
 
-# Install required packages.
+# Install and configure required packages.
 
-setup packages
-setup op
-setup gpg
+setup debian/packages
+setup wsl/op
+setup wsl/gpg
+
+# Create symlinks to common Windows directories.
+
+setup wsl/symlinks
 
 # Customise the shell environment.
 
 setup shell
-setup symlinks
-setup git wsl
-setup ssh wsl
-setup vim wsl
