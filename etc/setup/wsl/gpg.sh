@@ -45,8 +45,6 @@ EXISTING_SYSTEMD_UNITS=(
   "gpg-agent-extra.socket"
   "gpg-agent-ssh.socket"
   "keyboxd.socket"
-  "ssh-agent.service"
-  "ssh-agent.socket"
 )
 SYSTEMD_SOCKETS=(
   "gpg-agent-relay.socket"

@@ -1,11 +1,10 @@
 [Unit]
-Description=Relay gpg4win gpg-agent.ssh socket to WSL
+Description=Relay gpg4win openssh-ssh-agent socket to WSL
 Requires=gpg-agent-ssh-relay.socket
 
 [Service]
 Type=simple
-ExecStartPre=-%h/.local/bin/gpgconf.exe --launch gpg-agent
-ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/%u/AppData/Local/gnupg/S.gpg-agent.ssh'
+ExecStart=%h/.local/bin/npiperelay.exe -ei -s '//./pipe/openssh-ssh-agent'
 StandardInput=socket
 
 [Install]

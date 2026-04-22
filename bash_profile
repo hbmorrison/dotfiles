@@ -55,7 +55,7 @@ export LESSHISTFILE=-
 
 # Use gpg for ssh agent.
 
-export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR/%\/}/openssh_agent"
+export SSH_AUTH_SOCK="${XDG_RUNTIME_DIR/%\/}/gnupg/S.gpg-agent.ssh"
 
 # Don't put duplicate lines or lines starting with space in the history.
 
