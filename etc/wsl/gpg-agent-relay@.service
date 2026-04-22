@@ -4,8 +4,9 @@ Requires=gpg-agent-relay.socket
 
 [Service]
 Type=simple
+Environment=LOCALAPPDATA=%t
 ExecStartPre=-%h/.local/bin/gpgconf.exe --launch gpg-agent
-ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/hmorris/AppData/Local/gnupg/S.gpg-agent'
+ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/%u/AppData/Local/gnupg/S.gpg-agent'
 StandardInput=socket
 
 [Install]

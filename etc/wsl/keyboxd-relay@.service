@@ -5,7 +5,7 @@ Requires=keyboxd-relay.socket
 [Service]
 Type=simple
 ExecStartPre=-%h/.local/bin/gpgconf.exe --launch keyboxd
-ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/hmorris/AppData/Local/gnupg/S.keyboxd'
+ExecStart=%h/.local/bin/npiperelay.exe -ep -ei -s -a 'C:/Users/%u/AppData/Local/gnupg/S.keyboxd'
 StandardInput=socket
 
 [Install]
