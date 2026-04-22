@@ -7,27 +7,30 @@ PACKAGES="gpg gpg-agent socat"
 # Systemd units for integrating with gpg4win.
 
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
-EXISTING_SYSTEMD_SOCKETS=(
+EXISTING_SYSTEMD_UNITS=(
+  "gpg-agent.service"
+  "gpg-agent.socket"
+  "gpg-agent-browser.socket"
+  "gpg-agent-extra.socket"
+  "gpg-agent-ssh.socket"
   "keyboxd.socket"
+  "ssh-agent.service"
   "ssh-agent.socket"
-  "ssh-agent-browser.socket"
-  "ssh-agent-extra.socket"
-  "ssh-agent-ssh.socket"
 )
 SYSTEMD_SOCKETS=(
   "gpg-agent-relay.socket"
   "gpg-agent-extra-relay.socket"
   "gpg-agent-ssh-relay.socket"
   "keyboxd-relay.socket"
-  "openssh-ssh-agent.socket"
   "scdaemon-relay.socket"
+  "ssh-agent-relay.socket"
 )
 SYSTEMD_SERVICES=(
   "gpg-agent-relay@.service"
   "gpg-agent-extra-relay@.service"
   "gpg-agent-ssh-relay@.service"
   "keyboxd-relay@.service"
-  "openssh-ssh-agent@.service"
+  "ssh-agent-relay@.service"
   "scdaemon-relay@.service"
 )
 SYSTEMD_LAUNCH_SERVICES=(
@@ -100,7 +103,7 @@ notice "shutting down local gpg-agent"
 # Mask existing agent sockets and services.
 
 notice "masking existing gpg and ssh systemd units"
-for UNIT in "${EXISTING_SYSTEMD_SOCKETS[@]}"
+for UNIT in "${EXISTING_SYSTEMD_UNITS[@]}"
 do
   systemctl --user mask ${UNIT} &>/dev/null \
    || fatal "could not mask ${UNIT}"

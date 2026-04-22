@@ -2,8 +2,9 @@
 
 # Configuration.
 
-PACKAGES="bash-completion bind9-dnsutils curl expect fzf git-flow hiera-eyaml \
- inetutils-traceroute jq lsof man-db ncat vim wget whois xclip zip"
+PACKAGES="bash-completion bind9-dnsutils curl expect fzf git git-flow \
+ hiera-eyaml inetutils-traceroute jq lsof man-db ncat openssh-client vim wget \
+ whois xclip zip"
 
 # Make sure sudo has valid credentials before starting.
 
