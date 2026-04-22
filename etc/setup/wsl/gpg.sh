@@ -52,14 +52,12 @@ SYSTEMD_SOCKETS=(
   "gpg-agent-ssh-relay.socket"
   "keyboxd-relay.socket"
   "scdaemon-relay.socket"
-  "ssh-agent-relay.socket"
 )
 SYSTEMD_SERVICES=(
   "gpg-agent-relay@.service"
   "gpg-agent-extra-relay@.service"
   "gpg-agent-ssh-relay@.service"
   "keyboxd-relay@.service"
-  "ssh-agent-relay@.service"
   "scdaemon-relay@.service"
 )
 SYSTEMD_LAUNCH_SERVICES=(
