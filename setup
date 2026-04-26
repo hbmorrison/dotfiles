@@ -5,6 +5,9 @@
 if [ -f /etc/os-release ]
 then
   source /etc/os-release
+  case "${ID}" in
+    zorin) ID="debian" ;;
+  esac
   OS=$ID
 fi
 
@@ -82,7 +85,7 @@ usage () {
 
 # Work out whether to run commands using sudo.
 
-SUDO=sudo
+SUDO="/usr/bin/sudo"
 if [ $(id -u) -eq 0 ]
 then
   SUDO=""
@@ -116,11 +119,7 @@ ln -fs $BASE_DIR/setup $LOCAL_BIN/setup &>/dev/null
 # Get the name of the script to run from the command line.
 
 SCRIPT=""
-if [ ! -z ${1:+z} ]
-then
-  SCRIPT="${1}"
-  shift
-fi
+[ -z ${1:+z} ] || SCRIPT="${1}"
 
 # Work out the path to the script.
 
@@ -141,4 +140,4 @@ fi
 
 # Run the script.
 
-setup "${SCRIPT}"
+setup "$@"

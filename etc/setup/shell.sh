@@ -1,6 +1,7 @@
 # Configuration.
 
-SECURE_DIRECTORIES=".config .gnupg .ssh"
+SECURE_FILES=( ".config/Yubico/u2f_keys" )
+SECURE_DIRECTORIES=( ".config" ".gnupg" ".ssh" )
 
 # Update dotfiles repo.
 
@@ -31,10 +32,15 @@ do
 done
 pass
 
-# Make sure sensitive directories are secure.
+# Make sure sensitive files and directories are secure.
 
-notice "securing sensitive directories"
-for DIR in $SECURE_DIRECTORIES
+notice "securing sensitive files and directories"
+for FILE in "${SECURE_FILES[@]}"
+do
+  chmod go-rwx "${HOME}/${FILE}" &>/dev/null \
+   || fatal "could not secure ${HOME}/${FILE}"
+done
+for DIR in "${SECURE_DIRECTORIES[@]}"
 do
   chmod go-rwx "${HOME}/${DIR}" &>/dev/null \
    || fatal "could not secure ${HOME}/${DIR}"
