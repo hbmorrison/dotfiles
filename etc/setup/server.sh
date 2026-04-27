@@ -5,7 +5,8 @@ PACKAGES="bash-completion curl fail2ban git git-flow jq man-db net-tools \
   python3-systemd sudo vim"
 SSHD_CONFIG="/etc/ssh/sshd_config"
 TAILSCALE_ARGS="--accept-routes --accept-risk=all"
-PUBLIC_SSH_KEYS="${ETC_DIR}/server/public_ssh_keys"
+
+# Information about the non-root user.
 
 NON_ROOT_USER="hannah"
 NON_ROOT_ADMIN_GROUPS="sudo,users"
@@ -196,17 +197,6 @@ then
    || su -l -c "touch ${NON_ROOT_AUTHORIZED_KEYS}" "${NON_ROOT_USER}" || fatal
 fi
 pass
-
-# Go through each ssh key and add it to authorized_keys if not present.
-
-while read -r TYPE KEY COMMENT
-do
-  if ! grep -q "${KEY}" $NON_ROOT_AUTHORIZED_KEYS
-  then
-    notice "adding '${COMMENT}' authorized key for ${NON_ROOT_USER}"
-    echo "${TYPE} ${KEY} ${COMMENT}" >> $NON_ROOT_AUTHORIZED_KEYS && pass || fail
-  fi
-done < "${PUBLIC_SSH_KEYS}"
 
 # Configure the non-root user shell.
 
