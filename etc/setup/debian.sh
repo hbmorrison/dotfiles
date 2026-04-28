@@ -2,7 +2,8 @@
 
 setup debian/packages
 setup debian/yubikey
-setup debian/pamu2f
+setup debian/u2f
+setup debian/usbguard
 
 # Install required apps.
 
