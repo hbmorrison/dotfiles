@@ -2,8 +2,13 @@
 
 # Configuration.
 
+TIMESTAMP=$(date '+%Y%M%dT%H%M')
+U2F_MAPPING_FILE="/etc/u2f_mappings"
 PACKAGES=( "libpam-u2f" "pamu2fcfg" )
 PAM_U2F_CONFIG_FILES=( "common-u2f" "common-u2f-presenceonly" )
+
+# Services that will need u2f enabled.
+
 PAM_U2F_SERVICES=(
   "/etc/pam.d/chfn"
   "/etc/pam.d/chsh"
@@ -14,6 +19,9 @@ PAM_U2F_SERVICES=(
   "/etc/pam.d/su"
   "/etc/pam.d/sudo-i"
 )
+
+# Services that need presence-only acknowledgement enabled.
+
 PAM_U2F_PRESENCEONLY_SERVICES=(
   "/etc/pam.d/sudo"
   "/usr/lib/pam.d/polkit-1"
@@ -74,7 +82,21 @@ do
 done
 pass
 
-# Add the u2f key to the root mapping file.
+# Add the u2f key to the mapping file.
 
-USER_U2FCONFIG=$(/usr/bin/pamu2fcfg)
+notice "press your hardware key now"
+U2F_ENTRY=$(/usr/bin/pamu2fcfg || fatal "could not generate u2f mapping")
+pass
 
+if [ -f $U2F_MAPPING_FILE ]
+then
+  notice "removing existing u2f mapping for ${U2F_ENTRY/:*}"
+  $SUDO sed --in-place=".${TIMESTAMP}" "/^${U2F_ENTRY/:*}:/d" ${U2F_MAPPING_FILE} \
+   &>/dev/null && pass || fatal
+fi
+
+notice "adding new u2f mapping for ${U2F_ENTRY/:*}"
+echo "${U2F_ENTRY}" | $SUDO tee -a ${U2F_MAPPING_FILE} \
+ &>/dev/null || fatal
+$SUDO chmod go-rwx ${U2F_MAPPING_FILE} \
+ &>/dev/null && pass || fatal
