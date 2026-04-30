@@ -1,6 +1,6 @@
 # Configuration.
 
-SECURE_FILES=( ".config/Yubico/u2f_keys" )
+SECURE_FILES=()
 SECURE_DIRECTORIES=( ".config" ".gnupg" ".ssh" )
 
 # Update dotfiles repo.
