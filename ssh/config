@@ -3,3 +3,9 @@ GSSAPIAuthentication yes
 GSSAPIDelegateCredentials yes
 ForwardAgent yes
 AddKeysToAgent ask
+Host github.com codeberg.org
+  User git
+  ProxyCommand none
+Host *.internal *.frogstar.party
+  User hannah
+  ProxyCommand none
